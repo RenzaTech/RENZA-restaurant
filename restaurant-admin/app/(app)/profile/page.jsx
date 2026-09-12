@@ -100,16 +100,16 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-6 pb-16">
+    <div className="p-3.5 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-4 sm:space-y-6 pb-16">
       {/* Title */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Restaurant Profile</h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Restaurant Profile</h2>
+        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
           Brand logo, cuisine specialty, contact details, and location displayed on your digital menu.
         </p>
       </div>
 
-      <form onSubmit={handleSave} className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+      <form onSubmit={handleSave} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-4 sm:p-6 lg:p-8 shadow-xs space-y-4 sm:space-y-6">
         {/* Logo Upload Zone */}
         <div className="flex flex-col items-center py-2">
           <button
@@ -117,7 +117,7 @@ export default function ProfilePage() {
             onClick={() => fileInputRef.current?.click()}
             className="relative group focus:outline-none"
           >
-            <div className="w-28 h-28 rounded-3xl overflow-hidden border-4 border-slate-100 shadow-md bg-slate-50 flex items-center justify-center transition-all group-hover:border-orange-200">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden border-4 border-slate-100 shadow-md bg-slate-50 flex items-center justify-center transition-all group-hover:border-orange-200">
               {logoPreview ? (
                 <img
                   src={logoPreview}
@@ -125,15 +125,15 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Store className="w-12 h-12 text-slate-300" />
+                <Store className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300" />
               )}
             </div>
-            <div className="absolute -bottom-1 -right-1 w-9 h-9 bg-orange-500 hover:bg-orange-600 rounded-2xl flex items-center justify-center shadow-md border-2 border-white transition-transform group-hover:scale-110">
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 sm:w-9 sm:h-9 bg-orange-500 hover:bg-orange-600 rounded-2xl flex items-center justify-center shadow-md border-2 border-white transition-transform group-hover:scale-110">
               <Camera className="w-4 h-4 text-white" />
             </div>
           </button>
-          <p className="text-xs font-bold text-slate-700 mt-3">Restaurant Brand Logo</p>
-          <p className="text-[11px] text-slate-400">Tap to upload / change (Cloudinary WebP)</p>
+          <p className="text-xs font-bold text-slate-700 mt-2.5">Restaurant Brand Logo</p>
+          <p className="text-[10px] sm:text-[11px] text-slate-400">Tap to upload / change (Cloudinary WebP)</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -143,7 +143,7 @@ export default function ProfilePage() {
           />
         </div>
 
-        <div className="space-y-4 pt-2 border-t border-slate-100">
+        <div className="space-y-3.5 sm:space-y-4 pt-2 border-t border-slate-100">
           {/* Restaurant Name */}
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -222,7 +222,7 @@ export default function ProfilePage() {
         {/* Save button */}
         <Button
           type="submit"
-          className="w-full h-12 text-xs font-bold rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20 gap-2"
+          className="w-full h-12 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20 gap-2"
           disabled={saving}
         >
           {saving ? (

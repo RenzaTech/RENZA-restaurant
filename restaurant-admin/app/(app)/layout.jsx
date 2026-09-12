@@ -71,12 +71,12 @@ export default function AppLayout({ children }) {
   const customerMenuUrl = restaurant.slug ? `${customerBaseUrl}/menu/${restaurant.slug}` : '';
 
   const getPageTitle = () => {
-    if (pathname.startsWith('/menu/new')) return 'Add New Dish';
-    if (pathname.includes('/edit')) return 'Edit Dish Details';
-    if (pathname.startsWith('/menu')) return 'Menu & Stock Management';
-    if (pathname.startsWith('/categories')) return 'Menu Categories';
-    if (pathname.startsWith('/profile')) return 'Restaurant Profile';
-    return 'Kitchen Dashboard';
+    if (pathname.startsWith('/menu/new')) return 'Add Dish';
+    if (pathname.includes('/edit')) return 'Edit Dish';
+    if (pathname.startsWith('/menu')) return 'Menu & Stock';
+    if (pathname.startsWith('/categories')) return 'Categories';
+    if (pathname.startsWith('/profile')) return 'Profile';
+    return 'Dashboard';
   };
 
   return (
@@ -151,29 +151,29 @@ export default function AppLayout({ children }) {
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="relative flex flex-col w-72 bg-slate-950 h-full shadow-2xl">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center">
-                  <UtensilsCrossed className="w-5 h-5 text-white" />
+          <aside className="relative flex flex-col w-72 max-w-[85vw] bg-slate-950 h-full shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0">
+                  <UtensilsCrossed className="w-4 h-4 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Renza Partner</p>
-                  <p className="text-sm font-bold text-white truncate max-w-[140px]">{restaurant.name}</p>
+                  <p className="text-xs font-bold text-white truncate">{restaurant.name || 'Kitchen'}</p>
                 </div>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg flex-shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <nav className="flex-1 px-4 py-4 space-y-1">
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
               {navItems.map(({ label, href, icon: Icon }) => {
                 const isActive = activeNav === href;
                 return (
@@ -182,26 +182,26 @@ export default function AppLayout({ children }) {
                     href={href}
                     onClick={() => setSidebarOpen(false)}
                     className={cn(
-                      'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all',
+                      'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all',
                       isActive
-                        ? 'bg-orange-500 text-white'
+                        ? 'bg-orange-500 text-white shadow-xs'
                         : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                     )}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4 h-4" />
                     <span>{label}</span>
                   </Link>
                 );
               })}
             </nav>
 
-            <div className="p-4 border-t border-slate-800 space-y-2">
+            <div className="p-3 border-t border-slate-800 space-y-2">
               {customerMenuUrl && (
                 <a
                   href={customerMenuUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900"
+                  className="flex items-center justify-between w-full px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 border border-slate-800"
                 >
                   <span className="flex items-center gap-2">
                     <Store className="w-4 h-4 text-orange-400" />
@@ -213,7 +213,7 @@ export default function AppLayout({ children }) {
 
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
+                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
@@ -228,26 +228,24 @@ export default function AppLayout({ children }) {
 
         {/* Top Navbar */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between px-4 lg:px-8 h-16">
-            <div className="flex items-center gap-3.5">
+          <div className="flex items-center justify-between px-3 sm:px-6 lg:px-8 h-14 sm:h-16 gap-2">
+            <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+                className="lg:hidden p-1.5 sm:p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors flex-shrink-0"
                 aria-label="Open navigation menu"
               >
                 <Menu className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-slate-900 text-base sm:text-lg tracking-tight">
-                  {getPageTitle()}
-                </span>
-              </div>
+              <h1 className="font-extrabold text-slate-900 text-sm sm:text-base md:text-lg tracking-tight truncate">
+                {getPageTitle()}
+              </h1>
             </div>
 
             {/* Live status badge + Quick customer menu link */}
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-bold">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-bold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Menu Live</span>
               </div>
@@ -257,11 +255,11 @@ export default function AppLayout({ children }) {
                   href={customerMenuUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-100 text-xs font-bold transition-colors border border-orange-200/60"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-100 text-xs font-bold transition-colors border border-orange-200/60 shadow-2xs"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">View Diner Menu</span>
-                  <span className="sm:hidden">Menu</span>
+                  <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Diner Menu</span>
+                  <span className="sm:hidden text-[11px]">Menu</span>
                 </a>
               )}
             </div>
@@ -269,14 +267,14 @@ export default function AppLayout({ children }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 pb-24 lg:pb-10 overflow-y-auto bg-slate-50">
+        <main className="flex-1 pb-28 sm:pb-24 lg:pb-10 overflow-y-auto bg-slate-50 w-full">
           {children}
         </main>
       </div>
 
       {/* ── MOBILE BOTTOM NAV (hidden on lg+) ── */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
-        <div className="flex items-stretch h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-3px_16px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           {navItems.map(({ label, href, icon: Icon }) => {
             const isActive = activeNav === href;
             return (
@@ -284,14 +282,22 @@ export default function AppLayout({ children }) {
                 key={href}
                 href={href}
                 className={cn(
-                  'flex flex-col items-center justify-center flex-1 gap-1 transition-all min-h-[44px]',
-                  isActive ? 'text-orange-500 font-bold' : 'text-slate-400 hover:text-slate-600'
+                  'flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all relative flex-1 min-h-[48px]',
+                  isActive ? 'text-orange-600 font-bold' : 'text-slate-400 hover:text-slate-600'
                 )}
               >
-                <Icon className={cn('w-5 h-5 transition-transform', isActive && 'scale-110')} />
-                <span className="text-[10px] font-semibold">
+                <div className={cn(
+                  'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
+                  isActive && 'bg-orange-50 text-orange-600'
+                )}>
+                  <Icon className={cn('w-4 h-4 transition-transform', isActive && 'scale-110 text-orange-600')} />
+                </div>
+                <span className="text-[10px] tracking-tight mt-0.5 leading-none">
                   {label}
                 </span>
+                {isActive && (
+                  <span className="absolute bottom-1 w-4 h-0.5 bg-orange-500 rounded-full" />
+                )}
               </Link>
             );
           })}

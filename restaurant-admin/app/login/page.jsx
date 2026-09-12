@@ -84,12 +84,12 @@ export default function LoginPage() {
       </div>
 
       {/* Center Login Card */}
-      <div className="relative z-10 my-auto py-8 max-w-md w-full mx-auto">
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+      <div className="relative z-10 my-auto py-6 sm:py-8 max-w-md w-full mx-auto">
+        <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl backdrop-blur-md">
           {/* Card Header */}
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mx-auto mb-4 shadow-inner">
-              <Store className="w-7 h-7" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mx-auto mb-3 sm:mb-4 shadow-inner">
+              <Store className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               Restaurant Sign In

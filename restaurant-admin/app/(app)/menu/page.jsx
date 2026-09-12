@@ -23,16 +23,16 @@ const FILTERS = ['All', 'Available', 'Sold Out'];
 
 function FoodItemSkeleton() {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex gap-4">
-      <Skeleton className="w-24 h-24 rounded-xl flex-shrink-0" />
-      <div className="flex-1 space-y-2">
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-4 flex gap-3 sm:gap-4">
+      <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl flex-shrink-0" />
+      <div className="flex-1 space-y-2 min-w-0">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/3" />
         <Skeleton className="h-3 w-1/2" />
         <div className="flex items-center gap-2 mt-3 pt-2">
-          <Skeleton className="h-8 w-20 rounded-full" />
-          <Skeleton className="h-8 w-8 rounded-lg ml-auto" />
-          <Skeleton className="h-8 w-8 rounded-lg" />
+          <Skeleton className="h-7 w-16 rounded-full" />
+          <Skeleton className="h-7 w-7 rounded-lg ml-auto" />
+          <Skeleton className="h-7 w-7 rounded-lg" />
         </div>
       </div>
     </div>
@@ -75,9 +75,9 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
       "bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between",
       !item.isAvailable && "bg-slate-50/70 border-slate-200"
     )}>
-      <div className="flex gap-4 p-4">
+      <div className="flex gap-3 sm:gap-4 p-3.5 sm:p-4">
         {/* Food Image */}
-        <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200/80 relative">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200/80 relative">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -87,7 +87,7 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
-              <UtensilsCrossed className="w-7 h-7" />
+              <UtensilsCrossed className="w-6 h-6 sm:w-7 sm:h-7" />
               <span className="text-[9px] text-slate-400 mt-1 font-medium">No photo</span>
             </div>
           )}
@@ -95,7 +95,7 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-2 mb-1">
+          <div className="flex items-start gap-1.5 sm:gap-2 mb-1">
             {/* Veg/Non-veg FSSAI dot */}
             <span
               className={cn(
@@ -115,10 +115,10 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
             </h3>
           </div>
 
-          <p className="text-slate-900 font-black text-base">₹{item.price}</p>
+          <p className="text-slate-900 font-black text-sm sm:text-base">₹{item.price}</p>
 
           {item.category?.name && (
-            <span className="inline-block text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md mt-1">
+            <span className="inline-block text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md mt-1 truncate max-w-full">
               {item.category.name}
             </span>
           )}
@@ -132,16 +132,16 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
       </div>
 
       {/* Bottom bar: Availability Toggle + Actions */}
-      <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between gap-3">
+      <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between gap-2">
         {/* Availability Toggle */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <Switch
             checked={item.isAvailable}
             onCheckedChange={handleToggle}
             disabled={toggling}
           />
           <span className={cn(
-            'text-xs font-bold tracking-wide uppercase',
+            'text-[11px] sm:text-xs font-bold tracking-wide uppercase',
             item.isAvailable ? 'text-emerald-700' : 'text-rose-600'
           )}>
             {item.isAvailable ? 'Available' : 'Sold Out'}
@@ -233,21 +233,21 @@ export default function MenuPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
       {/* ── HEADER & TOOLBAR ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Menu Dishes & Stock</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Menu Dishes & Stock</h2>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
             Total {items.length} dishes • {items.filter((i) => i.isAvailable).length} Available •{' '}
             {items.filter((i) => !i.isAvailable).length} Sold Out
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <Button
             onClick={() => router.push('/menu/new')}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
+            className="w-full sm:w-auto justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
           >
             <Plus className="w-4 h-4" />
             Add New Dish
@@ -256,7 +256,7 @@ export default function MenuPage() {
       </div>
 
       {/* ── SEARCH & FILTER CONTROLS ── */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3">
         {/* Search */}
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -276,7 +276,7 @@ export default function MenuPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                'flex-1 sm:flex-none py-1.5 px-3.5 rounded-lg text-xs font-bold transition-all',
+                'flex-1 sm:flex-none py-1.5 px-3 sm:px-3.5 rounded-lg text-xs font-bold transition-all text-center',
                 filter === f
                   ? 'bg-orange-500 text-white shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'

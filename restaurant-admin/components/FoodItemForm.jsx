@@ -85,9 +85,9 @@ export default function FoodItemForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto pb-12">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 max-w-2xl mx-auto pb-12">
       {/* ── CARD 1: PHOTO & ESSENTIAL DETAILS ── */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-4 sm:p-6 lg:p-8 shadow-xs space-y-4 sm:space-y-6">
         {/* Photo Upload Zone */}
         <div>
           <Label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">
@@ -97,7 +97,7 @@ export default function FoodItemForm({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              'w-full h-52 rounded-2xl flex flex-col items-center justify-center transition-all relative overflow-hidden group',
+              'w-full h-44 sm:h-52 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all relative overflow-hidden group',
               imagePreview
                 ? 'border border-slate-200 shadow-xs'
                 : 'border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-orange-50/50 hover:border-orange-300'
@@ -119,11 +119,11 @@ export default function FoodItemForm({
               </>
             ) : (
               <>
-                <div className="w-14 h-14 rounded-2xl bg-orange-100/80 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                  <Camera className="w-7 h-7 text-orange-600" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-orange-100/80 flex items-center justify-center mb-2.5 sm:mb-3 group-hover:scale-105 transition-transform">
+                  <Camera className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
                 </div>
                 <p className="text-slate-700 font-bold text-xs">Tap or drop photo here</p>
-                <p className="text-slate-400 text-[11px] mt-1">Uploads automatically to Cloudinary WebP</p>
+                <p className="text-slate-400 text-[10px] sm:text-[11px] mt-0.5">Uploads automatically to Cloudinary WebP</p>
               </>
             )}
           </button>
@@ -152,7 +152,7 @@ export default function FoodItemForm({
         </div>
 
         {/* Row: Price & Category */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="price" className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Price (INR) <span className="text-rose-500">*</span>
@@ -198,7 +198,7 @@ export default function FoodItemForm({
           <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
             Dietary Type <span className="text-rose-500">*</span>
           </Label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {[
               { value: 'veg', label: 'Vegetarian (🌱)', isVeg: true },
               { value: 'non-veg', label: 'Non-Vegetarian (🍗)', isVeg: false },
@@ -208,7 +208,7 @@ export default function FoodItemForm({
                 type="button"
                 onClick={() => setDirect('foodType', value)}
                 className={cn(
-                  'h-12 rounded-xl border-2 font-bold text-xs transition-all flex items-center justify-center gap-2',
+                  'h-11 sm:h-12 rounded-xl border-2 font-bold text-xs transition-all flex items-center justify-center gap-2',
                   form.foodType === value
                     ? isVeg
                       ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-xs'
@@ -225,7 +225,7 @@ export default function FoodItemForm({
                     isVeg ? 'bg-emerald-600' : 'bg-rose-600'
                   )} />
                 </span>
-                <span>{label}</span>
+                <span className="truncate">{label}</span>
               </button>
             ))}
           </div>
@@ -247,17 +247,17 @@ export default function FoodItemForm({
         </div>
 
         {/* Availability Toggle */}
-        <div className="bg-slate-50/80 rounded-2xl border border-slate-200/80 p-4 flex items-center justify-between">
-          <div>
+        <div className="bg-slate-50/80 rounded-xl sm:rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <p className="font-bold text-slate-900 text-xs">Live Stock Availability</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
               {form.isAvailable
                 ? 'Dish is available and displayed to diners'
                 : 'Dish will show as Sold Out on the digital menu'}
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
-            <span className={cn('text-xs font-bold uppercase tracking-wider', form.isAvailable ? 'text-emerald-700' : 'text-slate-400')}>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className={cn('text-[11px] sm:text-xs font-bold uppercase tracking-wider', form.isAvailable ? 'text-emerald-700' : 'text-slate-400')}>
               {form.isAvailable ? 'Available' : 'Sold Out'}
             </span>
             <Switch
@@ -269,48 +269,48 @@ export default function FoodItemForm({
       </div>
 
       {/* ── CARD 2: CULINARY ATTRIBUTES & NUTRITION (COLLAPSIBLE) ── */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs">
         <button
           type="button"
           onClick={() => setShowMore(!showMore)}
-          className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50/50 transition-colors"
+          className="w-full flex items-center justify-between p-4 sm:p-6 text-left hover:bg-slate-50/50 transition-colors"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold flex-shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
-            <div>
-              <span className="font-bold text-slate-900 text-sm block">Culinary Details & Nutrition</span>
-              <span className="text-[11px] text-slate-400">Spice level, allergens, prep time, and dietary tags</span>
+            <div className="min-w-0">
+              <span className="font-bold text-slate-900 text-xs sm:text-sm block truncate">Culinary Details & Nutrition</span>
+              <span className="text-[10px] sm:text-[11px] text-slate-400 truncate block">Spice level, allergens, prep time, and dietary tags</span>
             </div>
           </div>
           {showMore ? (
-            <ChevronUp className="w-5 h-5 text-slate-400" />
+            <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-slate-400" />
+            <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
           )}
         </button>
 
         {showMore && (
-          <div className="p-6 pt-2 space-y-5 border-t border-slate-100">
+          <div className="p-4 sm:p-6 pt-2 space-y-4 sm:space-y-5 border-t border-slate-100">
             {/* Spicy Level */}
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">Spiciness Meter</Label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {SPICY_LEVELS.map(({ value, label, icon }) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setDirect('spicyLevel', value)}
                     className={cn(
-                      'flex flex-col items-center justify-center py-2.5 rounded-xl border-2 transition-all text-xs font-bold gap-1',
+                      'flex flex-col items-center justify-center py-2 sm:py-2.5 px-2 rounded-xl border-2 transition-all text-xs font-bold gap-1',
                       form.spicyLevel === value
                         ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-xs'
                         : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                     )}
                   >
                     <span className="text-base leading-none">{icon}</span>
-                    <span>{label}</span>
+                    <span className="text-[11px] sm:text-xs truncate">{label}</span>
                   </button>
                 ))}
               </div>
@@ -326,7 +326,7 @@ export default function FoodItemForm({
                     type="button"
                     onClick={() => handleTagToggle(tag)}
                     className={cn(
-                      'px-4 py-2 rounded-xl border-2 text-xs font-bold transition-all',
+                      'px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl border-2 text-xs font-bold transition-all',
                       form.tags.includes(tag)
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-xs'
                         : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
@@ -339,7 +339,7 @@ export default function FoodItemForm({
             </div>
 
             {/* Ingredients & Spices */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="ingredients" className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Ingredients
@@ -368,7 +368,7 @@ export default function FoodItemForm({
             </div>
 
             {/* Allergens & Calories */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="allergens" className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Allergens Warning
@@ -399,7 +399,7 @@ export default function FoodItemForm({
             </div>
 
             {/* Portion Size & Prep Time */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="portionSize" className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Portion Size
@@ -433,7 +433,7 @@ export default function FoodItemForm({
       {/* ── ACTION SUBMIT BUTTON ── */}
       <Button
         type="submit"
-        className="w-full h-12 text-xs font-bold rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20"
+        className="w-full h-12 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20"
         disabled={submitting}
       >
         {submitting ? (

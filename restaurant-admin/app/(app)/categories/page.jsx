@@ -130,12 +130,12 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-3.5 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-4 sm:space-y-6">
       {/* Header card */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Menu Categories</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Menu Categories</h2>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
             Organize the sections of your menu (e.g. Starters, Main Course, Biryani, Desserts, Drinks)
           </p>
         </div>
@@ -144,7 +144,7 @@ export default function CategoriesPage() {
             setShowAddInput(true);
             setNewCatName('');
           }}
-          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
+          className="w-full sm:w-auto justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
         >
           <Plus className="w-4 h-4" />
           Add Category
@@ -153,7 +153,7 @@ export default function CategoriesPage() {
 
       {/* Add Category Form */}
       {showAddInput && (
-        <div className="bg-orange-50/70 border border-orange-200 rounded-2xl p-5 shadow-xs space-y-4">
+        <div className="bg-orange-50/70 border border-orange-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3 sm:space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-orange-900">Create New Category</h3>
           <Input
             placeholder="Category name (e.g. Tandoori Starters, Biryani, Beverages, Desserts)"
@@ -167,7 +167,7 @@ export default function CategoriesPage() {
             <Button
               onClick={handleAdd}
               disabled={adding || !newCatName.trim()}
-              className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold h-9"
+              className="flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold h-9"
             >
               {adding ? 'Creating...' : 'Save Category'}
             </Button>
@@ -175,7 +175,7 @@ export default function CategoriesPage() {
               variant="outline"
               onClick={() => { setShowAddInput(false); setNewCatName(''); }}
               disabled={adding}
-              className="rounded-xl text-xs font-bold h-9 bg-white"
+              className="flex-1 sm:flex-none rounded-xl text-xs font-bold h-9 bg-white"
             >
               Cancel
             </Button>
@@ -190,11 +190,11 @@ export default function CategoriesPage() {
             {Array.from({ length: 4 }).map((_, i) => <CategorySkeleton key={i} />)}
           </div>
         ) : categories.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-12 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
-              <FolderTree className="w-8 h-8 text-orange-400" />
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-8 sm:p-12 flex flex-col items-center justify-center text-center">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
+              <FolderTree className="w-7 h-7 sm:w-8 sm:h-8 text-orange-400" />
             </div>
-            <h3 className="font-bold text-slate-800 text-base mb-1">No categories added yet</h3>
+            <h3 className="font-bold text-slate-800 text-sm sm:text-base mb-1">No categories added yet</h3>
             <p className="text-slate-400 text-xs max-w-sm mb-6 leading-relaxed">
               Categories create sticky navigation pills on diners&apos; phones to help them browse easily.
             </p>
@@ -207,7 +207,7 @@ export default function CategoriesPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             {categories.map((cat, index) => {
               const catId = cat.id || cat._id;
               const isEditing = editId === catId;
@@ -216,42 +216,42 @@ export default function CategoriesPage() {
               return (
                 <div
                   key={catId}
-                  className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex items-center gap-4 hover:shadow-md transition-all"
+                  className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-5 flex items-center gap-2.5 sm:gap-4 hover:shadow-md transition-all"
                 >
                   {/* Category icon/badge */}
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-orange-100">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-[11px] sm:text-xs flex-shrink-0 border border-orange-100">
                     #{index + 1}
                   </div>
 
                   {/* Name or Edit Input */}
                   <div className="flex-1 min-w-0">
                     {isEditing ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <Input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleEditSave(cat)}
                           autoFocus
-                          className="h-9 text-xs rounded-xl"
+                          className="h-8 sm:h-9 text-xs rounded-xl"
                         />
                         <button
                           onClick={() => handleEditSave(cat)}
                           disabled={savingEdit}
-                          className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                         >
                           <Check className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setEditId(null)}
-                          className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200"
+                          className="p-1.5 sm:p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm">{cat.name}</h3>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{cat.name}</h3>
+                        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">
                           {foodCount} {foodCount === 1 ? 'dish' : 'dishes'} in this section
                         </p>
                       </div>
@@ -259,44 +259,44 @@ export default function CategoriesPage() {
                   </div>
 
                   {/* Reorder Up/Down */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                     <button
                       onClick={() => handleReorder(index, 'up')}
                       disabled={index === 0}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
                       title="Move up"
                     >
-                      <ChevronUp className="w-4 h-4" />
+                      <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                     <button
                       onClick={() => handleReorder(index, 'down')}
                       disabled={index === categories.length - 1}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
                       title="Move down"
                     >
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
 
                   {/* Actions */}
                   {!isEditing && (
-                    <div className="flex items-center gap-1.5 pl-2 border-l border-slate-100">
+                    <div className="flex items-center gap-1 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-100 flex-shrink-0">
                       <button
                         onClick={() => {
                           setEditId(catId);
                           setEditName(cat.name);
                         }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-colors"
                         title="Rename category"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(cat)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                         title="Delete category"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     </div>
                   )}
@@ -309,7 +309,7 @@ export default function CategoriesPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogContent className="max-w-md p-6 bg-white rounded-2xl border border-slate-200">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md p-4 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-slate-200">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-slate-900">
               Delete &quot;{deleteTarget?.name}&quot;?

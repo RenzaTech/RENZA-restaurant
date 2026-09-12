@@ -38,21 +38,21 @@ import toast from 'react-hot-toast';
 
 function StatCard({ label, value, icon: Icon, color, bgColor, loading, subtitle }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 shadow-xs hover:shadow-md transition-all">
       {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-8 w-16" />
+        <div className="space-y-2 sm:space-y-3">
+          <Skeleton className="h-3 sm:h-4 w-16 sm:w-24" />
+          <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
         </div>
       ) : (
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">{label}</p>
-            <p className={`text-3xl font-black ${color} tracking-tight`}>{value ?? 0}</p>
-            {subtitle && <p className="text-xs text-slate-400 mt-1 font-medium">{subtitle}</p>}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 truncate">{label}</p>
+            <p className={`text-2xl sm:text-3xl font-black ${color} tracking-tight`}>{value ?? 0}</p>
+            {subtitle && <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 font-medium truncate">{subtitle}</p>}
           </div>
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${bgColor}`}>
-            <Icon className={`w-6 h-6 ${color}`} />
+          <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner ${bgColor}`}>
+            <Icon className={`w-4 h-4 sm:w-6 sm:h-6 ${color}`} />
           </div>
         </div>
       )}
@@ -118,33 +118,33 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
       {/* ── TOP HERO BANNER ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 text-white p-6 sm:p-8 shadow-lg shadow-orange-500/15">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-orange-50 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-              <Sparkles className="w-3.5 h-3.5" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 text-white p-5 sm:p-8 shadow-lg shadow-orange-500/15">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-5">
+          <div className="space-y-1 sm:space-y-1.5 min-w-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 text-orange-50 text-[10px] sm:text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               Kitchen Operations
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+            <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight truncate">
               {restaurantName}
-            </h1>
-            <p className="text-orange-100 text-xs sm:text-sm flex items-center gap-2 font-medium">
+            </h2>
+            <p className="text-orange-100 text-xs sm:text-sm flex items-center gap-2 font-medium flex-wrap">
               {cuisineType && <span>★ {cuisineType}</span>}
               {cuisineType && <span>•</span>}
-              <span className="bg-white/25 px-2 py-0.5 rounded-full text-xs font-bold">Menu Live</span>
+              <span className="bg-white/25 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold">Menu Live</span>
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 pt-2 md:pt-0">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 pt-1 sm:pt-2 md:pt-0 w-full sm:w-auto">
             {/* Get Table QR Button */}
             <Button
               onClick={() => setQrModalOpen(true)}
-              className="bg-white text-orange-600 hover:bg-orange-50 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs gap-2 h-auto"
+              className="bg-white text-orange-600 hover:bg-orange-50 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto flex-1 sm:flex-none justify-center"
             >
-              <QrCode className="w-4 h-4" />
-              <span>Get Table QR</span>
+              <QrCode className="w-4 h-4 flex-shrink-0" />
+              <span>Table QR</span>
             </Button>
 
             {customerMenuUrl && (
@@ -152,18 +152,18 @@ export default function DashboardPage() {
                 href={customerMenuUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-orange-700/60 hover:bg-orange-700 text-white font-bold text-xs transition-all border border-white/20 shadow-xs"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-orange-700/60 hover:bg-orange-700 text-white font-bold text-xs transition-all border border-white/20 shadow-xs flex-1 sm:flex-none"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>View Menu</span>
               </a>
             )}
 
             <Button
               onClick={() => router.push('/menu/new')}
-              className="bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto"
+              className="col-span-2 sm:col-span-1 bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto justify-center"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 flex-shrink-0" />
               <span>Add Dish</span>
             </Button>
           </div>
@@ -224,14 +224,14 @@ export default function DashboardPage() {
         {/* Left 2 Cols: Quick Action Tiles */}
         <div className="lg:col-span-2 space-y-3">
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Quick Management</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {/* Tile 1: Table QR Code */}
             <div
               onClick={() => setQrModalOpen(true)}
-              className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-4"
+              className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-3.5 sm:gap-4"
             >
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <QrCode className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <QrCode className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors text-sm">
@@ -246,10 +246,10 @@ export default function DashboardPage() {
             {/* Tile 2: Add New Dish */}
             <div
               onClick={() => router.push('/menu/new')}
-              className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-4"
+              className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-3.5 sm:gap-4"
             >
-              <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <Plus className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 group-hover:text-orange-600 transition-colors text-sm">
@@ -264,10 +264,10 @@ export default function DashboardPage() {
             {/* Tile 3: Manage Menu & Stock */}
             <div
               onClick={() => router.push('/menu')}
-              className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-4"
+              className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-3.5 sm:gap-4"
             >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <Utensils className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <Utensils className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors text-sm">
@@ -282,10 +282,10 @@ export default function DashboardPage() {
             {/* Tile 4: Organize Categories */}
             <div
               onClick={() => router.push('/categories')}
-              className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-4"
+              className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-3.5 sm:gap-4"
             >
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <FolderTree className="w-6 h-6" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <FolderTree className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
@@ -302,7 +302,7 @@ export default function DashboardPage() {
         {/* Right 1 Col: Top Dishes Today */}
         <div className="space-y-3">
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Most Viewed Dishes Today</h2>
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs">
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -316,7 +316,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : topItems.length === 0 ? (
-              <div className="py-8 flex flex-col items-center text-center">
+              <div className="py-6 sm:py-8 flex flex-col items-center text-center">
                 <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center mb-3">
                   <TrendingUp className="w-6 h-6 text-orange-400" />
                 </div>
@@ -351,9 +351,9 @@ export default function DashboardPage() {
 
       {/* ── TABLE QR CODE MODAL ── */}
       <Dialog open={qrModalOpen} onOpenChange={setQrModalOpen}>
-        <DialogContent className="max-w-md p-6 bg-white rounded-3xl border border-slate-200">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md p-4 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-slate-200">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-900 text-center">
+            <DialogTitle className="text-lg sm:text-xl font-black text-slate-900 text-center">
               Table QR Code
             </DialogTitle>
             <DialogDescription className="text-center text-xs text-slate-500">
@@ -361,32 +361,32 @@ export default function DashboardPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col items-center gap-4 py-4">
+          <div className="flex flex-col items-center gap-3 sm:gap-4 py-2 sm:py-4">
             {/* QR Image */}
             {qrImage ? (
-              <div className="p-4 bg-white border-2 border-orange-100 rounded-3xl shadow-md flex items-center justify-center">
+              <div className="p-3 sm:p-4 bg-white border-2 border-orange-100 rounded-2xl sm:rounded-3xl shadow-md flex items-center justify-center">
                 <img
                   src={qrImage}
                   alt={`${restaurantName} QR Code`}
-                  className="w-56 h-56 object-contain"
+                  className="w-44 h-44 sm:w-56 sm:h-56 object-contain"
                 />
               </div>
             ) : (
-              <div className="w-56 h-56 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-slate-400">
-                <QrCode className="w-12 h-12 text-slate-300 animate-pulse" />
+              <div className="w-44 h-44 sm:w-56 sm:h-56 border-2 border-dashed border-slate-200 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center text-slate-400">
+                <QrCode className="w-10 h-10 text-slate-300 animate-pulse" />
                 <span className="text-xs mt-2 font-medium">Generating QR code...</span>
               </div>
             )}
 
             <div className="text-center">
-              <p className="font-bold text-slate-900 text-base">{restaurantName}</p>
-              <p className="text-xs text-orange-600 font-semibold mt-0.5">Never expires • Syncs automatically</p>
+              <p className="font-bold text-slate-900 text-sm sm:text-base">{restaurantName}</p>
+              <p className="text-[11px] sm:text-xs text-orange-600 font-semibold mt-0.5">Never expires • Syncs automatically</p>
             </div>
 
             {/* Menu Destination Link */}
             <div className="w-full space-y-1.5">
               <span className="text-xs text-slate-700 font-bold px-0.5">Menu Link</span>
-              <div className="w-full flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="w-full flex items-center gap-2 p-2 sm:p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                 <Globe className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                 <p className="flex-1 text-xs text-slate-700 truncate font-mono">{customerMenuUrl}</p>
                 <a
@@ -409,10 +409,10 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-1">
             <Button
               onClick={handleDownloadQr}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl gap-2 h-11"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl gap-2 h-11 text-xs"
             >
               <Download className="w-4 h-4" />
               Download Printable PNG
