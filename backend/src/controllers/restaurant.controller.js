@@ -1,0 +1,453 @@
+const prisma = require('../lib/prisma')
+const QRCode = require('qrcode')
+const { uploadImage, deleteImage } = require('../lib/storage')
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const todayStart = () => {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+// ─── Profile ──────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/restaurant/profile
+ */
+const getProfile = async (req, res) => {
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: req.user.restaurantId },
+    include: {
+      _count: { select: { foodItems: true, categories: true } },
+    },
+  })
+  if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' })
+  return res.json(restaurant)
+}
+
+/**
+ * PUT /api/restaurant/profile
+ * Accepts optional image upload for logo
+ */
+const updateProfile = async (req, res) => {
+  const { name, description, cuisineType, address, phone } = req.body
+  const restaurantId = req.user.restaurantId
+
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } })
+  if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' })
+
+  const updateData = {}
+  if (name !== undefined && name.trim()) updateData.name = name.trim()
+  if (description !== undefined) updateData.description = description?.trim() || null
+  if (cuisineType !== undefined) updateData.cuisineType = cuisineType?.trim() || null
+  if (address !== undefined) updateData.address = address?.trim() || null
+  if (phone !== undefined) updateData.phone = phone?.trim() || null
+
+  // If a logo file was uploaded
+  if (req.file) {
+    if (restaurant.logoUrl) {
+      await deleteImage(restaurant.logoUrl)
+    }
+    updateData.logoUrl = await uploadImage(req.file, 'renza/logos')
+  }
+
+  const updated = await prisma.restaurant.update({
+    where: { id: restaurantId },
+    data: updateData,
+  })
+
+  return res.json(updated)
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/restaurant/dashboard
+ */
+const getDashboard = async (req, res) => {
+  const restaurantId = req.user.restaurantId
+  const today = todayStart()
+
+  const [todayMenuViews, todayQrScans, todayUnique, availableCount, unavailableCount, totalFoods] =
+    await Promise.all([
+      prisma.analyticsEvent.count({
+        where: { restaurantId, eventType: 'menu_view', createdAt: { gte: today } },
+      }),
+      prisma.analyticsEvent.count({
+        where: { restaurantId, eventType: 'qr_scan', createdAt: { gte: today } },
+      }),
+      prisma.analyticsEvent.findMany({
+        where: { restaurantId, createdAt: { gte: today } },
+        select: { sessionId: true },
+        distinct: ['sessionId'],
+      }),
+      prisma.foodItem.count({ where: { restaurantId, isAvailable: true } }),
+      prisma.foodItem.count({ where: { restaurantId, isAvailable: false } }),
+      prisma.foodItem.count({ where: { restaurantId } }),
+    ])
+
+  // Top 3 food items today by item_view
+  const topRaw = await prisma.analyticsEvent.groupBy({
+    by: ['foodItemId'],
+    where: { restaurantId, eventType: 'item_view', foodItemId: { not: null }, createdAt: { gte: today } },
+    _count: { foodItemId: true },
+    orderBy: { _count: { foodItemId: 'desc' } },
+    take: 3,
+  })
+
+  const topItems = await Promise.all(
+    topRaw.map(async (t) => {
+      const item = await prisma.foodItem.findUnique({
+        where: { id: t.foodItemId },
+        select: { id: true, name: true, price: true, imageUrl: true },
+      })
+      return { ...item, viewCount: t._count.foodItemId }
+    })
+  )
+
+  return res.json({
+    today: {
+      menuViews: todayMenuViews,
+      qrScans: todayQrScans,
+      uniqueVisitors: todayUnique.length,
+    },
+    foodItems: {
+      total: totalFoods,
+      available: availableCount,
+      unavailable: unavailableCount,
+    },
+    topItems,
+  })
+}
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/restaurant/categories
+ */
+const listCategories = async (req, res) => {
+  const categories = await prisma.category.findMany({
+    where: { restaurantId: req.user.restaurantId },
+    orderBy: { sortOrder: 'asc' },
+    include: {
+      _count: { select: { foodItems: true } },
+    },
+  })
+  return res.json(categories)
+}
+
+/**
+ * POST /api/restaurant/categories
+ */
+const createCategory = async (req, res) => {
+  const { name, sortOrder } = req.body
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Category name is required' })
+  }
+
+  const category = await prisma.category.create({
+    data: {
+      name: name.trim(),
+      sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0,
+      restaurantId: req.user.restaurantId,
+    },
+  })
+
+  return res.status(201).json(category)
+}
+
+/**
+ * PUT /api/restaurant/categories/:id
+ */
+const updateCategory = async (req, res) => {
+  const { name, sortOrder } = req.body
+
+  const category = await prisma.category.findUnique({ where: { id: req.params.id } })
+  if (!category) return res.status(404).json({ error: 'Category not found' })
+  if (category.restaurantId !== req.user.restaurantId) {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+
+  const updateData = {}
+  if (name !== undefined && name.trim()) updateData.name = name.trim()
+  if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder)
+
+  const updated = await prisma.category.update({ where: { id: req.params.id }, data: updateData })
+  return res.json(updated)
+}
+
+/**
+ * DELETE /api/restaurant/categories/:id
+ */
+const deleteCategory = async (req, res) => {
+  const category = await prisma.category.findUnique({ where: { id: req.params.id } })
+  if (!category) return res.status(404).json({ error: 'Category not found' })
+  if (category.restaurantId !== req.user.restaurantId) {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+
+  await prisma.category.delete({ where: { id: req.params.id } })
+  return res.json({ message: 'Category deleted' })
+}
+
+// ─── Food Items ───────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/restaurant/foods
+ */
+const listFoods = async (req, res) => {
+  const { categoryId, search } = req.query
+  const where = { restaurantId: req.user.restaurantId }
+  if (categoryId) where.categoryId = categoryId
+  if (search) where.name = { contains: search, mode: 'insensitive' }
+
+  const foods = await prisma.foodItem.findMany({
+    where,
+    include: { category: { select: { id: true, name: true } } },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+  })
+
+  return res.json(foods)
+}
+
+/**
+ * POST /api/restaurant/foods
+ */
+const createFood = async (req, res) => {
+  const {
+    name,
+    price,
+    categoryId,
+    description,
+    ingredients,
+    spices,
+    allergens,
+    portionSize,
+    prepTime,
+    calories,
+    isVeg,
+    isJain,
+    isVegan,
+    isGlutenFree,
+    spicyLevel,
+    specialTags,
+    isAvailable,
+    sortOrder,
+  } = req.body
+
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Food item name is required' })
+  if (price === undefined || price === '') return res.status(400).json({ error: 'Price is required' })
+
+  const parsedPrice = parseFloat(price)
+  if (isNaN(parsedPrice) || parsedPrice < 0) {
+    return res.status(400).json({ error: 'Price must be a valid non-negative number' })
+  }
+
+  // If categoryId provided, verify it belongs to this restaurant
+  if (categoryId) {
+    const cat = await prisma.category.findUnique({ where: { id: categoryId } })
+    if (!cat || cat.restaurantId !== req.user.restaurantId) {
+      return res.status(400).json({ error: 'Invalid category' })
+    }
+  }
+
+  const imageUrl = req.file ? await uploadImage(req.file, 'renza/dishes') : null
+
+  const food = await prisma.foodItem.create({
+    data: {
+      restaurantId: req.user.restaurantId,
+      categoryId: categoryId || null,
+      name: name.trim(),
+      price: parsedPrice,
+      imageUrl,
+      description: description?.trim() || null,
+      ingredients: ingredients?.trim() || null,
+      spices: spices?.trim() || null,
+      allergens: allergens?.trim() || null,
+      portionSize: portionSize?.trim() || null,
+      prepTime: prepTime?.trim() || null,
+      calories: calories ? parseInt(calories) : null,
+      isVeg: isVeg === 'true' || isVeg === true,
+      isJain: isJain === 'true' || isJain === true,
+      isVegan: isVegan === 'true' || isVegan === true,
+      isGlutenFree: isGlutenFree === 'true' || isGlutenFree === true,
+      spicyLevel: spicyLevel ? parseInt(spicyLevel) : 0,
+      specialTags: specialTags?.trim() || null,
+      isAvailable: isAvailable === undefined ? true : isAvailable === 'true' || isAvailable === true,
+      sortOrder: sortOrder ? parseInt(sortOrder) : 0,
+    },
+    include: { category: { select: { id: true, name: true } } },
+  })
+
+  return res.status(201).json(food)
+}
+
+/**
+ * PUT /api/restaurant/foods/:id
+ */
+const updateFood = async (req, res) => {
+  const existing = await prisma.foodItem.findUnique({ where: { id: req.params.id } })
+  if (!existing) return res.status(404).json({ error: 'Food item not found' })
+  if (existing.restaurantId !== req.user.restaurantId) {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+
+  const {
+    name,
+    price,
+    categoryId,
+    description,
+    ingredients,
+    spices,
+    allergens,
+    portionSize,
+    prepTime,
+    calories,
+    isVeg,
+    isJain,
+    isVegan,
+    isGlutenFree,
+    spicyLevel,
+    specialTags,
+    isAvailable,
+    sortOrder,
+  } = req.body
+
+  const updateData = {}
+
+  if (name !== undefined && name.trim()) updateData.name = name.trim()
+  if (price !== undefined && price !== '') {
+    const parsedPrice = parseFloat(price)
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      return res.status(400).json({ error: 'Price must be a valid non-negative number' })
+    }
+    updateData.price = parsedPrice
+  }
+  if (categoryId !== undefined) {
+    if (categoryId) {
+      const cat = await prisma.category.findUnique({ where: { id: categoryId } })
+      if (!cat || cat.restaurantId !== req.user.restaurantId) {
+        return res.status(400).json({ error: 'Invalid category' })
+      }
+    }
+    updateData.categoryId = categoryId || null
+  }
+  if (description !== undefined) updateData.description = description?.trim() || null
+  if (ingredients !== undefined) updateData.ingredients = ingredients?.trim() || null
+  if (spices !== undefined) updateData.spices = spices?.trim() || null
+  if (allergens !== undefined) updateData.allergens = allergens?.trim() || null
+  if (portionSize !== undefined) updateData.portionSize = portionSize?.trim() || null
+  if (prepTime !== undefined) updateData.prepTime = prepTime?.trim() || null
+  if (calories !== undefined) updateData.calories = calories ? parseInt(calories) : null
+  if (isVeg !== undefined) updateData.isVeg = isVeg === 'true' || isVeg === true
+  if (isJain !== undefined) updateData.isJain = isJain === 'true' || isJain === true
+  if (isVegan !== undefined) updateData.isVegan = isVegan === 'true' || isVegan === true
+  if (isGlutenFree !== undefined) updateData.isGlutenFree = isGlutenFree === 'true' || isGlutenFree === true
+  if (spicyLevel !== undefined) updateData.spicyLevel = parseInt(spicyLevel) || 0
+  if (specialTags !== undefined) updateData.specialTags = specialTags?.trim() || null
+  if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true
+  if (sortOrder !== undefined) updateData.sortOrder = parseInt(sortOrder) || 0
+
+  // If a new image was uploaded
+  if (req.file) {
+    if (existing.imageUrl) {
+      await deleteImage(existing.imageUrl)
+    }
+    updateData.imageUrl = await uploadImage(req.file, 'renza/dishes')
+  }
+
+  const updated = await prisma.foodItem.update({
+    where: { id: req.params.id },
+    data: updateData,
+    include: { category: { select: { id: true, name: true } } },
+  })
+
+  return res.json(updated)
+}
+
+/**
+ * DELETE /api/restaurant/foods/:id
+ */
+const deleteFood = async (req, res) => {
+  const food = await prisma.foodItem.findUnique({ where: { id: req.params.id } })
+  if (!food) return res.status(404).json({ error: 'Food item not found' })
+  if (food.restaurantId !== req.user.restaurantId) {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+
+  if (food.imageUrl) {
+    await deleteImage(food.imageUrl)
+  }
+
+  await prisma.foodItem.delete({ where: { id: req.params.id } })
+  return res.json({ message: 'Food item deleted' })
+}
+
+/**
+ * PATCH /api/restaurant/foods/:id/availability
+ * Toggle isAvailable
+ */
+const toggleAvailability = async (req, res) => {
+  const food = await prisma.foodItem.findUnique({ where: { id: req.params.id } })
+  if (!food) return res.status(404).json({ error: 'Food item not found' })
+  if (food.restaurantId !== req.user.restaurantId) {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+
+  const updated = await prisma.foodItem.update({
+    where: { id: req.params.id },
+    data: { isAvailable: !food.isAvailable },
+  })
+
+  return res.json({ isAvailable: updated.isAvailable, food: updated })
+}
+
+/**
+ * GET /api/restaurant/qr
+ * Returns generated QR code for current restaurant
+ */
+const getMyQRCode = async (req, res) => {
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: req.user.restaurantId },
+  })
+  if (!restaurant) {
+    return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
+  const menuUrl = req.query.url || restaurant.customMenuUrl || defaultUrl
+
+  const qrDataUrl = await QRCode.toDataURL(menuUrl, {
+    errorCorrectionLevel: 'H',
+    margin: 2,
+    width: 600,
+    color: { dark: '#000000', light: '#FFFFFF' },
+  })
+
+  return res.json({
+    qrDataUrl,
+    qrCodeUrl: qrDataUrl,
+    menuUrl,
+    slug: restaurant.slug,
+    name: restaurant.name,
+    customMenuUrl: restaurant.customMenuUrl || null,
+    defaultUrl,
+  })
+}
+
+module.exports = {
+  getProfile,
+  updateProfile,
+  getDashboard,
+  getMyQRCode,
+  listCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  listFoods,
+  createFood,
+  updateFood,
+  deleteFood,
+  toggleAvailability,
+}

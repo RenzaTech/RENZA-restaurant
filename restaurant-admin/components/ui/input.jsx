@@ -1,0 +1,25 @@
+'use client';
+
+import { cn } from '@/lib/utils';
+import { forwardRef } from 'react';
+
+const Input = forwardRef(({ className, type = 'text', ...props }, ref) => {
+  return (
+    <input
+      type={type}
+      ref={ref}
+      className={cn(
+        'flex w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400',
+        'focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        'min-h-[48px]',
+        className
+      )}
+      {...props}
+    />
+  );
+});
+
+Input.displayName = 'Input';
+
+export { Input };
