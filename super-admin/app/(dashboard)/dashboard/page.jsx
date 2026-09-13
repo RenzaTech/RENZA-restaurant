@@ -86,8 +86,14 @@ export default function DashboardPage() {
 
   const totalRestaurants = restaurants.length
   const activeRestaurants = restaurants.filter((r) => r.status === 'active').length
-  const totalScans = restaurants.reduce((sum, r) => sum + (r.totalScans || r.total_scans || 0), 0)
-  const totalViews = restaurants.reduce((sum, r) => sum + (r.totalMenuViews || r.total_menu_views || 0), 0)
+  const totalScans = restaurants.reduce(
+    (sum, r) => sum + (r.totalScans ?? r.total_scans ?? r.analytics?.allTime?.qrScans ?? 0),
+    0
+  )
+  const totalViews = restaurants.reduce(
+    (sum, r) => sum + (r.totalMenuViews ?? r.total_menu_views ?? r.analytics?.allTime?.menuViews ?? 0),
+    0
+  )
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -244,16 +250,16 @@ export default function DashboardPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4 text-slate-600 text-xs font-medium">
-                        {r.adminEmail || r.admin_email || '—'}
+                        {r.adminEmail || r.admin_email || r.adminUsers?.[0]?.email || '—'}
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={r.status} />
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-slate-800 text-xs">
-                        {formatNumber(r.foodItemsCount || r.food_items_count || 0)}
+                        {formatNumber(r.foodItemsCount ?? r.food_items_count ?? r.foodItemCount ?? r._count?.foodItems ?? 0)}
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-slate-800 text-xs">
-                        {formatNumber(r.totalScans || r.total_scans || 0)}
+                        {formatNumber(r.totalScans ?? r.total_scans ?? r.analytics?.allTime?.qrScans ?? 0)}
                       </td>
                       <td className="px-6 py-4 text-slate-500 text-xs">
                         {formatDate(r.createdAt || r.created_at)}

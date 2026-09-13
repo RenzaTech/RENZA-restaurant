@@ -103,9 +103,10 @@ export default function RestaurantsPage() {
   }, [])
 
   const filtered = restaurants.filter((r) => {
+    const adminEmail = (r.adminEmail || r.admin_email || r.adminUsers?.[0]?.email || '').toLowerCase()
     const matchesSearch =
       r.name?.toLowerCase().includes(search.toLowerCase()) ||
-      (r.adminEmail || r.admin_email || '').toLowerCase().includes(search.toLowerCase()) ||
+      adminEmail.includes(search.toLowerCase()) ||
       (r.cuisineType || r.cuisine_type || '').toLowerCase().includes(search.toLowerCase())
 
     const matchesStatus =
@@ -261,18 +262,20 @@ export default function RestaurantsPage() {
                           </div>
                         </Link>
                       </td>
-                      <td className="px-6 py-4 text-slate-600 text-xs font-medium">{r.adminEmail || r.admin_email || '—'}</td>
+                      <td className="px-6 py-4 text-slate-600 text-xs font-medium">
+                        {r.adminEmail || r.admin_email || r.adminUsers?.[0]?.email || '—'}
+                      </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={r.status} />
                       </td>
                       <td className="px-6 py-4 text-right text-slate-800 font-bold text-xs">
-                        {formatNumber(r.foodItemsCount || r.food_items_count || 0)}
+                        {formatNumber(r.foodItemsCount ?? r.food_items_count ?? r.foodItemCount ?? r._count?.foodItems ?? 0)}
                       </td>
                       <td className="px-6 py-4 text-right text-slate-700 text-xs font-semibold">
-                        {formatNumber(r.todayScans || r.today_scans || 0)}
+                        {formatNumber(r.todayScans ?? r.today_scans ?? r.analytics?.today?.qrScans ?? 0)}
                       </td>
                       <td className="px-6 py-4 text-right text-slate-700 text-xs font-semibold">
-                        {formatNumber(r.totalScans || r.total_scans || 0)}
+                        {formatNumber(r.totalScans ?? r.total_scans ?? r.analytics?.allTime?.qrScans ?? 0)}
                       </td>
                       <td className="px-6 py-4 text-slate-500 whitespace-nowrap text-xs">
                         {formatDate(r.createdAt || r.created_at)}

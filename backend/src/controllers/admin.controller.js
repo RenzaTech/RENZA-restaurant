@@ -111,8 +111,15 @@ const listRestaurants = async (_req, res) => {
         status: r.status,
         createdAt: r.createdAt,
         adminUsers: r.adminUsers,
+        adminEmail: r.adminUsers?.[0]?.email || null,
+        adminName: r.adminUsers?.[0]?.name || null,
         foodItemCount: r._count.foodItems,
+        foodItemsCount: r._count.foodItems,
         categoryCount: r._count.categories,
+        totalScans: allQr,
+        totalMenuViews: allMenu,
+        todayScans: todayQr,
+        todayMenuViews: todayMenu,
         analytics: {
           today: {
             qrScans: todayQr,
@@ -220,6 +227,11 @@ const getRestaurant = async (req, res) => {
         select: { id: true, name: true, email: true, role: true, createdAt: true },
       },
       categories: {
+        include: {
+          foodItems: {
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+          },
+        },
         orderBy: { sortOrder: 'asc' },
       },
       foodItems: {
@@ -236,7 +248,13 @@ const getRestaurant = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  return res.json(restaurant)
+  return res.json({
+    ...restaurant,
+    adminEmail: restaurant.adminUsers?.[0]?.email || null,
+    adminName: restaurant.adminUsers?.[0]?.name || null,
+    foodItemCount: restaurant._count.foodItems,
+    foodItemsCount: restaurant._count.foodItems,
+  })
 }
 
 /**
@@ -279,10 +297,10 @@ const toggleStatus = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  const newStatus = restaurant.status === 'active' ? 'suspended' : 'active'
+  const targetStatus = req.body?.status || (restaurant.status === 'active' ? 'suspended' : 'active')
   const updated = await prisma.restaurant.update({
     where: { id: req.params.id },
-    data: { status: newStatus },
+    data: { status: targetStatus },
   })
 
   return res.json({ status: updated.status, restaurant: updated })
@@ -360,10 +378,11 @@ const getAnalytics = async (req, res) => {
     select: { createdAt: true },
   })
 
-  const hourlyToday = Array.from({ length: 24 }, (_, h) => ({ hour: h, scans: 0 }))
+  const hourlyToday = Array.from({ length: 24 }, (_, h) => ({ hour: h, scans: 0, count: 0 }))
   todayEvents.forEach((e) => {
     const hour = new Date(e.createdAt).getHours()
     hourlyToday[hour].scans++
+    hourlyToday[hour].count++
   })
 
   // Scan history: last 30 days daily qr_scan counts
@@ -391,30 +410,42 @@ const getAnalytics = async (req, res) => {
     scanHistory.push({ date: dateKey, scans: scanMap[dateKey] || 0 })
   }
 
+  const weekMetrics = {
+    qrScans: weekQr,
+    scans: weekQr,
+    menuViews: weekMenu,
+    uniqueVisitors: weekUnique.length,
+  }
+
+  const monthMetrics = {
+    qrScans: monthQr,
+    scans: monthQr,
+    menuViews: monthMenu,
+    uniqueVisitors: monthUnique.length,
+  }
+
   return res.json({
     today: {
       qrScans: todayQr,
+      scans: todayQr,
       menuViews: todayMenu,
       itemViews: todayItem,
       uniqueVisitors: todayUnique.length,
     },
-    thisWeek: {
-      qrScans: weekQr,
-      menuViews: weekMenu,
-      uniqueVisitors: weekUnique.length,
-    },
-    thisMonth: {
-      qrScans: monthQr,
-      menuViews: monthMenu,
-      uniqueVisitors: monthUnique.length,
-    },
+    thisWeek: weekMetrics,
+    week: weekMetrics,
+    thisMonth: monthMetrics,
+    month: monthMetrics,
     allTime: {
       qrScans: allQr,
+      scans: allQr,
       menuViews: allMenu,
       uniqueVisitors: allUnique.length,
     },
     topItems: topItemsWithNames,
     hourlyToday,
+    hourly: hourlyToday,
+    hourlyScans: hourlyToday,
     scanHistory,
   })
 }

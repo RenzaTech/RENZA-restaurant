@@ -412,7 +412,7 @@ export default function RestaurantDetailPage() {
             <div className="space-y-4">
               {[
                 { icon: UtensilsCrossed, label: 'Restaurant Name', value: restaurant.name },
-                { icon: Mail, label: 'Admin Email', value: restaurant.adminEmail || restaurant.admin_email },
+                { icon: Mail, label: 'Admin Email', value: restaurant.adminEmail || restaurant.admin_email || restaurant.adminUsers?.[0]?.email },
                 { icon: MapPin, label: 'Address', value: restaurant.address },
                 { icon: Phone, label: 'Phone', value: restaurant.phone },
                 { icon: Calendar, label: 'Created On', value: formatDate(restaurant.createdAt || restaurant.created_at) },
@@ -585,9 +585,9 @@ export default function RestaurantDetailPage() {
               <div>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Today&apos;s Velocity</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <MetricCard label="QR Camera Scans" value={analytics.today?.scans || analytics.today?.qrScans} icon={Scan} color="text-orange-600" bg="bg-orange-50" />
-                  <MetricCard label="Unique Diners" value={analytics.today?.uniqueVisitors || analytics.today?.unique_visitors} icon={Users} color="text-blue-600" bg="bg-blue-50" />
-                  <MetricCard label="Menu Page Views" value={analytics.today?.menuViews || analytics.today?.menu_views} icon={Eye} color="text-purple-600" bg="bg-purple-50" />
+                  <MetricCard label="QR Camera Scans" value={analytics.today?.qrScans ?? analytics.today?.scans ?? 0} icon={Scan} color="text-orange-600" bg="bg-orange-50" />
+                  <MetricCard label="Unique Diners" value={analytics.today?.uniqueVisitors ?? analytics.today?.unique_visitors ?? 0} icon={Users} color="text-blue-600" bg="bg-blue-50" />
+                  <MetricCard label="Menu Page Views" value={analytics.today?.menuViews ?? analytics.today?.menu_views ?? 0} icon={Eye} color="text-purple-600" bg="bg-purple-50" />
                 </div>
               </div>
 
@@ -598,11 +598,11 @@ export default function RestaurantDetailPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">QR Scans</span>
-                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.week?.scans || analytics.week?.qrScans || 0)}</span>
+                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.thisWeek?.qrScans ?? analytics.week?.qrScans ?? analytics.thisWeek?.scans ?? 0)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">Unique Diners</span>
-                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.week?.uniqueVisitors || 0)}</span>
+                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.thisWeek?.uniqueVisitors ?? analytics.week?.uniqueVisitors ?? 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -612,11 +612,11 @@ export default function RestaurantDetailPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">QR Scans</span>
-                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.month?.scans || analytics.month?.qrScans || 0)}</span>
+                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.thisMonth?.qrScans ?? analytics.month?.qrScans ?? analytics.thisMonth?.scans ?? 0)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">Unique Diners</span>
-                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.month?.uniqueVisitors || 0)}</span>
+                      <span className="text-sm font-bold text-slate-800">{formatNumber(analytics.thisMonth?.uniqueVisitors ?? analytics.month?.uniqueVisitors ?? 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -626,11 +626,11 @@ export default function RestaurantDetailPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">Total QR Scans</span>
-                      <span className="text-sm font-bold text-orange-600">{formatNumber(analytics.allTime?.scans || analytics.allTime?.qrScans || analytics.total?.scans || 0)}</span>
+                      <span className="text-sm font-bold text-orange-600">{formatNumber(analytics.allTime?.qrScans ?? analytics.allTime?.scans ?? analytics.total?.scans ?? 0)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">Total Menu Views</span>
-                      <span className="text-sm font-bold text-purple-600">{formatNumber(analytics.allTime?.menuViews || analytics.allTime?.menu_views || analytics.total?.menuViews || 0)}</span>
+                      <span className="text-sm font-bold text-purple-600">{formatNumber(analytics.allTime?.menuViews ?? analytics.allTime?.menu_views ?? analytics.total?.menuViews ?? 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -649,8 +649,33 @@ export default function RestaurantDetailPage() {
                     </div>
                   </div>
                 </div>
-                <HourlyChart data={analytics.hourly || analytics.hourlyScans || []} />
+                <HourlyChart data={analytics.hourlyToday || analytics.hourly || analytics.hourlyScans || []} />
               </div>
+
+              {/* Top Viewed Dishes */}
+              {Array.isArray(analytics.topItems) && analytics.topItems.length > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
+                  <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-orange-500" />
+                    <span>Most Viewed Dishes Today</span>
+                  </h3>
+                  <div className="divide-y divide-slate-100">
+                    {analytics.topItems.map((item, idx) => (
+                      <div key={item.id || idx} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-3">
+                          <span className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${
+                            idx === 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            #{idx + 1}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800">{item.name}</span>
+                        </div>
+                        <span className="text-xs font-semibold text-slate-500">{item.viewCount} views</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="text-center py-16 text-slate-400">
@@ -679,7 +704,7 @@ export default function RestaurantDetailPage() {
 
 // ─── Menu Tab Component ───────────────────────────────────────────────────────
 function MenuTab({ restaurantId }) {
-  const [menu, setMenu] = useState(null)
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -687,8 +712,7 @@ function MenuTab({ restaurantId }) {
       setLoading(true)
       try {
         const res = await api.get(`/api/admin/restaurants/${restaurantId}`)
-        const data = res.data?.restaurant || res.data
-        setMenu(data?.menu || data?.categories || [])
+        setData(res.data?.restaurant || res.data || null)
       } catch {
         toast.error('Failed to load menu')
       } finally {
@@ -706,9 +730,50 @@ function MenuTab({ restaurantId }) {
     )
   }
 
-  const categories = Array.isArray(menu) ? menu : []
+  const rawCategories = Array.isArray(data?.categories) ? data.categories : []
+  const rawFoodItems = Array.isArray(data?.foodItems) ? data.foodItems : []
 
-  if (categories.length === 0) {
+  // Build a structured category list
+  const categoryMap = new Map()
+  rawCategories.forEach((cat) => {
+    categoryMap.set(cat.id, {
+      id: cat.id,
+      name: cat.name,
+      items: Array.isArray(cat.foodItems) ? [...cat.foodItems] : [],
+    })
+  })
+
+  // Distribute flat food items to categories if not already present
+  const uncategorizedItems = []
+  rawFoodItems.forEach((item) => {
+    if (item.categoryId && categoryMap.has(item.categoryId)) {
+      const cat = categoryMap.get(item.categoryId)
+      if (!cat.items.some((i) => (i.id || i._id) === (item.id || item._id))) {
+        cat.items.push(item)
+      }
+    } else {
+      if (!uncategorizedItems.some((i) => (i.id || i._id) === (item.id || item._id))) {
+        uncategorizedItems.push(item)
+      }
+    }
+  })
+
+  const displayCategories = []
+  categoryMap.forEach((cat) => {
+    displayCategories.push(cat)
+  })
+
+  if (uncategorizedItems.length > 0) {
+    displayCategories.push({
+      id: 'uncategorized',
+      name: displayCategories.length > 0 ? 'Uncategorized Dishes' : 'Main Menu',
+      items: uncategorizedItems,
+    })
+  }
+
+  const allItems = displayCategories.flatMap((c) => c.items || [])
+
+  if (allItems.length === 0) {
     return (
       <div className="text-center py-16 bg-white rounded-2xl border border-slate-200/80 p-8">
         <UtensilsCrossed className="w-12 h-12 mx-auto mb-3 text-slate-300" />
@@ -720,7 +785,6 @@ function MenuTab({ restaurantId }) {
     )
   }
 
-  const allItems = categories.flatMap((c) => c.items || c.foodItems || [])
   const availableCount = allItems.filter((i) => i.isAvailable !== false && i.available !== false).length
   const unavailableCount = allItems.length - availableCount
 
@@ -735,18 +799,18 @@ function MenuTab({ restaurantId }) {
           <span className="text-xs font-bold text-rose-800">{unavailableCount} Sold Out Dishes</span>
         </div>
         <div className="px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl">
-          <span className="text-xs font-bold text-slate-700">{categories.length} Categories</span>
+          <span className="text-xs font-bold text-slate-700">{displayCategories.length} Categories</span>
         </div>
       </div>
 
       {/* Categories */}
-      {categories.map((cat, ci) => {
-        const items = cat.items || cat.foodItems || []
+      {displayCategories.map((cat, ci) => {
+        const items = cat.items || []
         return (
-          <div key={cat._id || cat.id || ci} className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
+          <div key={cat.id || ci} className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
             <div className="flex items-center justify-between px-6 py-4 bg-slate-50/80 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-sm">{cat.name}</h3>
-              <span className="text-xs text-slate-400 font-semibold">{items.length} dishes</span>
+              <span className="text-xs text-slate-400 font-semibold">{items.length} {items.length === 1 ? 'dish' : 'dishes'}</span>
             </div>
             {items.length === 0 ? (
               <p className="px-6 py-4 text-xs text-slate-400">No dishes in this category</p>
@@ -754,8 +818,19 @@ function MenuTab({ restaurantId }) {
               <div className="divide-y divide-slate-100">
                 {items.map((item, ii) => {
                   const available = item.isAvailable !== false && item.available !== false
+                  const rawImage = item.imageUrl || item.image
                   return (
-                    <div key={item._id || item.id || ii} className="flex items-center gap-3.5 px-6 py-4 hover:bg-slate-50/50 transition-colors">
+                    <div key={item.id || item._id || ii} className="flex items-center gap-3.5 px-6 py-4 hover:bg-slate-50/50 transition-colors">
+                      {rawImage ? (
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0">
+                          <img
+                            src={rawImage}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        </div>
+                      ) : null}
                       <VegDot isVeg={item.isVeg ?? item.is_veg ?? true} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-bold ${available ? 'text-slate-900' : 'text-slate-400 line-through'}`}>
