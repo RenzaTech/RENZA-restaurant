@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Camera, ChevronDown, ChevronUp, Flame, Leaf, AlertCircle, X, Sparkles, UtensilsCrossed, Clock, Check } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Flame, Leaf, AlertCircle, X, Sparkles, UtensilsCrossed, Clock, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectOption } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import ImageUploader from '@/components/ImageUploader';
 
 const SPICY_LEVELS = [
   { value: 0, label: 'Zero Spice', icon: '—' },
@@ -25,10 +26,10 @@ export default function FoodItemForm({
   onSubmit,
   submitting = false,
   submitLabel = 'Save Dish to Menu',
+  uploadProgress = 0,
 }) {
-  const fileInputRef = useRef(null);
-  const [imagePreview, setImagePreview] = useState(initialData.imageUrl || null);
   const [imageFile, setImageFile] = useState(null);
+  const [imageError, setImageError] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
   const [form, setForm] = useState({
@@ -51,14 +52,6 @@ export default function FoodItemForm({
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   const setDirect = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    const url = URL.createObjectURL(file);
-    setImagePreview(url);
-  };
-
   const handleTagToggle = (tag) => {
     setForm((f) => ({
       ...f,
@@ -70,6 +63,7 @@ export default function FoodItemForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (imageError) return;
     const formData = new FormData();
     Object.entries(form).forEach(([key, value]) => {
       if (key === 'tags') {
@@ -93,46 +87,12 @@ export default function FoodItemForm({
           <Label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">
             Dish Photography
           </Label>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className={cn(
-              'w-full h-44 sm:h-52 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all relative overflow-hidden group',
-              imagePreview
-                ? 'border border-slate-200 shadow-xs'
-                : 'border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-orange-50/50 hover:border-orange-300'
-            )}
-          >
-            {imagePreview ? (
-              <>
-                <img
-                  src={imagePreview}
-                  alt="Food preview"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs">
-                  <div className="bg-white/95 rounded-xl px-4 py-2 flex items-center gap-2 shadow-lg">
-                    <Camera className="w-4 h-4 text-slate-700" />
-                    <span className="text-xs font-bold text-slate-800">Change Photo</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-orange-100/80 flex items-center justify-center mb-2.5 sm:mb-3 group-hover:scale-105 transition-transform">
-                  <Camera className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
-                </div>
-                <p className="text-slate-700 font-bold text-xs">Tap or drop photo here</p>
-                <p className="text-slate-400 text-[10px] sm:text-[11px] mt-0.5">Uploads automatically to Cloudinary WebP</p>
-              </>
-            )}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageChange}
+          <ImageUploader
+            dishName={form.name}
+            initialImageUrl={initialData.imageUrl || null}
+            uploadProgress={uploadProgress}
+            onFileChange={setImageFile}
+            onValidationChange={setImageError}
           />
         </div>
 

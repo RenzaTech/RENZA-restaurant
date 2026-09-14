@@ -272,7 +272,6 @@ export default function MenuPage({ params }) {
         ))}
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-100 bg-white/95 py-2.5 text-center shadow-xs backdrop-blur-md"><p className="text-[11px] text-slate-400">Powered by <span className="font-bold text-orange-500">Renza</span> · Digital Menu Platform</p></footer>
       {selectedItem && <DishSheet item={selectedItem} onClose={handleSheetClose} resolveImageUrl={resolveImageUrl} triggerRef={triggerCardRef} />}
     </div>
   );

@@ -1,0 +1,1289 @@
+{
+  "restaurant": {
+    "name": "Anbu'de Cafe",
+    "slug": "anbude-cafe",
+    "description": "Coffee shop in Maraimalai Nagar serving tea, coffee, fresh juices, ice creams, sandwiches and snacks.",
+    "cuisineType": "Cafe · Fast Food · Beverages",
+    "address": "Vallal MGR Salai, Maraimalai Nagar, Tamil Nadu 603209",
+    "phone": "088708 05287",
+    "hours": "Open daily · closes 10:30 pm",
+    "rating": "5.0 (12 Google reviews)"
+  },
+  "categories": [
+    {
+      "name": "Snacks",
+      "sortOrder": 0,
+      "foodItems": [
+        {
+          "name": "Bread Omelette",
+          "price": 45.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Bread Omelette",
+          "price": 60.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Cheese Bread Omelette",
+          "price": 55.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Sandwich",
+          "price": 45.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Cheese Sandwich",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Corn Sandwich",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Corn Cheese Sandwich",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        },
+        {
+          "name": "Mushroom Sandwich",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 7,
+          "imageUrl": null
+        },
+        {
+          "name": "Cheese Toast",
+          "price": 35.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 8,
+          "imageUrl": null
+        },
+        {
+          "name": "Chilli Cheese Sandwich",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 9,
+          "imageUrl": null
+        },
+        {
+          "name": "Chilli Cheese Corn Sandwich",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 10,
+          "imageUrl": null
+        },
+        {
+          "name": "Paneer Sandwich",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 11,
+          "imageUrl": null
+        },
+        {
+          "name": "Egg Sandwich",
+          "price": 55.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 12,
+          "imageUrl": null
+        },
+        {
+          "name": "Egg Cheese Sandwich",
+          "price": 65.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 13,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Sandwich",
+          "price": 65.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 14,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Cheese Sandwich",
+          "price": 75.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 15,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Combos",
+      "sortOrder": 1,
+      "foodItems": [
+        {
+          "name": "Veg Sandwich + French Fries + Lime",
+          "price": 110.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Egg Sandwich + French Fries + Lime",
+          "price": 120.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Paneer Sandwich + French Fries + Lime",
+          "price": 130.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Sandwich + French Fries + Lime",
+          "price": 130.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Burger + French Fries + Lime",
+          "price": 120.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Paneer Burger + French Fries + Lime",
+          "price": 140.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Burger + French Fries + Lime",
+          "price": 150.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Wrap",
+      "sortOrder": 2,
+      "foodItems": [
+        {
+          "name": "Chicken Wrap",
+          "price": 80.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Egg Wrap",
+          "price": 70.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Wrap",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Paneer Wrap",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Mushroom Wrap",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Roll & Nuggets",
+      "sortOrder": 3,
+      "foodItems": [
+        {
+          "name": "Chicken Roll",
+          "price": 60.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Cutlet",
+          "price": 60.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Paneer Roll",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Nuggets (7 pcs)",
+          "price": 80.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Nuggets (7 pcs)",
+          "price": 90.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Fries",
+      "sortOrder": 4,
+      "foodItems": [
+        {
+          "name": "French Fries",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Masala Fries",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Peri Peri Fries",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Nuggets (7 pcs)",
+          "price": 90.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Nuggets (7 pcs)",
+          "price": 80.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Crab Lollypop (5 pcs)",
+          "price": 150.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Fish Finger (5 pcs)",
+          "price": 150.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        },
+        {
+          "name": "Smiles (5 pcs)",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 7,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Cheese Balls (5 pcs)",
+          "price": 50.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 8,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Roll (2 pcs)",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 9,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Maggi",
+      "sortOrder": 5,
+      "foodItems": [
+        {
+          "name": "Plain Maggi",
+          "price": 40.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Veg Maggi",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Egg Maggi",
+          "price": 55.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Paneer Maggi",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Mushroom Maggi",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Maggi",
+          "price": 65.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Cheese Maggi",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Momos (6 pcs)",
+      "sortOrder": 6,
+      "foodItems": [
+        {
+          "name": "Veg Momos",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Paneer Momos",
+          "price": 90.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Schezwan Momos",
+          "price": 110.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Corn & Cheese Momos",
+          "price": 80.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Momos",
+          "price": 80.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Mushroom Momos",
+          "price": 90.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Puffs",
+      "sortOrder": 7,
+      "foodItems": [
+        {
+          "name": "Veg Puff",
+          "price": 20.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Egg Puff",
+          "price": 25.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicken Puff",
+          "price": 30.0,
+          "isVeg": false,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Ice Cream",
+      "sortOrder": 8,
+      "foodItems": [
+        {
+          "name": "Vanilla",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Strawberry",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Pista",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Butterscotch",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Chocolate",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Mango",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Blackcurrant",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        },
+        {
+          "name": "Two in One",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 7,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Ice Cream Shake",
+      "sortOrder": 9,
+      "foodItems": [
+        {
+          "name": "Vanilla Shake",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Strawberry Shake",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Pista Shake",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Butterscotch Shake",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Chocolate Shake",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Blackcurrant Shake",
+          "price": 80.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Fruit Salad",
+      "sortOrder": 10,
+      "foodItems": [
+        {
+          "name": "Fruit Salad",
+          "price": 45.0,
+          "isVeg": true,
+          "description": "₹45–60 depending on size",
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Mango Salad",
+          "price": 55.0,
+          "isVeg": true,
+          "description": "₹55–75 depending on size",
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Apple Salad",
+          "price": 55.0,
+          "isVeg": true,
+          "description": "₹55–75 depending on size",
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Pineapple Salad",
+          "price": 50.0,
+          "isVeg": true,
+          "description": "₹50–65 depending on size",
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Watermelon Salad",
+          "price": 50.0,
+          "isVeg": true,
+          "description": "₹50–65 depending on size",
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Lassi",
+      "sortOrder": 11,
+      "foodItems": [
+        {
+          "name": "Lassi",
+          "price": 40.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Mango Lassi",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Banana Lassi",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Chicku Lassi",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Pineapple Lassi",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Mint Lassi",
+          "price": 55.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Strawberry Lassi",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        },
+        {
+          "name": "Grape Lassi",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 7,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Fresh Juice",
+      "sortOrder": 12,
+      "foodItems": [
+        {
+          "name": "Fresh Lime",
+          "price": 20.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Pineapple Juice",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Grape Juice",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Orange Juice",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Watermelon Juice",
+          "price": 40.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Amla Juice",
+          "price": 45.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Beetroot Juice",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        },
+        {
+          "name": "Papaya Juice",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 7,
+          "imageUrl": null
+        },
+        {
+          "name": "Carrot Juice",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 8,
+          "imageUrl": null
+        },
+        {
+          "name": "Musk Melon Juice",
+          "price": 45.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 9,
+          "imageUrl": null
+        },
+        {
+          "name": "Cucumber Lime",
+          "price": 40.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 10,
+          "imageUrl": null
+        },
+        {
+          "name": "Sweet Lime",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 11,
+          "imageUrl": null
+        },
+        {
+          "name": "Lime O Honey",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 12,
+          "imageUrl": null
+        },
+        {
+          "name": "Grape Lime",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 13,
+          "imageUrl": null
+        },
+        {
+          "name": "Pineapple Lime",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 14,
+          "imageUrl": null
+        },
+        {
+          "name": "Ginger Lime",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 15,
+          "imageUrl": null
+        },
+        {
+          "name": "Cucumber Lime Mint",
+          "price": 40.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 16,
+          "imageUrl": null
+        },
+        {
+          "name": "Lemon Soda",
+          "price": 25.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 17,
+          "imageUrl": null
+        },
+        {
+          "name": "Jaljeera Soda",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 18,
+          "imageUrl": null
+        },
+        {
+          "name": "Mint Lime Soda",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 19,
+          "imageUrl": null
+        },
+        {
+          "name": "Mint Lime Salt",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 20,
+          "imageUrl": null
+        },
+        {
+          "name": "Nannari Soda",
+          "price": 35.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 21,
+          "imageUrl": null
+        },
+        {
+          "name": "Nannari Lemon",
+          "price": 30.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 22,
+          "imageUrl": null
+        },
+        {
+          "name": "Milk Sarbat",
+          "price": 35.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 23,
+          "imageUrl": null
+        },
+        {
+          "name": "ABC Juice",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 24,
+          "imageUrl": null
+        },
+        {
+          "name": "Beetroot Special",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 25,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Falooda",
+      "sortOrder": 13,
+      "foodItems": [
+        {
+          "name": "Mini Falooda",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Royal Falooda",
+          "price": 90.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Kiwi Falooda",
+          "price": 110.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Dry Fruit Falooda",
+          "price": 130.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Mojito",
+      "sortOrder": 14,
+      "foodItems": [
+        {
+          "name": "Blueberry Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Ocean Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Lemon Mint Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Mint Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Mango Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        },
+        {
+          "name": "Guava Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 5,
+          "imageUrl": null
+        },
+        {
+          "name": "Kiwi Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 6,
+          "imageUrl": null
+        },
+        {
+          "name": "Orange Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 7,
+          "imageUrl": null
+        },
+        {
+          "name": "Green Apple Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 8,
+          "imageUrl": null
+        },
+        {
+          "name": "Strawberry Mojito",
+          "price": 50.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 9,
+          "imageUrl": null
+        }
+      ]
+    },
+    {
+      "name": "Special",
+      "sortOrder": 15,
+      "foodItems": [
+        {
+          "name": "Cold Horlicks",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 0,
+          "imageUrl": null
+        },
+        {
+          "name": "Cold Boost",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 1,
+          "imageUrl": null
+        },
+        {
+          "name": "Cold Coffee",
+          "price": 60.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 2,
+          "imageUrl": null
+        },
+        {
+          "name": "Avil Milk",
+          "price": 70.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 3,
+          "imageUrl": null
+        },
+        {
+          "name": "Special Avil Milk",
+          "price": 90.0,
+          "isVeg": true,
+          "description": null,
+          "isAvailable": true,
+          "sortOrder": 4,
+          "imageUrl": null
+        }
+      ]
+    }
+  ]
+}

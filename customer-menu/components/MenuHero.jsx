@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin, Phone, Search, Sparkles } from 'lucide-react';
+import { MapPin, Phone, Search } from 'lucide-react';
 import Image from 'next/image';
 
 export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
@@ -31,11 +31,6 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
       <div className="absolute inset-0 bg-gradient-to-b from-renza-ink/55 via-renza-ink/75 to-renza-ink" />
 
       <div className={`relative flex min-h-[19rem] flex-col items-center justify-center px-5 py-8 text-center transition-transform duration-500 ease-out ${isCompact ? '-translate-y-full' : 'translate-y-0'}`}>
-        <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-renza-gold/30 bg-renza-gold/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-renza-gold">
-          <Sparkles className="h-3 w-3" />
-          Digital Dining Menu
-        </div>
-
         <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-glow backdrop-blur-xl">
           {logoUrl ? (
             <Image

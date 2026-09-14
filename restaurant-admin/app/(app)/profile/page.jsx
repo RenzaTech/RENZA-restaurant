@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { Camera, User, UtensilsCrossed, Phone, MapPin, Sparkles, Store, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +46,7 @@ export default function ProfilePage() {
       })
       .catch(() => toast.error('Failed to load profile'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [API_URL]);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -117,12 +118,15 @@ export default function ProfilePage() {
             onClick={() => fileInputRef.current?.click()}
             className="relative group focus:outline-none"
           >
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden border-4 border-slate-100 shadow-md bg-slate-50 flex items-center justify-center transition-all group-hover:border-orange-200">
+            <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border-4 border-slate-100 bg-slate-50 shadow-md transition-all group-hover:border-orange-200 sm:h-28 sm:w-28">
               {logoPreview ? (
-                <img
+                <Image
                   src={logoPreview}
                   alt="Restaurant logo"
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="112px"
+                  unoptimized={logoPreview.startsWith('blob:')}
+                  className="object-cover"
                 />
               ) : (
                 <Store className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300" />

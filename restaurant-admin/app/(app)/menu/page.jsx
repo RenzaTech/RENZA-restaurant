@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Plus, Pencil, Trash2, UtensilsCrossed, Search, Filter, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -79,10 +80,12 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
         {/* Food Image */}
         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200/80 relative">
           {imageUrl ? (
-            <img
+            <Image
               src={imageUrl}
               alt={item.name}
-              className={cn("w-full h-full object-cover transition-opacity", !item.isAvailable && "opacity-60")}
+              fill
+              sizes="96px"
+              className={cn("object-cover transition-opacity", !item.isAvailable && "opacity-60")}
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (
