@@ -1,56 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { UtensilsCrossed, ArrowLeft, SearchX } from 'lucide-react';
+import { ArrowLeft, SearchX } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col justify-between items-center bg-slate-950 text-slate-100 px-4 py-8 relative overflow-hidden font-sans">
-      {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Renza Logo */}
-      <div className="relative z-10 flex items-center gap-2.5 pt-4">
-        <div className="w-10 h-10 bg-gradient-to-tr from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
-          <UtensilsCrossed className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <span className="text-xl font-black text-white tracking-tight">Renza</span>
-        </div>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-renza-ink px-6 py-12 text-renza-cream">
+      <div className="pointer-events-none absolute left-1/2 top-[-15%] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(201,162,39,0.18),transparent_68%)] blur-3xl" />
+      <div className="relative z-10 w-full max-w-md text-center">
+        <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl border border-renza-gold/30 bg-renza-gold/10 text-renza-gold shadow-glow"><SearchX className="h-9 w-9" strokeWidth={1.5} /></div>
+        <p className="font-mono text-6xl font-black tracking-tighter text-white/20">404</p>
+        <h1 className="mt-3 font-display text-3xl text-white">Menu not found</h1>
+        <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-white/55">The restaurant menu does not exist or this QR link has expired.</p>
+        <Link href="/" className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-full bg-renza-gold px-6 py-3 text-xs font-bold text-renza-ink shadow-glow transition hover:bg-[#d9b337] focus:outline-none focus:ring-2 focus:ring-renza-gold focus:ring-offset-2 focus:ring-offset-renza-ink"><ArrowLeft className="h-4 w-4" />Return to scanner</Link>
+        <p className="mt-16 text-xs text-white/35">Powered by <span className="font-bold text-renza-gold">Renza</span></p>
       </div>
-
-      {/* Center 404 Visual */}
-      <div className="relative z-10 text-center my-auto py-8 max-w-sm w-full mx-auto">
-        <div className="w-20 h-20 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-6 text-rose-400">
-          <SearchX className="w-10 h-10" />
-        </div>
-
-        <span className="text-5xl font-black text-slate-700 tracking-tighter block mb-2 font-mono">
-          404
-        </span>
-
-        <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2">
-          Menu Not Found
-        </h1>
-        <p className="text-xs text-slate-400 leading-relaxed mb-8 max-w-xs mx-auto">
-          The restaurant menu you are trying to reach does not exist or the QR link has expired. Please verify with your dining server.
-        </p>
-
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-2xl text-xs font-bold shadow-md shadow-orange-500/20 transition-all"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Return to Scanner</span>
-        </Link>
-      </div>
-
-      {/* Footer */}
-      <div className="relative z-10 text-center text-xs text-slate-500">
-        Powered by{' '}
-        <span className="text-orange-400 font-bold">Renza</span>
-        {' '}· Digital Menu Platform
-      </div>
-    </div>
+    </main>
   );
 }
