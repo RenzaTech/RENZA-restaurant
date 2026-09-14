@@ -17,6 +17,7 @@ export default function EditFoodItemPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -41,13 +42,17 @@ export default function EditFoodItemPage() {
         router.back();
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [API_URL, id, router]);
 
   const handleSubmit = async (formData) => {
     setSubmitting(true);
+    setUploadProgress(0);
     try {
       await api.put(`/api/restaurant/foods/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (event) => {
+          if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
+        },
       });
       toast.success('Food item updated!');
       router.push('/menu');
@@ -56,6 +61,7 @@ export default function EditFoodItemPage() {
       toast.error(msg);
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -85,6 +91,7 @@ export default function EditFoodItemPage() {
           categories={categories}
           onSubmit={handleSubmit}
           submitting={submitting}
+          uploadProgress={uploadProgress}
           submitLabel="Update Food Item"
         />
       )}

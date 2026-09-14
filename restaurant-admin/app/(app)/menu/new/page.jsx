@@ -11,6 +11,7 @@ export default function NewFoodItemPage() {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     api.get('/api/restaurant/categories')
@@ -23,9 +24,13 @@ export default function NewFoodItemPage() {
 
   const handleSubmit = async (formData) => {
     setSubmitting(true);
+    setUploadProgress(0);
     try {
       await api.post('/api/restaurant/foods', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (event) => {
+          if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
+        },
       });
       toast.success('Food item added!');
       router.push('/menu');
@@ -34,6 +39,7 @@ export default function NewFoodItemPage() {
       toast.error(msg);
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -54,6 +60,7 @@ export default function NewFoodItemPage() {
         categories={categories}
         onSubmit={handleSubmit}
         submitting={submitting}
+        uploadProgress={uploadProgress}
         submitLabel="Save Food Item"
       />
     </div>

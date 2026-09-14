@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Eye,
   QrCode,
@@ -365,10 +366,13 @@ export default function DashboardPage() {
             {/* QR Image */}
             {qrImage ? (
               <div className="p-3 sm:p-4 bg-white border-2 border-orange-100 rounded-2xl sm:rounded-3xl shadow-md flex items-center justify-center">
-                <img
+                <Image
                   src={qrImage}
                   alt={`${restaurantName} QR Code`}
-                  className="w-44 h-44 sm:w-56 sm:h-56 object-contain"
+                  width={224}
+                  height={224}
+                  unoptimized
+                  className="h-44 w-44 object-contain sm:h-56 sm:w-56"
                 />
               </div>
             ) : (
