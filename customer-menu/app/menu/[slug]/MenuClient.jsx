@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { UtensilsCrossed } from 'lucide-react';
 import { trackEvent } from '../../../utils/analytics';
 import MenuHero from '../../../components/MenuHero';
@@ -96,6 +96,14 @@ export default function MenuPage({ params }) {
   const searchInputRef = useRef(null);
   const triggerCardRef = useRef(null);
   const trackedItemRef = useRef(null);
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) window.clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -210,19 +218,30 @@ export default function MenuPage({ params }) {
   }, [selectedItem, slug]);
 
   const handleCategorySelect = (catId) => {
+    if (scrollTimeoutRef.current) {
+      window.clearTimeout(scrollTimeoutRef.current);
+    }
+    isProgrammaticScroll.current = true;
+    setActiveCategory(catId);
+
     if (catId === 'all') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setActiveCategory('all');
-      return;
+    } else {
+      const el = sectionRefs.current[catId] || document.querySelector(`[data-category-id="${catId}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
-    setActiveCategory(catId);
-    const el = sectionRefs.current[catId];
-    if (el) {
-      const stickyOffset = 96;
-      const top = el.getBoundingClientRect().top + window.scrollY - stickyOffset;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
+
+    scrollTimeoutRef.current = window.setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 700);
   };
+
+  const handleActiveCategoryChange = useCallback((catId) => {
+    if (isProgrammaticScroll.current) return;
+    setActiveCategory((prev) => (prev === catId ? prev : catId));
+  }, []);
 
   const handleItemSelect = (item, triggerElement) => {
     triggerCardRef.current = triggerElement;
@@ -251,38 +270,73 @@ export default function MenuPage({ params }) {
     requestAnimationFrame(() => triggerElement?.focus());
   }, []);
 
+  // Filter items based on search and dietary choice
+  const filteredGroups = useMemo(() => {
+    return categoryGroups.map((group) => {
+      const items = group.items.filter((item) => {
+        const normalizedIngredients = Array.isArray(item.ingredients) ? item.ingredients.join(' ') : item.ingredients || '';
+        const matchesSearch = debouncedSearch
+          ? item.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            item.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            group.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            item.categoryName?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            item.category?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            (typeof item.specialTags === 'string' && item.specialTags.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
+            normalizedIngredients.toLowerCase().includes(debouncedSearch.toLowerCase())
+          : true;
+
+        const isVeg =
+          item.isVeg === true ||
+          item.isVeg === 'true' ||
+          item.foodType === 'veg' ||
+          item.isVegan === true ||
+          item.isVegan === 'true' ||
+          item.isJain === true ||
+          item.isJain === 'true';
+
+        const isVegan =
+          item.isVegan === true ||
+          item.isVegan === 'true' ||
+          (typeof item.specialTags === 'string' && /vegan/i.test(item.specialTags));
+
+        const isJain =
+          item.isJain === true ||
+          item.isJain === 'true' ||
+          (typeof item.specialTags === 'string' && /jain/i.test(item.specialTags));
+
+        const isGlutenFree =
+          item.isGlutenFree === true ||
+          item.isGlutenFree === 'true' ||
+          (typeof item.specialTags === 'string' && /gluten[- ]?free/i.test(item.specialTags)) ||
+          (typeof item.allergens === 'string' && /gluten[- ]?free/i.test(item.allergens));
+
+        const isAvailable = item.isAvailable === true || item.isAvailable === 'true' || item.isAvailable === undefined;
+
+        const matchesDiet = activeFilters.every((filter) => {
+          if (filter === 'veg') return isVeg;
+          if (filter === 'vegan') return isVegan;
+          if (filter === 'jain') return isJain;
+          if (filter === 'gluten-free') return isGlutenFree;
+          if (filter === 'available') return isAvailable;
+          return true;
+        });
+
+        return matchesSearch && matchesDiet;
+      });
+
+      return { ...group, items };
+    }).filter((g) => g.items.length > 0);
+  }, [categoryGroups, debouncedSearch, activeFilters]);
+
+  const allCategories = useMemo(
+    () => filteredGroups.map((g) => ({ id: g.id, name: g.name })),
+    [filteredGroups]
+  );
+
   if (state === 'loading') return <SkeletonPage />;
   if (state === 'notfound') return <NotFoundState />;
   if (state === 'suspended') return <SuspendedState />;
   if (state === 'error') return <ErrorState onRetry={fetchMenu} />;
-
-  const allCategories = categoryGroups.map((g) => ({ id: g.id, name: g.name }));
-
-  // Filter items based on search and dietary choice
-  const filteredGroups = categoryGroups.map((group) => {
-    const items = group.items.filter((item) => {
-      const normalizedIngredients = Array.isArray(item.ingredients) ? item.ingredients.join(' ') : item.ingredients || '';
-      const matchesSearch = debouncedSearch
-        ? item.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-          item.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-          normalizedIngredients.toLowerCase().includes(debouncedSearch.toLowerCase())
-        : true;
-
-      const isVeg = item.isVeg !== false && item.foodType !== 'non-veg';
-      const matchesDiet = activeFilters.every((filter) => {
-        if (filter === 'veg') return isVeg;
-        if (filter === 'vegan') return item.isVegan;
-        if (filter === 'jain') return item.isJain;
-        if (filter === 'gluten-free') return item.isGlutenFree;
-        if (filter === 'available') return item.isAvailable;
-        return true;
-      });
-
-      return matchesSearch && matchesDiet;
-    });
-
-    return { ...group, items };
-  }).filter((g) => g.items.length > 0);
 
   const resultCount = filteredGroups.reduce((total, group) => total + group.items.length, 0);
   const emptyVariant = categoryGroups.length === 0 ? 'category' : 'search';
@@ -294,7 +348,7 @@ export default function MenuPage({ params }) {
       <div className="border-b border-renza-ink/10 bg-renza-cream/80">
         <SearchBar ref={searchInputRef} searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeFilters={activeFilters} onToggleFilter={handleToggleFilter} onClearAll={handleClearAll} resultCount={resultCount} />
       </div>
-      <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={setActiveCategory} />
+      <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={handleActiveCategoryChange} />
 
       <main className="mx-auto max-w-[1200px] space-y-8 px-4 pb-24 pt-4 sm:space-y-10 sm:pt-6">
         {filteredGroups.length === 0 ? (
@@ -305,7 +359,7 @@ export default function MenuPage({ params }) {
               key={group.id}
               ref={(el) => { sectionRefs.current[group.id] = el; }}
               data-category-id={group.id}
-              className="scroll-mt-28 [contain-intrinsic-size:0_480px] [content-visibility:auto]"
+              className="scroll-mt-28"
             >
               <div className="mb-3.5 flex items-center gap-2.5">
                 <h2 className="font-serif text-xl font-bold tracking-tight text-renza-ink sm:text-2xl">

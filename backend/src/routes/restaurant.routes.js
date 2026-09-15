@@ -23,6 +23,7 @@ router.delete('/categories/:id', restaurantController.deleteCategory)
 
 // Food items
 router.get('/foods', restaurantController.listFoods)
+router.get('/foods/:id', restaurantController.getFood)
 router.post('/foods', uploadSingle, restaurantController.createFood)
 router.put('/foods/:id', uploadSingle, restaurantController.updateFood)
 router.delete('/foods/:id', restaurantController.deleteFood)

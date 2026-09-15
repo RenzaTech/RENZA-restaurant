@@ -28,10 +28,11 @@ export default function EditFoodItemPage() {
     ])
       .then(([foodRes, catRes]) => {
         const food = foodRes.data?.food || foodRes.data;
+        const rawImg = food.imageUrl || food.image;
         setItem({
           ...food,
-          imageUrl: food.image
-            ? food.image.startsWith('http') ? food.image : `${API_URL}${food.image}`
+          imageUrl: rawImg
+            ? (rawImg.startsWith('http') ? rawImg : `${API_URL}${rawImg}`)
             : null,
         });
         const cats = catRes.data?.categories || catRes.data || [];
@@ -57,7 +58,7 @@ export default function EditFoodItemPage() {
       toast.success('Food item updated!');
       router.push('/menu');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to update food item';
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to update food item';
       toast.error(msg);
     } finally {
       setSubmitting(false);

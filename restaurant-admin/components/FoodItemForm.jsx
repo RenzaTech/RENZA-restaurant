@@ -32,12 +32,23 @@ export default function FoodItemForm({
   const [imageError, setImageError] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
+  const initialTags = Array.isArray(initialData.tags)
+    ? initialData.tags
+    : [
+        ...(initialData.isJain ? ['Jain'] : []),
+        ...(initialData.isVegan ? ['Vegan'] : []),
+        ...(initialData.isGlutenFree ? ['Gluten-Free'] : []),
+      ];
+
+  const initialFoodType = initialData.foodType || (initialData.isVeg !== undefined ? (initialData.isVeg ? 'veg' : 'non-veg') : 'veg');
+  const initialCategoryId = initialData.categoryId || initialData.category?.id || initialData.category?._id || '';
+
   const [form, setForm] = useState({
     name: initialData.name || '',
     price: initialData.price || '',
-    foodType: initialData.foodType || 'veg',
+    foodType: initialFoodType,
     description: initialData.description || '',
-    categoryId: initialData.category?._id || initialData.categoryId || '',
+    categoryId: initialCategoryId,
     ingredients: initialData.ingredients || '',
     spices: initialData.spices || '',
     allergens: initialData.allergens || '',
@@ -45,7 +56,7 @@ export default function FoodItemForm({
     prepTime: initialData.prepTime || '',
     calories: initialData.calories || '',
     spicyLevel: initialData.spicyLevel ?? 0,
-    tags: initialData.tags || [],
+    tags: initialTags,
     isAvailable: initialData.isAvailable !== undefined ? initialData.isAvailable : true,
   });
 
@@ -68,10 +79,29 @@ export default function FoodItemForm({
     Object.entries(form).forEach(([key, value]) => {
       if (key === 'tags') {
         formData.append('tags', JSON.stringify(value));
+      } else if (key === 'categoryId') {
+        if (value && value !== 'null' && value !== 'undefined') {
+          formData.append('categoryId', value);
+        } else {
+          formData.append('categoryId', '');
+        }
       } else {
         formData.append(key, value);
       }
     });
+
+    // Explicitly append boolean dietary flags
+    const isVeg = form.foodType === 'veg';
+    const isJain = form.tags.includes('Jain');
+    const isVegan = form.tags.includes('Vegan');
+    const isGlutenFree = form.tags.includes('Gluten-Free');
+
+    formData.append('isVeg', String(isVeg));
+    formData.append('isJain', String(isJain));
+    formData.append('isVegan', String(isVegan));
+    formData.append('isGlutenFree', String(isGlutenFree));
+    formData.append('specialTags', form.tags.join(', '));
+
     if (imageFile) {
       formData.append('image', imageFile);
     }
@@ -144,11 +174,14 @@ export default function FoodItemForm({
               className="rounded-xl border-slate-200 text-xs h-11 focus:ring-orange-500/20 focus:border-orange-500"
             >
               <SelectOption value="">Select category...</SelectOption>
-              {categories.map((cat) => (
-                <SelectOption key={cat._id || cat.id} value={cat._id || cat.id}>
-                  {cat.name}
-                </SelectOption>
-              ))}
+              {categories.map((cat) => {
+                const catId = cat.id || cat._id;
+                return (
+                  <SelectOption key={catId} value={catId}>
+                    {cat.name}
+                  </SelectOption>
+                );
+              })}
             </Select>
           </div>
         </div>

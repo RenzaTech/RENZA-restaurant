@@ -11,12 +11,41 @@ import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
+function validatePhoneNumber(phone) {
+  if (!phone || !phone.trim()) return { valid: true };
+  let digits = phone.trim().replace(/[\s\-()]/g, '');
+  if (digits.startsWith('+91')) {
+    digits = digits.slice(3);
+  } else if (digits.startsWith('91') && digits.length === 12) {
+    digits = digits.slice(2);
+  } else if (digits.startsWith('0') && digits.length === 11) {
+    digits = digits.slice(1);
+  }
+
+  if (!/^[6-9]\d{9}$/.test(digits)) {
+    return {
+      valid: false,
+      error: 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.',
+    };
+  }
+
+  if (/^(\d)\1{9}$/.test(digits)) {
+    return {
+      valid: false,
+      error: 'Phone number cannot have all identical digits.',
+    };
+  }
+
+  return { valid: true, sanitized: digits };
+}
+
 export default function ProfilePage() {
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
+  const [phoneError, setPhoneError] = useState('');
 
   const [form, setForm] = useState({
     name: '',
@@ -50,6 +79,15 @@ export default function ProfilePage() {
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const handlePhoneChange = (e) => {
+    const val = e.target.value;
+    setForm((f) => ({ ...f, phone: val }));
+    if (phoneError) {
+      const check = validatePhoneNumber(val);
+      setPhoneError(check.valid ? '' : check.error);
+    }
+  };
+
   const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -71,6 +109,17 @@ export default function ProfilePage() {
       toast.error('Restaurant name is required');
       return;
     }
+
+    if (form.phone?.trim()) {
+      const phoneCheck = validatePhoneNumber(form.phone);
+      if (!phoneCheck.valid) {
+        setPhoneError(phoneCheck.error);
+        toast.error(phoneCheck.error);
+        return;
+      }
+      setPhoneError('');
+    }
+
     setSaving(true);
     try {
       const formData = new FormData();
@@ -101,7 +150,7 @@ export default function ProfilePage() {
       }
       toast.success('Restaurant profile saved to cloud!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save profile');
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to save profile');
     } finally {
       setSaving(false);
     }
@@ -279,9 +328,17 @@ export default function ProfilePage() {
                   type="tel"
                   placeholder="+91 98765 43210"
                   value={form.phone}
-                  onChange={set('phone')}
-                  className="rounded-xl border-slate-200 text-xs h-11 focus:ring-orange-500/20 focus:border-orange-500"
+                  onChange={handlePhoneChange}
+                  className={cn(
+                    "rounded-xl text-xs h-11 focus:ring-orange-500/20 focus:border-orange-500",
+                    phoneError ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/20" : "border-slate-200"
+                  )}
                 />
+                {phoneError && (
+                  <p className="text-[11px] font-semibold text-rose-500 mt-1">
+                    {phoneError}
+                  </p>
+                )}
               </div>
             </div>
 

@@ -27,6 +27,31 @@ const getProfile = async (req, res) => {
 
 /**
  * PUT /api/restaurant/profile
+const validateMobileNumber = (phone) => {
+  if (phone === undefined || phone === null) return { valid: true, sanitized: null }
+  const trimmed = String(phone).trim()
+  if (!trimmed) return { valid: true, sanitized: null }
+
+  let digits = trimmed.replace(/[\s\-()]/g, '')
+  if (digits.startsWith('+91')) {
+    digits = digits.slice(3)
+  } else if (digits.startsWith('91') && digits.length === 12) {
+    digits = digits.slice(2)
+  } else if (digits.startsWith('0') && digits.length === 11) {
+    digits = digits.slice(1)
+  }
+
+  if (!/^[6-9]\d{9}$/.test(digits)) {
+    return { valid: false }
+  }
+  if (/^(\d)\1{9}$/.test(digits)) {
+    return { valid: false }
+  }
+  return { valid: true, sanitized: digits }
+}
+
+/**
+ * PUT /api/restaurant/profile
  * Accepts optional image upload for logo
  */
 const updateProfile = async (req, res) => {
@@ -41,7 +66,13 @@ const updateProfile = async (req, res) => {
   if (description !== undefined) updateData.description = description?.trim() || null
   if (cuisineType !== undefined) updateData.cuisineType = cuisineType?.trim() || null
   if (address !== undefined) updateData.address = address?.trim() || null
-  if (phone !== undefined) updateData.phone = phone?.trim() || null
+  if (phone !== undefined) {
+    const phoneCheck = validateMobileNumber(phone)
+    if (!phoneCheck.valid) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit mobile number' })
+    }
+    updateData.phone = phoneCheck.sanitized
+  }
 
   // If a logo file was uploaded
   if (req.file) {
@@ -131,6 +162,17 @@ const listCategories = async (req, res) => {
     orderBy: { sortOrder: 'asc' },
     include: {
       _count: { select: { foodItems: true } },
+      foodItems: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          isAvailable: true,
+          imageUrl: true,
+          isVeg: true,
+        },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      },
     },
   })
   return res.json(categories)
@@ -211,6 +253,21 @@ const listFoods = async (req, res) => {
 }
 
 /**
+ * GET /api/restaurant/foods/:id
+ */
+const getFood = async (req, res) => {
+  const food = await prisma.foodItem.findUnique({
+    where: { id: req.params.id },
+    include: { category: { select: { id: true, name: true } } },
+  })
+  if (!food) return res.status(404).json({ error: 'Food item not found' })
+  if (food.restaurantId !== req.user.restaurantId) {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+  return res.json(food)
+}
+
+/**
  * POST /api/restaurant/foods
  */
 const createFood = async (req, res) => {
@@ -243,9 +300,49 @@ const createFood = async (req, res) => {
     return res.status(400).json({ error: 'Price must be a valid non-negative number' })
   }
 
+  // Parse tags if provided as JSON array or string
+  let parsedTags = []
+  if (req.body.tags) {
+    try {
+      parsedTags = typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags
+      if (!Array.isArray(parsedTags)) parsedTags = []
+    } catch {
+      parsedTags = []
+    }
+  }
+
+  // Resolve dietary flags
+  let resolvedVeg = false
+  if (isVeg !== undefined) {
+    resolvedVeg = isVeg === 'true' || isVeg === true
+  } else if (req.body.foodType) {
+    resolvedVeg = req.body.foodType === 'veg'
+  }
+
+  const resolvedJain = isJain !== undefined
+    ? (isJain === 'true' || isJain === true)
+    : parsedTags.includes('Jain')
+
+  const resolvedVegan = isVegan !== undefined
+    ? (isVegan === 'true' || isVegan === true)
+    : parsedTags.includes('Vegan')
+
+  const resolvedGlutenFree = isGlutenFree !== undefined
+    ? (isGlutenFree === 'true' || isGlutenFree === true)
+    : (parsedTags.includes('Gluten-Free') || parsedTags.includes('Gluten-free'))
+
+  // Sanitize categoryId
+  let resolvedCategoryId = null
+  if (categoryId && typeof categoryId === 'string') {
+    const trimmed = categoryId.trim()
+    if (trimmed && trimmed !== 'null' && trimmed !== 'undefined') {
+      resolvedCategoryId = trimmed
+    }
+  }
+
   // If categoryId provided, verify it belongs to this restaurant
-  if (categoryId) {
-    const cat = await prisma.category.findUnique({ where: { id: categoryId } })
+  if (resolvedCategoryId) {
+    const cat = await prisma.category.findUnique({ where: { id: resolvedCategoryId } })
     if (!cat || cat.restaurantId !== req.user.restaurantId) {
       return res.status(400).json({ error: 'Invalid category' })
     }
@@ -256,7 +353,7 @@ const createFood = async (req, res) => {
   const food = await prisma.foodItem.create({
     data: {
       restaurantId: req.user.restaurantId,
-      categoryId: categoryId || null,
+      categoryId: resolvedCategoryId,
       name: name.trim(),
       price: parsedPrice,
       imageUrl,
@@ -267,12 +364,12 @@ const createFood = async (req, res) => {
       portionSize: portionSize?.trim() || null,
       prepTime: prepTime?.trim() || null,
       calories: calories ? parseInt(calories) : null,
-      isVeg: isVeg === 'true' || isVeg === true,
-      isJain: isJain === 'true' || isJain === true,
-      isVegan: isVegan === 'true' || isVegan === true,
-      isGlutenFree: isGlutenFree === 'true' || isGlutenFree === true,
+      isVeg: resolvedVeg,
+      isJain: resolvedJain,
+      isVegan: resolvedVegan,
+      isGlutenFree: resolvedGlutenFree,
       spicyLevel: spicyLevel ? parseInt(spicyLevel) : 0,
-      specialTags: specialTags?.trim() || null,
+      specialTags: specialTags?.trim() || (parsedTags.length > 0 ? parsedTags.join(', ') : null),
       isAvailable: isAvailable === undefined ? true : isAvailable === 'true' || isAvailable === true,
       sortOrder: sortOrder ? parseInt(sortOrder) : 0,
     },
@@ -323,15 +420,35 @@ const updateFood = async (req, res) => {
     }
     updateData.price = parsedPrice
   }
+
   if (categoryId !== undefined) {
-    if (categoryId) {
-      const cat = await prisma.category.findUnique({ where: { id: categoryId } })
+    let resolvedCategoryId = null
+    if (categoryId && typeof categoryId === 'string') {
+      const trimmed = categoryId.trim()
+      if (trimmed && trimmed !== 'null' && trimmed !== 'undefined') {
+        resolvedCategoryId = trimmed
+      }
+    }
+    if (resolvedCategoryId) {
+      const cat = await prisma.category.findUnique({ where: { id: resolvedCategoryId } })
       if (!cat || cat.restaurantId !== req.user.restaurantId) {
         return res.status(400).json({ error: 'Invalid category' })
       }
     }
-    updateData.categoryId = categoryId || null
+    updateData.categoryId = resolvedCategoryId
   }
+
+  // Parse tags if provided
+  let parsedTags = null
+  if (req.body.tags !== undefined) {
+    try {
+      parsedTags = typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags
+      if (!Array.isArray(parsedTags)) parsedTags = null
+    } catch {
+      parsedTags = null
+    }
+  }
+
   if (description !== undefined) updateData.description = description?.trim() || null
   if (ingredients !== undefined) updateData.ingredients = ingredients?.trim() || null
   if (spices !== undefined) updateData.spices = spices?.trim() || null
@@ -339,12 +456,38 @@ const updateFood = async (req, res) => {
   if (portionSize !== undefined) updateData.portionSize = portionSize?.trim() || null
   if (prepTime !== undefined) updateData.prepTime = prepTime?.trim() || null
   if (calories !== undefined) updateData.calories = calories ? parseInt(calories) : null
-  if (isVeg !== undefined) updateData.isVeg = isVeg === 'true' || isVeg === true
-  if (isJain !== undefined) updateData.isJain = isJain === 'true' || isJain === true
-  if (isVegan !== undefined) updateData.isVegan = isVegan === 'true' || isVegan === true
-  if (isGlutenFree !== undefined) updateData.isGlutenFree = isGlutenFree === 'true' || isGlutenFree === true
+
+  if (isVeg !== undefined) {
+    updateData.isVeg = isVeg === 'true' || isVeg === true
+  } else if (req.body.foodType !== undefined) {
+    updateData.isVeg = req.body.foodType === 'veg'
+  }
+
+  if (isJain !== undefined) {
+    updateData.isJain = isJain === 'true' || isJain === true
+  } else if (parsedTags) {
+    updateData.isJain = parsedTags.includes('Jain')
+  }
+
+  if (isVegan !== undefined) {
+    updateData.isVegan = isVegan === 'true' || isVegan === true
+  } else if (parsedTags) {
+    updateData.isVegan = parsedTags.includes('Vegan')
+  }
+
+  if (isGlutenFree !== undefined) {
+    updateData.isGlutenFree = isGlutenFree === 'true' || isGlutenFree === true
+  } else if (parsedTags) {
+    updateData.isGlutenFree = parsedTags.includes('Gluten-Free') || parsedTags.includes('Gluten-free')
+  }
+
   if (spicyLevel !== undefined) updateData.spicyLevel = parseInt(spicyLevel) || 0
-  if (specialTags !== undefined) updateData.specialTags = specialTags?.trim() || null
+  if (specialTags !== undefined) {
+    updateData.specialTags = specialTags?.trim() || null
+  } else if (parsedTags) {
+    updateData.specialTags = parsedTags.length > 0 ? parsedTags.join(', ') : null
+  }
+
   if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true
   if (sortOrder !== undefined) updateData.sortOrder = parseInt(sortOrder) || 0
 
@@ -450,6 +593,7 @@ module.exports = {
   updateCategory,
   deleteCategory,
   listFoods,
+  getFood,
   createFood,
   updateFood,
   deleteFood,
