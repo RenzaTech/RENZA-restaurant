@@ -218,7 +218,7 @@ export default function MenuPage({ params }) {
     setActiveCategory(catId);
     const el = sectionRefs.current[catId];
     if (el) {
-      const stickyOffset = 130;
+      const stickyOffset = 96;
       const top = el.getBoundingClientRect().top + window.scrollY - stickyOffset;
       window.scrollTo({ top, behavior: 'smooth' });
     }
@@ -296,7 +296,7 @@ export default function MenuPage({ params }) {
       </div>
       <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={setActiveCategory} />
 
-      <main className="mx-auto max-w-[1200px] space-y-12 px-4 pb-28 pt-6">
+      <main className="mx-auto max-w-[1200px] space-y-8 px-4 pb-24 pt-4 sm:space-y-10 sm:pt-6">
         {filteredGroups.length === 0 ? (
           <EmptyState variant={emptyVariant} onReset={handleClearAll} />
         ) : (
@@ -305,13 +305,13 @@ export default function MenuPage({ params }) {
               key={group.id}
               ref={(el) => { sectionRefs.current[group.id] = el; }}
               data-category-id={group.id}
-              className="scroll-mt-36 [contain-intrinsic-size:0_480px] [content-visibility:auto]"
+              className="scroll-mt-28 [contain-intrinsic-size:0_480px] [content-visibility:auto]"
             >
-              <div className="mb-5 flex items-center gap-3">
-                <h2 className="font-serif text-2xl font-bold tracking-tight text-renza-ink md:text-3xl">
+              <div className="mb-3.5 flex items-center gap-2.5">
+                <h2 className="font-serif text-xl font-bold tracking-tight text-renza-ink sm:text-2xl">
                   {group.name}
                 </h2>
-                <span className="flex h-6 items-center justify-center rounded-full bg-renza-gold/20 px-2.5 text-xs font-bold text-amber-700">
+                <span className="flex h-5 items-center justify-center rounded-full bg-renza-gold/20 px-2 text-[11px] font-bold text-amber-700">
                   {group.items.length}
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-renza-gold/40 via-renza-gold/20 to-transparent" />
