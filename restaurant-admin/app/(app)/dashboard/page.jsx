@@ -121,7 +121,7 @@ export default function DashboardPage() {
   return (
     <div className="p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
       {/* ── TOP HERO BANNER ── */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 text-white p-5 sm:p-8 shadow-lg shadow-orange-500/15">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-teal-700 text-white p-5 sm:p-8 shadow-lg shadow-orange-500/15">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-5">
           <div className="space-y-1 sm:space-y-1.5 min-w-0">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 text-orange-50 text-[10px] sm:text-xs font-bold uppercase tracking-wider backdrop-blur-sm">

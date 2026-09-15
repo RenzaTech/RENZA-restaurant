@@ -60,13 +60,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col justify-between p-4 sm:p-8 font-sans text-slate-100 selection:bg-orange-500 selection:text-white relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-orange-500/20 via-amber-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-orange-500/20 via-teal-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       {/* Top Bar Header */}
       <div className="relative z-10 flex items-center justify-between max-w-5xl mx-auto w-full pt-2">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
             <UtensilsCrossed className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -168,7 +168,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group mt-3"
+              className="w-full py-3.5 px-5 bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group mt-3"
             >
               {loading ? (
                 <>

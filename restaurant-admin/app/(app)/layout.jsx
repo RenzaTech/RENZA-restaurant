@@ -86,7 +86,7 @@ export default function AppLayout({ children }) {
       <aside className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:w-64 bg-slate-950 z-40 border-r border-slate-850 select-none">
         {/* Brand */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-800/70">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20">
             <UtensilsCrossed className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
@@ -109,7 +109,7 @@ export default function AppLayout({ children }) {
                 className={cn(
                   'flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold transition-all group',
                   isActive
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20'
+                    ? 'bg-gradient-to-r from-orange-500 to-teal-600 text-white shadow-md shadow-orange-500/20'
                     : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
                 )}
               >
@@ -157,7 +157,7 @@ export default function AppLayout({ children }) {
           <aside className="relative flex flex-col w-72 max-w-[85vw] bg-slate-950 h-full shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center flex-shrink-0">
                   <UtensilsCrossed className="w-4 h-4 text-white" />
                 </div>
                 <div className="min-w-0">

@@ -250,7 +250,7 @@ export default function MenuPage() {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <Button
             onClick={() => router.push('/menu/new')}
-            className="w-full sm:w-auto justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
+            className="w-full sm:w-auto justify-center bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
           >
             <Plus className="w-4 h-4" />
             Add New Dish

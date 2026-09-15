@@ -393,7 +393,7 @@ export default function FoodItemForm({
       {/* ── ACTION SUBMIT BUTTON ── */}
       <Button
         type="submit"
-        className="w-full h-12 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20"
+        className="w-full h-12 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white shadow-md shadow-orange-500/20"
         disabled={submitting}
       >
         {submitting ? (
