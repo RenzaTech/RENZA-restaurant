@@ -535,7 +535,13 @@ const deleteRestaurant = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  await prisma.restaurant.delete({ where: { id: req.params.id } })
+  await prisma.$transaction(async (tx) => {
+    // Delete any users associated with this restaurant first
+    await tx.user.deleteMany({ where: { restaurantId: req.params.id } })
+    // Delete restaurant (categories, foodItems, and analytics cascade automatically)
+    await tx.restaurant.delete({ where: { id: req.params.id } })
+  })
+
   return res.json({ message: `Restaurant "${restaurant.name}" deleted successfully` })
 }
 

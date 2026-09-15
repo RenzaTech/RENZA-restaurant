@@ -17,6 +17,7 @@ import {
   Store,
   ExternalLink,
   Filter,
+  Trash2,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
@@ -77,6 +78,50 @@ function ConfirmDialog({ open, message, onConfirm, onCancel }) {
   )
 }
 
+function DeleteConfirmDialog({ open, restaurant, onConfirm, onCancel, deleting }) {
+  if (!open || !restaurant) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-slate-100">
+        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-4 border border-rose-100">
+          <Trash2 className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Suspended Restaurant?</h3>
+        <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+          Are you sure you want to permanently delete <strong className="text-slate-900">{restaurant.name}</strong>? This action cannot be undone and will delete all associated food items, categories, admin credentials, and analytics.
+        </p>
+        <div className="flex gap-2.5 justify-end">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
+          >
+            {deleting ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Restaurant</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function RestaurantsPage() {
   const router = useRouter()
   const [restaurants, setRestaurants] = useState([])
@@ -85,6 +130,8 @@ export default function RestaurantsPage() {
   const [statusFilter, setStatusFilter] = useState('all') // all | active | suspended
   const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null, currentStatus: null })
   const [statusUpdating, setStatusUpdating] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchRestaurants = async () => {
     setLoading(true)
@@ -134,6 +181,22 @@ export default function RestaurantsPage() {
       toast.error('Failed to update restaurant status')
     } finally {
       setStatusUpdating(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget._id || deleteTarget.id
+    setDeleting(true)
+    try {
+      await api.delete(`/api/admin/restaurants/${id}`)
+      toast.success(`Restaurant "${deleteTarget.name}" deleted successfully`)
+      setRestaurants((prev) => prev.filter((r) => (r._id || r.id) !== id))
+      setDeleteTarget(null)
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to delete restaurant')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -317,6 +380,16 @@ export default function RestaurantsPage() {
                               <ToggleLeft className="w-5 h-5 text-slate-400" />
                             )}
                           </button>
+
+                          {r.status === 'suspended' && (
+                            <button
+                              onClick={() => setDeleteTarget(r)}
+                              title="Delete Suspended Restaurant"
+                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors ml-0.5"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -339,6 +412,15 @@ export default function RestaurantsPage() {
         }`}
         onConfirm={confirmStatusToggle}
         onCancel={() => setConfirmDialog({ open: false, id: null, currentStatus: null })}
+      />
+
+      {/* ── DELETE CONFIRMATION MODAL ── */}
+      <DeleteConfirmDialog
+        open={Boolean(deleteTarget)}
+        restaurant={deleteTarget}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        deleting={deleting}
       />
     </div>
   )
