@@ -31,27 +31,58 @@ const navItems = [
 export default function AppLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [restaurant, setRestaurant] = useState({ name: '', slug: '', cuisineType: '' });
+  const [restaurant, setRestaurant] = useState({ name: '', slug: '', cuisineType: '', logo: null });
+  const [logoError, setLogoError] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.replace('/login');
       return;
     }
-    api.get('/api/restaurant/profile')
-      .then((res) => {
-        const data = res.data?.restaurant || res.data || {};
-        if (data.name) {
-          setRestaurant({
-            name: data.name,
-            slug: data.slug || '',
-            cuisineType: data.cuisineType || '',
-          });
-        }
-      })
-      .catch(() => {});
-  }, [router]);
+
+    const fetchProfile = () => {
+      api.get('/api/restaurant/profile')
+        .then((res) => {
+          const data = res.data?.restaurant || res.data || {};
+          if (data.name) {
+            const rawLogo = data.logoUrl || data.logo;
+            const fullLogo = rawLogo
+              ? (rawLogo.startsWith('http') || rawLogo.startsWith('blob:') ? rawLogo : `${API_URL}${rawLogo}`)
+              : null;
+            setRestaurant({
+              name: data.name,
+              slug: data.slug || '',
+              cuisineType: data.cuisineType || '',
+              logo: fullLogo,
+            });
+            setLogoError(false);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchProfile();
+
+    const handleProfileUpdated = (event) => {
+      if (!event?.detail) return;
+      setRestaurant((prev) => ({
+        ...prev,
+        ...(event.detail.name ? { name: event.detail.name } : {}),
+        ...(event.detail.logo !== undefined ? { logo: event.detail.logo } : {}),
+        ...(event.detail.slug ? { slug: event.detail.slug } : {}),
+      }));
+      if (event.detail.logo !== undefined) {
+        setLogoError(false);
+      }
+    };
+
+    window.addEventListener('restaurant-profile-updated', handleProfileUpdated);
+    return () => {
+      window.removeEventListener('restaurant-profile-updated', handleProfileUpdated);
+    };
+  }, [router, API_URL]);
 
   const handleLogout = () => {
     clearToken();
@@ -86,9 +117,21 @@ export default function AppLayout({ children }) {
       <aside className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:w-64 bg-slate-950 z-40 border-r border-slate-850 select-none">
         {/* Brand */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-800/70">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20">
-            <UtensilsCrossed className="w-5 h-5 text-white" />
-          </div>
+          {restaurant.logo && !logoError ? (
+            <div className="w-10 h-10 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-750 bg-slate-900 shadow-lg shadow-orange-500/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={restaurant.logo}
+                alt={restaurant.name || 'Restaurant Logo'}
+                className="w-full h-full object-cover"
+                onError={() => setLogoError(true)}
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20">
+              <UtensilsCrossed className="w-5 h-5 text-white" />
+            </div>
+          )}
           <div className="min-w-0">
             <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest leading-none">Renza Partner</p>
             <p className="text-sm font-bold text-white truncate mt-1">{restaurant.name || 'Kitchen Portal'}</p>
@@ -157,9 +200,21 @@ export default function AppLayout({ children }) {
           <aside className="relative flex flex-col w-72 max-w-[85vw] bg-slate-950 h-full shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-                  <UtensilsCrossed className="w-4 h-4 text-white" />
-                </div>
+                {restaurant.logo && !logoError ? (
+                  <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 border border-slate-750 bg-slate-900 shadow-md">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={restaurant.logo}
+                      alt={restaurant.name || 'Restaurant Logo'}
+                      className="w-full h-full object-cover"
+                      onError={() => setLogoError(true)}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                    <UtensilsCrossed className="w-4 h-4 text-white" />
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Renza Partner</p>
                   <p className="text-xs font-bold text-white truncate">{restaurant.name || 'Kitchen'}</p>

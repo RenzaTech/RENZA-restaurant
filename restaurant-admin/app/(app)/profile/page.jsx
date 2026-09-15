@@ -54,7 +54,15 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('restaurant-profile-updated', {
+          detail: { logo: previewUrl },
+        })
+      );
+    }
   };
 
   const handleSave = async (e) => {
@@ -72,9 +80,25 @@ export default function ProfilePage() {
         formData.append('logo', logoFile);
       }
 
-      await api.put('/api/restaurant/profile', formData, {
+      const res = await api.put('/api/restaurant/profile', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      const updated = res.data?.restaurant || res.data || {};
+      const savedLogo = updated.logoUrl || updated.logo;
+      const fullLogoUrl = savedLogo
+        ? (savedLogo.startsWith('http') || savedLogo.startsWith('blob:') ? savedLogo : `${API_URL}${savedLogo}`)
+        : null;
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('restaurant-profile-updated', {
+            detail: {
+              name: updated.name || form.name,
+              logo: fullLogoUrl,
+            },
+          })
+        );
+      }
       toast.success('Restaurant profile saved to cloud!');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save profile');
