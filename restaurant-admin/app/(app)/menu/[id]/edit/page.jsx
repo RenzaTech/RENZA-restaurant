@@ -50,7 +50,6 @@ export default function EditFoodItemPage() {
     setUploadProgress(0);
     try {
       await api.put(`/api/restaurant/foods/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (event) => {
           if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
         },

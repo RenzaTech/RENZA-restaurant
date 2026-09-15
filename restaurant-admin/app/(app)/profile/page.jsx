@@ -130,9 +130,7 @@ export default function ProfilePage() {
         formData.append('logo', logoFile);
       }
 
-      const res = await api.put('/api/restaurant/profile', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.put('/api/restaurant/profile', formData);
       const updated = res.data?.restaurant || res.data || {};
       const savedLogo = updated.logoUrl || updated.logo;
       const fullLogoUrl = savedLogo

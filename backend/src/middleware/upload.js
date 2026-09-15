@@ -38,8 +38,18 @@ const upload = multer({
 const uploadAny = upload.any()
 
 const uploadSingle = (req, res, next) => {
+  const contentType = req.headers['content-type'] || ''
+  if (!contentType.includes('multipart/form-data')) {
+    return next()
+  }
   uploadAny(req, res, (err) => {
-    if (err) return next(err)
+    if (err) {
+      if (err.message && err.message.includes('Boundary not found')) {
+        console.warn('[Upload] Multipart boundary missing, skipping file parse:', err.message)
+        return next()
+      }
+      return next(err)
+    }
     if (req.files && req.files.length > 0) {
       // Find 'image' or 'logo' or fallback to first file
       req.file =
