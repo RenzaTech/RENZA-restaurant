@@ -49,7 +49,6 @@ function DetailCard({ label, children, warning = false }) {
 export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }) {
   const overlayRef = useRef(null);
   const panelRef = useRef(null);
-  const closeButtonRef = useRef(null);
   const zoomCloseButtonRef = useRef(null);
   const dragStartRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -77,7 +76,7 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
     const focusTimer = requestAnimationFrame(() => {
       setIsVisible(true);
       if (isZoomed) zoomCloseButtonRef.current?.focus();
-      else closeButtonRef.current?.focus();
+      else panelRef.current?.focus();
     });
 
     const handleKeyDown = (event) => {
@@ -191,16 +190,6 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
         >
           <div className="h-1.5 w-14 rounded-full bg-slate-300 shadow-xs" />
         </div>
-
-        {/* Floating Glass Close Button */}
-        <button
-          ref={closeButtonRef}
-          onClick={onClose}
-          className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white backdrop-blur-xl transition hover:bg-black/80 active:scale-90 focus:outline-none focus:ring-2 focus:ring-renza-gold"
-          aria-label="Close dish details"
-        >
-          <X className="h-5 w-5" />
-        </button>
 
         {/* Hero Dish Image */}
         <button
