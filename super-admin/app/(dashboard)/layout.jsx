@@ -13,7 +13,6 @@ import {
   X,
   Shield,
   Activity,
-  Plus,
   ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -96,17 +95,6 @@ function Sidebar({ onClose }) {
             </Link>
           )
         })}
-
-        <div className="pt-6 px-3">
-          <Link
-            href="/restaurants/new"
-            onClick={onClose}
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 text-orange-400 text-xs font-bold border border-orange-500/20 hover:border-orange-500/40 transition-all shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Onboard Restaurant</span>
-          </Link>
-        </div>
       </nav>
 
       {/* Cloud Service Status pill */}
@@ -213,17 +201,10 @@ export default function DashboardLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Super Admin Active</span>
             </div>
-            <Link
-              href="/restaurants/new"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-sm shadow-orange-500/20"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>New Restaurant</span>
-            </Link>
           </div>
         </header>
 
