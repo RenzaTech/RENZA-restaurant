@@ -2,7 +2,7 @@ import EmptyState from '../components/EmptyState';
 import MenuClient from './menu/[slug]/MenuClient';
 import { generateMetadata as generateMenuMetadata } from './menu/[slug]/page';
 
-const DEFAULT_SLUG = process.env.NEXT_PUBLIC_DEFAULT_SLUG;
+const DEFAULT_SLUG = process.env.NEXT_PUBLIC_DEFAULT_SLUG || 'anbude-cafe';
 
 export async function generateMetadata() {
   if (!DEFAULT_SLUG) {

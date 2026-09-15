@@ -1,15 +1,4 @@
 import './globals.css';
-import { Inter, Playfair_Display } from 'next/font/google';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-});
-
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-display',
-});
 
 export const metadata = {
   title: 'Renza — Digital Restaurant Menu',
@@ -31,7 +20,7 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#0B0B0F" />
       </head>
-      <body className={`${inter.variable} ${playfairDisplay.variable} bg-renza-cream font-sans antialiased min-h-screen`}>
+      <body className="bg-renza-cream font-sans antialiased min-h-screen">
         {children}
       </body>
     </html>

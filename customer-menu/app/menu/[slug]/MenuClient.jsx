@@ -30,7 +30,26 @@ function SuspendedState() {
 }
 
 function ErrorState({ onRetry }) {
-  return <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center text-slate-900"><div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-rose-50 text-rose-500"><UtensilsCrossed className="h-8 w-8" /></div><h2 className="mb-2 text-xl font-bold">Connection Issue</h2><p className="mb-6 max-w-xs text-xs text-slate-500">Could not connect to the dining network. Check your phone signal and tap below to retry.</p><button onClick={onRetry} className="min-h-11 rounded-xl bg-orange-500 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">Retry Loading Menu</button></div>;
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-renza-cream px-6 text-center text-renza-ink">
+      <div className="mx-auto max-w-sm rounded-3xl border border-white/80 bg-white/75 p-8 text-center shadow-glass backdrop-blur-xl">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-600 shadow-glow">
+          <UtensilsCrossed className="h-8 w-8" />
+        </div>
+        <h2 className="mb-2 font-serif text-2xl font-bold tracking-tight text-renza-ink">Connection Issue</h2>
+        <p className="mb-6 text-xs leading-relaxed text-renza-charcoal/70">
+          Could not connect to the dining network. Check your phone signal and tap below to retry.
+        </p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="min-h-11 rounded-full bg-gradient-to-r from-renza-gold to-amber-600 px-6 py-2.5 text-xs font-bold text-renza-ink shadow-gold transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-renza-gold focus:ring-offset-2 active:scale-95"
+        >
+          Retry Loading Menu
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function groupItemsByCategory(items, categories = []) {
@@ -152,7 +171,21 @@ export default function MenuPage({ params }) {
   // Non-blocking analytics
   useEffect(() => {
     if (state !== 'ready') return;
-    trackEvent(slug, 'qr_scan');
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isFromQr = searchParams.get('source') === 'qr' || searchParams.get('src') === 'qr';
+
+      if (isFromQr) {
+        const scanKey = `renza_scanned_${slug}`;
+        if (!sessionStorage.getItem(scanKey)) {
+          sessionStorage.setItem(scanKey, 'true');
+          trackEvent(slug, 'qr_scan');
+        }
+      }
+    } catch {
+      // Ignore browser storage restrictions
+    }
+
     trackEvent(slug, 'menu_view');
   }, [slug, state]);
 
@@ -185,8 +218,8 @@ export default function MenuPage({ params }) {
     setActiveCategory(catId);
     const el = sectionRefs.current[catId];
     if (el) {
-      const navHeight = 52;
-      const top = el.getBoundingClientRect().top + window.scrollY - navHeight - 8;
+      const stickyOffset = 130;
+      const top = el.getBoundingClientRect().top + window.scrollY - stickyOffset;
       window.scrollTo({ top, behavior: 'smooth' });
     }
   };
@@ -263,13 +296,41 @@ export default function MenuPage({ params }) {
       </div>
       <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={setActiveCategory} />
 
-      <main className="mx-auto grid max-w-[1200px] grid-cols-1 gap-x-5 px-4 pb-24 pt-3 md:grid-cols-2 xl:grid-cols-3">
-        {filteredGroups.length === 0 ? <div className="md:col-span-2 xl:col-span-3"><EmptyState variant={emptyVariant} onReset={handleClearAll} /></div> : filteredGroups.map((group) => (
-          <section key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} data-category-id={group.id} className="mt-6 first:mt-3 [contain-intrinsic-size:0_480px] [content-visibility:auto]">
-            <div className="mb-3 flex items-center gap-2 px-1 md:col-span-2 xl:col-span-3"><h2 className="text-base font-black tracking-tight text-slate-900">{group.name}</h2><span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-500">{group.items.length}</span><div className="ml-2 h-px flex-1 bg-slate-200/80" /></div>
-            {group.items.map((item) => <DishCard key={item.id || item._id || item.name} item={item} priority={cardIndex++ < 4} onSelect={handleItemSelect} resolveImageUrl={resolveImageUrl} />)}
-          </section>
-        ))}
+      <main className="mx-auto max-w-[1200px] space-y-12 px-4 pb-28 pt-6">
+        {filteredGroups.length === 0 ? (
+          <EmptyState variant={emptyVariant} onReset={handleClearAll} />
+        ) : (
+          filteredGroups.map((group) => (
+            <section
+              key={group.id}
+              ref={(el) => { sectionRefs.current[group.id] = el; }}
+              data-category-id={group.id}
+              className="scroll-mt-36 [contain-intrinsic-size:0_480px] [content-visibility:auto]"
+            >
+              <div className="mb-5 flex items-center gap-3">
+                <h2 className="font-serif text-2xl font-bold tracking-tight text-renza-ink md:text-3xl">
+                  {group.name}
+                </h2>
+                <span className="flex h-6 items-center justify-center rounded-full bg-renza-gold/20 px-2.5 text-xs font-bold text-amber-700">
+                  {group.items.length}
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-renza-gold/40 via-renza-gold/20 to-transparent" />
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {group.items.map((item) => (
+                  <DishCard
+                    key={item.id || item._id || item.name}
+                    item={item}
+                    priority={cardIndex++ < 4}
+                    onSelect={handleItemSelect}
+                    resolveImageUrl={resolveImageUrl}
+                  />
+                ))}
+              </div>
+            </section>
+          ))
+        )}
       </main>
 
       {selectedItem && <DishSheet item={selectedItem} onClose={handleSheetClose} resolveImageUrl={resolveImageUrl} triggerRef={triggerCardRef} />}

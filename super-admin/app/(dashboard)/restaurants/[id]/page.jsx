@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -28,6 +28,7 @@ import {
   Clock,
   TrendingUp,
   Share2,
+  RefreshCw,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatDate, formatNumber } from '@/lib/utils'
@@ -170,6 +171,10 @@ export default function RestaurantDetailPage() {
   const [isEditingUrl, setIsEditingUrl] = useState(false)
   const [customUrlInput, setCustomUrlInput] = useState('')
   const [savingUrl, setSavingUrl] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const analyticsLoadedRef = useRef(false)
 
   const handleStartEditUrl = () => {
     setCustomUrlInput(qrData?.customMenuUrl || qrData?.menuUrl || '')
@@ -233,15 +238,18 @@ export default function RestaurantDetailPage() {
     }
   }, [id])
 
-  const fetchAnalytics = useCallback(async () => {
-    setAnalyticsLoading(true)
+  const fetchAnalytics = useCallback(async (silent = false) => {
+    if (!silent) setAnalyticsLoading(true)
+    setIsRefreshing(true)
     try {
       const res = await api.get(`/api/admin/restaurants/${id}/analytics`)
       setAnalytics(res.data?.analytics || res.data)
+      setLastUpdated(new Date())
     } catch {
-      toast.error('Failed to load analytics')
+      if (!silent) toast.error('Failed to load analytics')
     } finally {
-      setAnalyticsLoading(false)
+      if (!silent) setAnalyticsLoading(false)
+      setIsRefreshing(false)
     }
   }, [id])
 
@@ -249,11 +257,22 @@ export default function RestaurantDetailPage() {
     fetchRestaurant()
   }, [fetchRestaurant])
 
+  // Fetch immediately whenever switching to the analytics tab
   useEffect(() => {
-    if (tab === 'analytics' && !analytics) {
-      fetchAnalytics()
+    if (tab === 'analytics') {
+      fetchAnalytics(analyticsLoadedRef.current)
+      analyticsLoadedRef.current = true
     }
-  }, [tab, analytics, fetchAnalytics])
+  }, [tab, fetchAnalytics])
+
+  // Live real-time polling interval (every 10 seconds)
+  useEffect(() => {
+    if (tab !== 'analytics' || !autoRefresh) return
+    const interval = setInterval(() => {
+      fetchAnalytics(true)
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [tab, autoRefresh, fetchAnalytics])
 
   const handleStatusToggle = async () => {
     setConfirmOpen(false)
@@ -575,6 +594,49 @@ export default function RestaurantDetailPage() {
       {/* ── TAB 2: DINING ANALYTICS ── */}
       {tab === 'analytics' && (
         <div className="space-y-6">
+          {/* Live Data Stream Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/80 px-5 py-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-2.5 w-2.5">
+                {autoRefresh && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${autoRefresh ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              </span>
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                {autoRefresh ? 'Live Stream Active' : 'Live Stream Paused'}
+              </span>
+              {lastUpdated && (
+                <span className="text-[11px] text-slate-400 font-medium">
+                  • Last sync: {lastUpdated.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAutoRefresh((prev) => !prev)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                  autoRefresh
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                {autoRefresh ? 'Auto-Sync (10s)' : 'Resume Auto-Sync'}
+              </button>
+              <button
+                type="button"
+                onClick={() => fetchAnalytics(false)}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-500 text-white text-xs font-bold shadow-xs hover:bg-orange-600 transition-all disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+
           {analyticsLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-24" />)}

@@ -11,5 +11,22 @@ const stateContent = {
 export default function EmptyState({ variant = 'search', onReset }) {
   const content = stateContent[variant];
   const Icon = content.icon;
-  return <div className="flex min-h-[24rem] flex-col items-center justify-center px-6 py-16 text-center"><div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[2rem] border border-renza-gold/20 bg-renza-gold/10 text-renza-gold shadow-glow"><Icon className="h-9 w-9" strokeWidth={1.5} /></div><h2 className="font-display text-2xl text-renza-ink">{content.title}</h2><p className="mt-2 max-w-xs text-sm leading-relaxed text-renza-ink/50">{content.message}</p>{content.action && <button type="button" onClick={onReset} className="mt-6 min-h-11 rounded-full bg-renza-ink px-5 py-2.5 text-xs font-bold text-renza-cream transition hover:bg-renza-charcoal focus:outline-none focus:ring-2 focus:ring-renza-gold focus:ring-offset-2">{content.action}</button>}</div>;
+  return (
+    <div className="mx-auto my-8 max-w-md rounded-3xl border border-white/80 bg-white/75 p-8 text-center shadow-glass backdrop-blur-xl">
+      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[2rem] border border-renza-gold/30 bg-renza-gold/10 text-amber-600 shadow-glow">
+        <Icon className="h-9 w-9" strokeWidth={1.5} />
+      </div>
+      <h2 className="font-serif text-2xl font-bold tracking-tight text-renza-ink">{content.title}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-renza-charcoal/70">{content.message}</p>
+      {content.action && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="mt-6 min-h-11 rounded-full bg-gradient-to-r from-renza-ink to-renza-charcoal px-6 py-2.5 text-xs font-bold text-renza-cream shadow-md transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-renza-gold active:scale-95"
+        >
+          {content.action}
+        </button>
+      )}
+    </div>
+  );
 }

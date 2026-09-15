@@ -68,20 +68,24 @@ export default function DashboardPage() {
   const [restaurants, setRestaurants] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetchData = async () => {
-    setLoading(true)
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const res = await api.get('/api/admin/restaurants')
       setRestaurants(res.data?.restaurants || res.data || [])
     } catch (err) {
-      toast.error('Failed to load platform data')
+      if (!silent) toast.error('Failed to load platform data')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
   useEffect(() => {
     fetchData()
+    const interval = setInterval(() => {
+      fetchData(true)
+    }, 15000)
+    return () => clearInterval(interval)
   }, [])
 
   const totalRestaurants = restaurants.length

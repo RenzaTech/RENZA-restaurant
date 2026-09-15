@@ -464,7 +464,11 @@ const getQRCode = async (req, res) => {
   const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
   const menuUrl = req.query.url || restaurant.customMenuUrl || defaultUrl
 
-  const qrDataUrl = await QRCode.toDataURL(menuUrl, {
+  // Encode ?source=qr into the scanned QR code image
+  const separator = menuUrl.includes('?') ? '&' : '?'
+  const qrTargetUrl = menuUrl.includes('source=') || menuUrl.includes('src=') ? menuUrl : `${menuUrl}${separator}source=qr`
+
+  const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
     errorCorrectionLevel: 'H',
     margin: 2,
     width: 500,
@@ -501,7 +505,11 @@ const updateQRUrl = async (req, res) => {
   const defaultUrl = `${baseCustomerUrl}/menu/${updated.slug}`
   const menuUrl = updated.customMenuUrl || defaultUrl
 
-  const qrDataUrl = await QRCode.toDataURL(menuUrl, {
+  // Encode ?source=qr into the scanned QR code image
+  const separator = menuUrl.includes('?') ? '&' : '?'
+  const qrTargetUrl = menuUrl.includes('source=') || menuUrl.includes('src=') ? menuUrl : `${menuUrl}${separator}source=qr`
+
+  const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
     errorCorrectionLevel: 'H',
     margin: 2,
     width: 500,
