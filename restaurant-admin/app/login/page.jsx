@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
@@ -14,12 +14,12 @@ import {
   Sparkles,
   QrCode,
   Shield,
+  TrendingUp,
+  ChefHat,
+  CheckCircle2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import api from '@/lib/api';
-import { setToken } from '@/lib/auth';
+import { setToken, isAuthenticated } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,6 +28,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,7 +53,7 @@ export default function LoginPage() {
       }
 
       setToken(token);
-      toast.success(`Welcome to your kitchen portal, ${user?.name || 'Manager'}!`);
+      toast.success(`Welcome back, ${user?.name || 'Manager'}!`);
       router.replace('/dashboard');
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Invalid email or password';
@@ -58,51 +64,142 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 flex flex-col justify-between p-4 sm:p-8 font-sans text-slate-100 selection:bg-orange-500 selection:text-white relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-orange-500/20 via-teal-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
+    <div className="min-h-screen w-full bg-slate-950 flex flex-col lg:flex-row font-sans text-slate-100 selection:bg-orange-500 selection:text-white">
+      {/* ── LEFT SHOWCASE PANEL (Desktop 58%) ── */}
+      <div className="relative hidden lg:flex lg:w-7/12 flex-col justify-between p-12 xl:p-16 overflow-hidden border-r border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        {/* Ambient glow orbs */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 right-12 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
 
-      {/* Top Bar Header */}
-      <div className="relative z-10 flex items-center justify-between max-w-5xl mx-auto w-full pt-2">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+        {/* Top Brand Header */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center shadow-lg shadow-orange-500/25">
             <UtensilsCrossed className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="text-lg font-black tracking-tight text-white">Renza</span>
-            <span className="text-[10px] ml-2 px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30 uppercase tracking-wider">
-              Partner Hub
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black tracking-tight text-white">Renza</span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20 uppercase tracking-wider">
+                Partner Hub
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400">Digital Dining & Kitchen Portal</p>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Kitchen Network Active</span>
+        {/* Center Showcase & Value Propositions */}
+        <div className="relative z-10 my-auto py-8 max-w-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs font-semibold text-orange-400 mb-6 backdrop-blur-sm shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+            Kitchen Operations & Digital QR Suite
+          </div>
+
+          <h1 className="text-4xl xl:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-5">
+            Command Your Kitchen &{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-teal-300 to-orange-500">
+              Live Dining Menus
+            </span>
+          </h1>
+
+          <p className="text-slate-400 text-base xl:text-lg leading-relaxed mb-8">
+            Keep your digital menu synchronized, toggle out-of-stock items in real time, generate high-definition table QR stands, and deliver seamless contactless dining.
+          </p>
+
+          {/* Feature Showcase Cards */}
+          <div className="space-y-3.5">
+            <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm hover:border-slate-700/80 transition-all">
+              <div className="w-9 h-9 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 flex-shrink-0 mt-0.5">
+                <ChefHat className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-white">Instant Stock & 86-Item Control</p>
+                  <span className="inline-flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Live sync
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                  Mark sold-out dishes in a single tap to instantly prevent diner disappointment across all active tables.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm hover:border-slate-700/80 transition-all">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-400 flex-shrink-0 mt-0.5">
+                <QrCode className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Table & Counter QR Code Studio</p>
+                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                  Generate crisp, print-ready SVG & PNG QR stands for each dining table and billing counter.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm hover:border-slate-700/80 transition-all">
+              <div className="w-9 h-9 rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-400 flex-shrink-0 mt-0.5">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Live Diner Menu Intelligence</p>
+                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                  Gain instant visibility into diner menu scans, popular dish views, and peak meal rush hours.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Platform Status Strip */}
+        <div className="relative z-10 flex items-center justify-between pt-6 border-t border-slate-800/60 text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-slate-300 font-medium">Kitchen POS & QR Network Active</span>
+          </div>
+          <span>v2.4 Partner Edition</span>
         </div>
       </div>
 
-      {/* Center Login Card */}
-      <div className="relative z-10 my-auto py-6 sm:py-8 max-w-md w-full mx-auto">
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl backdrop-blur-md">
-          {/* Card Header */}
-          <div className="text-center mb-6 sm:mb-8">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mx-auto mb-3 sm:mb-4 shadow-inner">
-              <Store className="w-6 h-6 sm:w-7 sm:h-7" />
+      {/* ── RIGHT LOGIN PANEL (Mobile 100% / Desktop 42%) ── */}
+      <div className="w-full lg:w-5/12 flex flex-col justify-between p-6 sm:p-10 lg:p-14 bg-slate-900/90 relative">
+        {/* Mobile Header */}
+        <div className="lg:hidden flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center shadow-md">
+              <UtensilsCrossed className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <div>
+              <span className="text-lg font-bold text-white">Renza</span>
+              <span className="text-[10px] ml-1.5 text-slate-400">Partner Hub</span>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20">
+            Restaurant Admin
+          </span>
+        </div>
+
+        {/* Center Form Card */}
+        <div className="my-auto max-w-md w-full mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-4 shadow-inner">
+              <Store className="w-6 h-6" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Restaurant Sign In
-            </h1>
-            <p className="text-xs text-slate-400 mt-2 max-w-xs mx-auto leading-relaxed">
-              Manage your live digital dining menu, update food availability, and track table QR scans in real-time.
+            </h2>
+            <p className="text-sm text-slate-400 mt-2">
+              Enter your manager credentials to access your restaurant kitchen portal.
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email */}
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email Field */}
             <div className="space-y-1.5">
-              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                 Manager Email
               </label>
               <div className="relative">
@@ -110,9 +207,9 @@ export default function LoginPage() {
                 <input
                   id="email"
                   type="email"
-                  placeholder="admin@restaurant.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@restaurant.com"
                   autoComplete="email"
                   autoFocus
                   required
@@ -121,10 +218,10 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password Field */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                   Password
                 </label>
               </div>
@@ -133,16 +230,16 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
                   autoComplete="current-password"
                   required
                   className="w-full pl-10 pr-11 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-inner font-mono text-xs"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
@@ -164,11 +261,11 @@ export default function LoginPage() {
               </label>
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-5 bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group mt-3"
+              className="w-full py-3.5 px-5 bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group mt-3"
             >
               {loading ? (
                 <>
@@ -184,19 +281,19 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick info chip */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80 text-center">
-            <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-orange-400" />
-              <span>Instant stock availability sync enabled</span>
+          {/* Security & Isolation Notice */}
+          <div className="mt-8 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-3">
+            <Shield className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Secure Restaurant Environment · Real-time 86-item stock availability sync and multi-tenant data isolation active.
             </p>
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="relative z-10 text-center text-xs text-slate-500 pb-2">
-        Renza Hospitality Technologies &copy; {new Date().getFullYear()} · All rights reserved
+        {/* Footer */}
+        <div className="pt-8 text-center text-xs text-slate-500">
+          Renza Hospitality Technologies &copy; {new Date().getFullYear()} · All rights reserved
+        </div>
       </div>
     </div>
   );
