@@ -66,20 +66,29 @@ export default function EditFoodItemPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
-      {/* Sub-header */}
-      <div className="sticky top-14 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+      {/* Page Heading & Back navigation */}
+      <div>
         <button
+          type="button"
           onClick={() => router.back()}
-          className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 mb-3 transition-colors group"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>Back to Menu & Stock</span>
         </button>
-        <h1 className="text-lg font-bold text-gray-900">Edit Food Item</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Edit Food Item</h2>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+              Update dish photography, pricing, culinary details, and live availability.
+            </p>
+          </div>
+        </div>
       </div>
 
       {loading ? (
-        <div className="p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="space-y-4 w-full">
           <Skeleton className="h-48 w-full rounded-2xl" />
           <Skeleton className="h-12 w-full rounded-xl" />
           <Skeleton className="h-12 w-full rounded-xl" />

@@ -79,7 +79,7 @@ export default function FoodItemForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 max-w-2xl mx-auto pb-12">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-12 w-full">
       {/* ── CARD 1: PHOTO & ESSENTIAL DETAILS ── */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-4 sm:p-6 lg:p-8 shadow-xs space-y-4 sm:space-y-6">
         {/* Photo Upload Zone */}

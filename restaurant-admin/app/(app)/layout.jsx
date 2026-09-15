@@ -228,7 +228,7 @@ export default function AppLayout({ children }) {
 
         {/* Top Navbar */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between px-3 sm:px-6 lg:px-8 h-14 sm:h-16 gap-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3 w-full">
             <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
               <button
                 onClick={() => setSidebarOpen(true)}
