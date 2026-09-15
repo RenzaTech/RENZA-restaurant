@@ -830,6 +830,14 @@ export default function RestaurantDetailPage() {
         onConfirm={handleStatusToggle}
         onCancel={() => setConfirmOpen(false)}
       />
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        restaurant={restaurant}
+        onConfirm={handleDeleteRestaurant}
+        onCancel={() => setDeleteConfirmOpen(false)}
+        deleting={deleting}
+      />
     </div>
   )
 }
@@ -990,28 +998,6 @@ function MenuTab({ restaurantId }) {
           </div>
         )
       })}
-      {/* ── STATUS TOGGLE CONFIRM DIALOG ── */}
-      <ConfirmDialog
-        open={confirmOpen}
-        message={`Are you sure you want to ${
-          restaurant?.status === 'active' ? 'suspend' : 'activate'
-        } this restaurant? ${
-          restaurant?.status === 'active'
-            ? 'Customers will be greeted with a temporarily unavailable screen.'
-            : 'Customers will instantly be able to view their digital menu again.'
-        }`}
-        onConfirm={handleStatusToggle}
-        onCancel={() => setConfirmOpen(false)}
-      />
-
-      {/* ── DELETE CONFIRMATION MODAL ── */}
-      <DeleteConfirmDialog
-        open={deleteConfirmOpen}
-        restaurant={restaurant}
-        onConfirm={handleDeleteRestaurant}
-        onCancel={() => setDeleteConfirmOpen(false)}
-        deleting={deleting}
-      />
     </div>
   )
 }
