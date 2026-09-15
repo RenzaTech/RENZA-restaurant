@@ -65,20 +65,13 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
 
   const priceFormatted = (Number(item.price) || 0).toFixed(2);
 
-  const placeholder = (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-renza-charcoal via-renza-ink to-renza-ember/60 text-renza-cream">
-      <UtensilsCrossed className="mb-2 h-8 w-8 text-renza-gold/80" strokeWidth={1.5} />
-      <span className="font-display text-3xl tracking-wide text-white/90">{initials}</span>
-    </div>
-  );
-
   return (
     <article
       ref={ref}
-      className={`group relative overflow-hidden rounded-3xl border border-white/90 bg-white/85 shadow-card backdrop-blur-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-renza-gold focus:ring-offset-2 active:scale-[0.98] motion-reduce:active:scale-100 ${
+      className={`group relative flex items-center justify-between gap-3 sm:gap-4 overflow-hidden rounded-2xl sm:rounded-3xl border border-white/90 bg-white/85 p-3.5 sm:p-4 shadow-card backdrop-blur-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00d2c4] focus:ring-offset-2 active:scale-[0.99] ${
         isUnavailable
-          ? 'cursor-default opacity-85'
-          : 'cursor-pointer hover:-translate-y-1.5 hover:shadow-xl hover:border-renza-gold/40 motion-reduce:hover:translate-y-0'
+          ? 'cursor-default opacity-80'
+          : 'cursor-pointer hover:shadow-md hover:border-[#00d2c4]/40 hover:-translate-y-0.5'
       }`}
       onClick={isUnavailable ? undefined : (event) => onSelect(item, event.currentTarget)}
       onKeyDown={
@@ -95,76 +88,76 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
       role="button"
       aria-disabled={isUnavailable}
     >
-      <div className={`relative aspect-[4/3] overflow-hidden bg-renza-charcoal ${isUnavailable ? 'grayscale' : ''}`}>
-        {imageUrl && !imageFailed ? (
-          <Image
-            src={imageUrl}
-            alt={item.name}
-            fill
-            sizes="(min-width: 1280px) 31vw, (min-width: 768px) 47vw, calc(100vw - 2rem)"
-            placeholder="blur"
-            blurDataURL={getDishBlurDataUrl(item.name)}
-            priority={priority}
-            loading={priority ? undefined : 'lazy'}
-            className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-            onError={() => setImageFailed(true)}
-          />
-        ) : (
-          placeholder
-        )}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
-          aria-hidden="true"
-        />
-
-        {/* Floating Glass Veg/Non-Veg Badge */}
-        <div className="absolute left-3.5 top-3.5 rounded-xl border border-white/80 bg-white/85 p-1.5 shadow-sm backdrop-blur-md">
+      {/* ── Left Content Details ── */}
+      <div className="flex-1 min-w-0 pr-1">
+        <div className="flex items-center gap-2 mb-1">
           <VegIndicator isVeg={isVeg} />
-        </div>
-
-        {/* Sold out banner */}
-        {isUnavailable && (
-          <div className="absolute right-0 top-4 rounded-l-full border-y border-l border-white/20 bg-renza-ink/90 px-3.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-renza-cream backdrop-blur-md shadow-md">
-            Sold out
-          </div>
-        )}
-
-        {/* Floating Glass Price Badge */}
-        <span className="absolute bottom-3.5 right-3.5 rounded-full border border-white/25 bg-renza-ink/80 px-3.5 py-1.5 text-xs font-black text-white shadow-lg backdrop-blur-xl ring-1 ring-black/10 sm:text-sm">
-          ₹{priceFormatted}
-        </span>
-      </div>
-
-      <div className="p-4 sm:p-4.5">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className={`text-base font-bold leading-snug tracking-tight sm:text-lg ${isUnavailable ? 'text-slate-500' : 'text-slate-900'}`}>
-            {item.name}
-          </h3>
           {isUnavailable ? (
-            <span className="flex-shrink-0 rounded-full border border-rose-200/60 bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold text-rose-600">
+            <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[9px] font-bold text-rose-600">
               Sold Out
             </span>
           ) : (
-            <span className="flex-shrink-0 inline-flex items-center text-[10px] font-bold text-emerald-700">
+            <span className="text-[10px] font-bold text-emerald-600">
               Available
             </span>
           )}
         </div>
 
-        <div className="mt-2 min-h-5">
-          <DietaryTags item={item} />
-        </div>
+        <h3 className={`font-bold text-sm sm:text-base leading-snug tracking-tight truncate ${isUnavailable ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+          {item.name}
+        </h3>
+
+        <p className="mt-0.5 text-sm sm:text-base font-extrabold text-slate-900">
+          ₹{priceFormatted}
+        </p>
 
         {item.description && (
-          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500 sm:text-xs">
+          <p className="mt-1 line-clamp-1 sm:line-clamp-2 text-xs leading-relaxed text-slate-500">
             {item.description}
           </p>
         )}
 
-        <div className="mt-3 flex items-center justify-between border-t border-renza-ink/5 pt-2.5 text-[11px] font-bold text-renza-gold transition-colors group-hover:text-renza-ember">
-          <span>View dish details</span>
-          <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+        <div className="mt-2 min-h-4">
+          <DietaryTags item={item} />
         </div>
+      </div>
+
+      {/* ── Right Thumbnail ── */}
+      <div className="relative h-24 w-24 sm:h-28 sm:w-28 flex-shrink-0 overflow-hidden rounded-2xl bg-renza-charcoal border border-slate-100 shadow-xs">
+        {imageUrl && !imageFailed ? (
+          <Image
+            src={imageUrl}
+            alt={item.name}
+            fill
+            sizes="(min-width: 640px) 112px, 96px"
+            placeholder="blur"
+            blurDataURL={getDishBlurDataUrl(item.name)}
+            priority={priority}
+            loading={priority ? undefined : 'lazy'}
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-renza-charcoal via-renza-ink to-[#00d2c4]/20 text-renza-cream">
+            <UtensilsCrossed className="h-6 w-6 text-renza-gold/80 mb-1" strokeWidth={1.5} />
+            <span className="font-display text-base font-black text-white/90">{initials}</span>
+          </div>
+        )}
+
+        {isUnavailable && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs text-[10px] font-black uppercase tracking-wider text-white">
+            Sold out
+          </div>
+        )}
+
+        {/* View Details cue on bottom of thumbnail */}
+        {!isUnavailable && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-center bg-gradient-to-t from-black/75 via-black/40 to-transparent py-1 text-[9px] font-bold text-white">
+            <span className="flex items-center gap-0.5">
+              Details <ChevronRight className="h-2.5 w-2.5 text-[#00d2c4]" />
+            </span>
+          </div>
+        )}
       </div>
     </article>
   );
