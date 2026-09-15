@@ -138,10 +138,19 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="flex items-center pt-1 sm:pt-2 md:pt-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-1 sm:pt-2 md:pt-0">
+            {/* Get Table QR Button */}
+            <Button
+              onClick={() => setQrModalOpen(true)}
+              className="bg-white text-orange-600 hover:bg-orange-50 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto flex-1 sm:flex-none justify-center"
+            >
+              <QrCode className="w-4 h-4 flex-shrink-0" />
+              <span>Table QR</span>
+            </Button>
+
             <Button
               onClick={() => router.push('/menu/new')}
-              className="bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto"
+              className="bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto flex-1 sm:flex-none justify-center"
             >
               <Plus className="w-4 h-4 flex-shrink-0" />
               <span>Add Dish</span>
