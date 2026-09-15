@@ -87,10 +87,12 @@ app.use((err, _req, res, _next) => {
 
 // ─── Start server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () => {
-  console.log(`🚀 Renza backend running on http://localhost:${PORT}`)
-  console.log(`   Uploads served at http://localhost:${PORT}/uploads`)
-  console.log(`   Allowed origins: ${allowedOrigins.join(', ')}`)
-})
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Renza backend running on http://localhost:${PORT}`)
+    console.log(`   Uploads served at http://localhost:${PORT}/uploads`)
+    console.log(`   Allowed origins: ${allowedOrigins.join(', ')}`)
+  })
+}
 
 module.exports = app
