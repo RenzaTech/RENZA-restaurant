@@ -25,8 +25,7 @@ const getProfile = async (req, res) => {
   return res.json(restaurant)
 }
 
-/**
- * PUT /api/restaurant/profile
+// ─── Mobile Validation Helper ────────────────────────────────────────────────
 const validateMobileNumber = (phone) => {
   if (phone === undefined || phone === null) return { valid: true, sanitized: null }
   const trimmed = String(phone).trim()
