@@ -11,7 +11,7 @@
   --renza-charcoal: #16161C;
   --renza-cream: #FAF7F2;
   --renza-gold: #C9A227;
-  --renza-ember: #F97316;
+  --renza-ember: #00d2c4;
   --renza-sage: #4F7A5B;
 }
 
@@ -27,7 +27,7 @@ body {
   background-color: var(--renza-cream);
   background-image: 
     radial-gradient(at 0% 0%, rgba(201, 162, 39, 0.07) 0px, transparent 50%),
-    radial-gradient(at 100% 10%, rgba(249, 115, 22, 0.05) 0px, transparent 40%),
+    radial-gradient(at 100% 10%, rgba(0, 210, 196, 0.06) 0px, transparent 40%),
     radial-gradient(at 50% 60%, rgba(201, 162, 39, 0.04) 0px, transparent 60%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;

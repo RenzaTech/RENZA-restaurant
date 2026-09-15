@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
             },
             success: {
               iconTheme: {
-                primary: '#f97316',
+                primary: '#00d2c4',
                 secondary: '#fff',
               },
             },

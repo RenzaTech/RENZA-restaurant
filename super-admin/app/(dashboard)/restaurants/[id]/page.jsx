@@ -113,7 +113,7 @@ function HourlyChart({ data }) {
                     style={{ height: `${Math.max(pct, val > 0 ? 6 : 0)}%` }}
                     className={`w-full rounded-t-lg transition-all cursor-pointer ${
                       isPeak
-                        ? 'bg-gradient-to-t from-orange-500 to-amber-400 shadow-sm'
+                        ? 'bg-gradient-to-t from-orange-500 to-teal-400 shadow-sm'
                         : val > 0
                         ? 'bg-orange-200 hover:bg-orange-400'
                         : 'bg-slate-100 hover:bg-slate-200'
@@ -353,7 +353,7 @@ export default function RestaurantDetailPage() {
       {/* ── HERO RESTAURANT HEADER CARD ── */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-orange-500/20 flex-shrink-0">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-orange-500/20 flex-shrink-0">
             {restaurant.name?.charAt(0) || 'R'}
           </div>
           <div>

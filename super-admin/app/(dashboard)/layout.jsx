@@ -44,7 +44,7 @@ function Sidebar({ onClose }) {
       {/* Logo & Platform Info */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/70">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-tr from-orange-500 to-amber-500 rounded-2xl shadow-lg shadow-orange-500/20">
+          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-tr from-orange-500 to-teal-600 rounded-2xl shadow-lg shadow-orange-500/20">
             <span className="text-xl font-black text-white">R</span>
           </div>
           <div>
@@ -83,7 +83,7 @@ function Sidebar({ onClose }) {
               className={cn(
                 'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all group',
                 isActive
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20'
+                  ? 'bg-gradient-to-r from-orange-500 to-teal-600 text-white shadow-md shadow-orange-500/20'
                   : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
               )}
             >
