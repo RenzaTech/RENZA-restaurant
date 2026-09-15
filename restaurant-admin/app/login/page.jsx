@@ -292,7 +292,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="pt-8 text-center text-xs text-slate-500">
-          Renza Hospitality Technologies &copy; {new Date().getFullYear()} · All rights reserved
+          Renza &copy; {new Date().getFullYear()} · All rights reserved
         </div>
       </div>
     </div>
