@@ -243,25 +243,12 @@ export default function AppLayout({ children }) {
               </h1>
             </div>
 
-            {/* Live status badge + Quick customer menu link */}
+            {/* Live status badge */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-bold">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-bold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Menu Live</span>
               </div>
-
-              {customerMenuUrl && (
-                <a
-                  href={customerMenuUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-100 text-xs font-bold transition-colors border border-orange-200/60 shadow-2xs"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="hidden sm:inline">Diner Menu</span>
-                  <span className="sm:hidden text-[11px]">Menu</span>
-                </a>
-              )}
             </div>
           </div>
         </header>
