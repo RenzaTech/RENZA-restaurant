@@ -91,6 +91,7 @@ export default function MenuPage({ params }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [activeFilters, setActiveFilters] = useState([]);
+  const [sortBy, setSortBy] = useState('default');
   const [urlReady, setUrlReady] = useState(false);
   const sectionRefs = useRef({});
   const searchInputRef = useRef(null);
@@ -108,6 +109,10 @@ export default function MenuPage({ params }) {
   useEffect(() => {
     const url = new URL(window.location.href);
     const restoredFilters = (url.searchParams.get('filters') || '').split(',').filter((filter) => FILTER_IDS.includes(filter));
+    const restoredSort = url.searchParams.get('sort');
+    if (restoredSort === 'price-asc' || restoredSort === 'price-desc') {
+      setSortBy(restoredSort);
+    }
     setSearchQuery(url.searchParams.get('q') || '');
     setActiveFilters(restoredFilters);
     setUrlReady(true);
@@ -125,8 +130,10 @@ export default function MenuPage({ params }) {
     else url.searchParams.delete('q');
     if (activeFilters.length > 0) url.searchParams.set('filters', activeFilters.join(','));
     else url.searchParams.delete('filters');
+    if (sortBy && sortBy !== 'default') url.searchParams.set('sort', sortBy);
+    else url.searchParams.delete('sort');
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
-  }, [activeFilters, searchQuery, urlReady]);
+  }, [activeFilters, searchQuery, sortBy, urlReady]);
 
   const fetchMenu = useCallback(async () => {
     setState('loading');
@@ -269,6 +276,7 @@ export default function MenuPage({ params }) {
   const handleClearAll = () => {
     setSearchQuery('');
     setActiveFilters([]);
+    setSortBy('default');
   };
 
   const handleSheetClose = useCallback(() => {
@@ -281,64 +289,72 @@ export default function MenuPage({ params }) {
     requestAnimationFrame(() => triggerElement?.focus());
   }, []);
 
-  // Filter items based on search and dietary choice
+  // Filter items based on search and dietary choice, then sort by price if requested
   const filteredGroups = useMemo(() => {
-    return categoryGroups.map((group) => {
-      const items = group.items.filter((item) => {
-        const normalizedIngredients = Array.isArray(item.ingredients) ? item.ingredients.join(' ') : item.ingredients || '';
-        const matchesSearch = debouncedSearch
-          ? item.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            item.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            group.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            item.categoryName?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            item.category?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            (typeof item.specialTags === 'string' && item.specialTags.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-            normalizedIngredients.toLowerCase().includes(debouncedSearch.toLowerCase())
-          : true;
+    return categoryGroups
+      .map((group) => {
+        const items = group.items.filter((item) => {
+          const normalizedIngredients = Array.isArray(item.ingredients) ? item.ingredients.join(' ') : item.ingredients || '';
+          const matchesSearch = debouncedSearch
+            ? item.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+              item.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+              group.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+              item.categoryName?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+              item.category?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+              (typeof item.specialTags === 'string' && item.specialTags.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
+              normalizedIngredients.toLowerCase().includes(debouncedSearch.toLowerCase())
+            : true;
 
-        const isVeg =
-          item.isVeg === true ||
-          item.isVeg === 'true' ||
-          item.foodType === 'veg' ||
-          item.isVegan === true ||
-          item.isVegan === 'true' ||
-          item.isJain === true ||
-          item.isJain === 'true';
+          const isVeg =
+            item.isVeg === true ||
+            item.isVeg === 'true' ||
+            item.foodType === 'veg' ||
+            item.isVegan === true ||
+            item.isVegan === 'true' ||
+            item.isJain === true ||
+            item.isJain === 'true';
 
-        const isVegan =
-          item.isVegan === true ||
-          item.isVegan === 'true' ||
-          (typeof item.specialTags === 'string' && /vegan/i.test(item.specialTags));
+          const isVegan =
+            item.isVegan === true ||
+            item.isVegan === 'true' ||
+            (typeof item.specialTags === 'string' && /vegan/i.test(item.specialTags));
 
-        const isJain =
-          item.isJain === true ||
-          item.isJain === 'true' ||
-          (typeof item.specialTags === 'string' && /jain/i.test(item.specialTags));
+          const isJain =
+            item.isJain === true ||
+            item.isJain === 'true' ||
+            (typeof item.specialTags === 'string' && /jain/i.test(item.specialTags));
 
-        const isGlutenFree =
-          item.isGlutenFree === true ||
-          item.isGlutenFree === 'true' ||
-          (typeof item.specialTags === 'string' && /gluten[- ]?free/i.test(item.specialTags)) ||
-          (typeof item.allergens === 'string' && /gluten[- ]?free/i.test(item.allergens));
+          const isGlutenFree =
+            item.isGlutenFree === true ||
+            item.isGlutenFree === 'true' ||
+            (typeof item.specialTags === 'string' && /gluten[- ]?free/i.test(item.specialTags)) ||
+            (typeof item.allergens === 'string' && /gluten[- ]?free/i.test(item.allergens));
 
-        const isAvailable = item.isAvailable === true || item.isAvailable === 'true' || item.isAvailable === undefined;
+          const isAvailable = item.isAvailable === true || item.isAvailable === 'true' || item.isAvailable === undefined;
 
-        const matchesDiet = activeFilters.every((filter) => {
-          if (filter === 'veg') return isVeg;
-          if (filter === 'non-veg') return !isVeg;
-          if (filter === 'vegan') return isVegan;
-          if (filter === 'jain') return isJain;
-          if (filter === 'gluten-free') return isGlutenFree;
-          if (filter === 'available') return isAvailable;
-          return true;
+          const matchesDiet = activeFilters.every((filter) => {
+            if (filter === 'veg') return isVeg;
+            if (filter === 'non-veg') return !isVeg;
+            if (filter === 'vegan') return isVegan;
+            if (filter === 'jain') return isJain;
+            if (filter === 'gluten-free') return isGlutenFree;
+            if (filter === 'available') return isAvailable;
+            return true;
+          });
+
+          return matchesSearch && matchesDiet;
         });
 
-        return matchesSearch && matchesDiet;
-      });
+        if (sortBy === 'price-asc') {
+          items.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+        } else if (sortBy === 'price-desc') {
+          items.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+        }
 
-      return { ...group, items };
-    }).filter((g) => g.items.length > 0);
-  }, [categoryGroups, debouncedSearch, activeFilters]);
+        return { ...group, items };
+      })
+      .filter((g) => g.items.length > 0);
+  }, [categoryGroups, debouncedSearch, activeFilters, sortBy]);
 
   const allCategories = useMemo(
     () => filteredGroups.map((g) => ({ id: g.id, name: g.name })),
@@ -357,8 +373,18 @@ export default function MenuPage({ params }) {
   return (
     <div className="min-h-screen bg-renza-cream font-sans selection:bg-renza-gold selection:text-renza-ink">
       <MenuHero restaurant={restaurant} resolveImageUrl={resolveImageUrl} onSearch={() => searchInputRef.current?.focus()} />
-      <div className="border-b border-renza-ink/10 bg-renza-cream/80">
-        <SearchBar ref={searchInputRef} searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeFilters={activeFilters} onToggleFilter={handleToggleFilter} onClearAll={handleClearAll} resultCount={resultCount} />
+      <div className="relative z-40 border-b border-renza-ink/10 bg-renza-cream/80">
+        <SearchBar
+          ref={searchInputRef}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          activeFilters={activeFilters}
+          onToggleFilter={handleToggleFilter}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          onClearAll={handleClearAll}
+          resultCount={resultCount}
+        />
       </div>
       <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={handleActiveCategoryChange} />
 
