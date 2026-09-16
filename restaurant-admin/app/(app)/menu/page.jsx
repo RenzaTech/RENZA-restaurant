@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Pencil, Trash2, UtensilsCrossed, Search, Filter, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, UtensilsCrossed, Search, Filter, Sparkles, FolderTree, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -176,18 +176,26 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
 export default function MenuPage() {
   const router = useRouter();
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [groupByCategory, setGroupByCategory] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
   const fetchItems = useCallback(() => {
     setLoading(true);
-    api.get('/api/restaurant/foods')
-      .then((res) => {
-        const foods = res.data?.foods || res.data || [];
+    Promise.all([
+      api.get('/api/restaurant/foods'),
+      api.get('/api/restaurant/categories').catch(() => ({ data: { categories: [] } })),
+    ])
+      .then(([foodsRes, catsRes]) => {
+        const foods = foodsRes.data?.foods || foodsRes.data || [];
+        const cats = catsRes.data?.categories || catsRes.data || [];
         setItems(Array.isArray(foods) ? foods : []);
+        setCategories(Array.isArray(cats) ? cats : []);
       })
       .catch((err) => {
         if (err.response?.status !== 401) toast.error('Failed to load menu dishes');
@@ -221,19 +229,64 @@ export default function MenuPage() {
     }
   };
 
-  const filteredItems = items.filter((item) => {
-    const matchesFilter =
-      filter === 'All'
-        ? true
-        : filter === 'Available'
-        ? item.isAvailable
-        : !item.isAvailable;
-    const matchesSearch = search
-      ? item.name?.toLowerCase().includes(search.toLowerCase()) ||
-        item.category?.name?.toLowerCase().includes(search.toLowerCase())
-      : true;
-    return matchesFilter && matchesSearch;
-  });
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const matchesFilter =
+        filter === 'All'
+          ? true
+          : filter === 'Available'
+          ? item.isAvailable
+          : !item.isAvailable;
+
+      const matchesCategory =
+        selectedCategory === 'all'
+          ? true
+          : (item.categoryId === selectedCategory || item.category?.id === selectedCategory);
+
+      const matchesSearch = search
+        ? item.name?.toLowerCase().includes(search.toLowerCase()) ||
+          item.category?.name?.toLowerCase().includes(search.toLowerCase()) ||
+          item.description?.toLowerCase().includes(search.toLowerCase())
+        : true;
+
+      return matchesFilter && matchesCategory && matchesSearch;
+    });
+  }, [items, filter, selectedCategory, search]);
+
+  const groupedSections = useMemo(() => {
+    if (!groupByCategory || selectedCategory !== 'all') return [];
+
+    const sections = [];
+    const seenDishIds = new Set();
+    const sortedCats = [...categories].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    sortedCats.forEach((cat) => {
+      const catItems = filteredItems.filter((item) => {
+        const matches = item.categoryId === cat.id || item.category?.id === cat.id;
+        if (matches) seenDishIds.add(item.id || item._id);
+        return matches;
+      });
+
+      if (catItems.length > 0) {
+        sections.push({
+          id: cat.id,
+          name: cat.name,
+          items: catItems,
+        });
+      }
+    });
+
+    const uncategorized = filteredItems.filter((item) => !seenDishIds.has(item.id || item._id));
+    if (uncategorized.length > 0) {
+      sections.push({
+        id: 'uncategorized',
+        name: 'Other Dishes',
+        items: uncategorized,
+      });
+    }
+
+    return sections;
+  }, [categories, filteredItems, groupByCategory, selectedCategory]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -242,7 +295,8 @@ export default function MenuPage() {
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Menu Dishes & Stock</h2>
           <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-            Total {items.length} dishes • {items.filter((i) => i.isAvailable).length} Available •{' '}
+            {filteredItems.length !== items.length ? `Showing ${filteredItems.length} of ${items.length} dishes • ` : `Total ${items.length} dishes • `}
+            {items.filter((i) => i.isAvailable).length} Available •{' '}
             {items.filter((i) => !i.isAvailable).length} Sold Out
           </p>
         </div>
@@ -259,39 +313,129 @@ export default function MenuPage() {
       </div>
 
       {/* ── SEARCH & FILTER CONTROLS ── */}
-      <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3">
-        {/* Search */}
-        <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search dishes by name or category..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-xs"
-          />
-        </div>
+      <div className="space-y-3">
+        <div className="flex flex-col lg:flex-row items-center gap-2.5 sm:gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search dishes by name, category, or ingredients..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-xs"
+            />
+          </div>
 
-        {/* Filter Pills */}
-        <div className="flex gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs w-full sm:w-auto">
-          {FILTERS.map((f) => (
+          {/* View Mode Switcher: By Category vs All Grid */}
+          <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs w-full sm:w-auto">
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              type="button"
+              onClick={() => setGroupByCategory(true)}
               className={cn(
-                'flex-1 sm:flex-none py-1.5 px-3 sm:px-3.5 rounded-lg text-xs font-bold transition-all text-center',
-                filter === f
-                  ? 'bg-orange-500 text-white shadow-xs'
+                'flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all',
+                groupByCategory && selectedCategory === 'all'
+                  ? 'bg-slate-900 text-white shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               )}
+              title="Group dishes by category sections"
             >
-              {f}
+              <FolderTree className="w-3.5 h-3.5" />
+              <span>By Category</span>
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => setGroupByCategory(false)}
+              className={cn(
+                'flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all',
+                !groupByCategory || selectedCategory !== 'all'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+              )}
+              title="Show all dishes in single grid"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>All Grid</span>
+            </button>
+          </div>
+
+          {/* Availability Status Filter Pills */}
+          <div className="flex gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs w-full sm:w-auto">
+            {FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={cn(
+                  'flex-1 sm:flex-none py-1.5 px-3 sm:px-3.5 rounded-lg text-xs font-bold transition-all text-center',
+                  filter === f
+                    ? 'bg-orange-500 text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── CATEGORY PILLS RAIL ── */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide -webkit-overflow-scrolling-touch">
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('all')}
+            className={cn(
+              'flex-shrink-0 inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-bold transition-all',
+              selectedCategory === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+            )}
+          >
+            <FolderTree className="w-3.5 h-3.5" />
+            <span>All Categories</span>
+            <span
+              className={cn(
+                'text-[10px] px-1.5 py-0.2 rounded-full font-extrabold',
+                selectedCategory === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              )}
+            >
+              {items.length}
+            </span>
+          </button>
+
+          {categories.map((cat) => {
+            const count = items.filter(
+              (i) => i.categoryId === cat.id || i.category?.id === cat.id
+            ).length;
+            const isSelected = selectedCategory === cat.id;
+
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={cn(
+                  'flex-shrink-0 inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-bold transition-all',
+                  isSelected
+                    ? 'bg-orange-500 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                )}
+              >
+                <span>{cat.name}</span>
+                <span
+                  className={cn(
+                    'text-[10px] px-1.5 py-0.2 rounded-full font-extrabold',
+                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* ── FOOD ITEMS RESPONSIVE GRID ── */}
+      {/* ── FOOD ITEMS DISPLAY: CATEGORIZED SECTIONS OR FLAT GRID ── */}
       <div>
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -305,24 +449,60 @@ export default function MenuPage() {
               <UtensilsCrossed className="w-8 h-8 text-orange-400" />
             </div>
             <h3 className="font-bold text-slate-800 text-base mb-1">
-              {search ? 'No matching dishes found' : filter === 'All' ? 'No food items in menu yet' : `No ${filter.toLowerCase()} dishes`}
+              {search
+                ? 'No matching dishes found'
+                : selectedCategory !== 'all'
+                ? 'No dishes in this category'
+                : filter === 'All'
+                ? 'No food items in menu yet'
+                : `No ${filter.toLowerCase()} dishes`}
             </h3>
             <p className="text-slate-400 text-xs max-w-sm mb-6 leading-relaxed">
-              {search
-                ? 'Try searching with a different keyword or clear the search input.'
+              {search || selectedCategory !== 'all' || filter !== 'All'
+                ? 'Try resetting your search, category selection, or filters.'
                 : 'Start showcasing your food to diners by adding your signature recipes.'}
             </p>
             <Button
               onClick={() => {
-                if (search) setSearch('');
-                else router.push('/menu/new');
+                setSearch('');
+                setSelectedCategory('all');
+                setFilter('All');
               }}
               className="gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold"
             >
-              {search ? 'Clear Search' : <><Plus className="w-4 h-4" /> Add First Dish</>}
+              Reset Filters
             </Button>
           </div>
+        ) : groupByCategory && selectedCategory === 'all' && groupedSections.length > 0 ? (
+          /* Grouped by Category View */
+          <div className="space-y-8">
+            {groupedSections.map((group) => (
+              <section key={group.id} className="space-y-3.5">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/80">
+                  <h3 className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
+                    {group.name}
+                  </h3>
+                  <span className="text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
+                    {group.items.length} {group.items.length === 1 ? 'dish' : 'dishes'}
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-slate-200/80 via-slate-100 to-transparent" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {group.items.map((item) => (
+                    <FoodItemCard
+                      key={item.id || item._id}
+                      item={item}
+                      onToggle={handleToggleAvailability}
+                      onEdit={(id) => router.push(`/menu/${id}/edit`)}
+                      onDelete={setDeleteTarget}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         ) : (
+          /* Flat Grid View / Single Category Filtered View */
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredItems.map((item) => (
               <FoodItemCard
