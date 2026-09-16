@@ -22,12 +22,12 @@ const login = async (req, res) => {
   })
 
   if (!user) {
-    return res.status(401).json({ error: 'Invalid email or password' })
+    return res.status(401).json({ error: 'User not found with this email' })
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash)
   if (!isValid) {
-    return res.status(401).json({ error: 'Invalid email or password' })
+    return res.status(401).json({ error: 'Incorrect password' })
   }
 
   const payload = {

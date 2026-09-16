@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Store,
   CheckCircle2,
+  AlertCircle,
 } from 'lucide-react'
 import api from '../../lib/api'
 import { setToken, isAuthenticated } from '../../lib/auth'
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -41,12 +43,15 @@ export default function LoginPage() {
     }
 
     setLoading(true)
+    setErrorMessage('')
     try {
       const response = await api.post('/api/auth/login', { email, password })
       const { token, user } = response.data
 
       if (user?.role !== 'superadmin') {
-        toast.error('Access restricted to Super Administrators only.')
+        const roleMsg = 'Access restricted to Super Administrators only.'
+        toast.error(roleMsg)
+        setErrorMessage(roleMsg)
         setLoading(false)
         return
       }
@@ -55,10 +60,21 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${user?.name || 'Administrator'}!`)
       router.replace('/dashboard')
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
+      const rawMsg =
         error.response?.data?.error ||
-        'Invalid credentials. Please verify and try again.'
+        error.response?.data?.message ||
+        ''
+
+      let message = 'Incorrect password'
+      if (rawMsg) {
+        if (rawMsg.toLowerCase().includes('user not found') || rawMsg.toLowerCase().includes('email')) {
+          message = rawMsg
+        } else {
+          message = 'Incorrect password'
+        }
+      }
+
+      setErrorMessage(message)
       toast.error(message)
     } finally {
       setLoading(false)
@@ -198,7 +214,10 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (errorMessage) setErrorMessage('')
+                  }}
                   placeholder="admin@renza.com"
                   autoComplete="email"
                   required
@@ -220,11 +239,18 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (errorMessage) setErrorMessage('')
+                  }}
                   placeholder="••••••••••••"
                   autoComplete="current-password"
                   required
-                  className="w-full pl-10 pr-11 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-inner"
+                  className={`w-full pl-10 pr-11 py-3 bg-slate-950/80 rounded-xl text-sm text-white placeholder-slate-500 transition-all shadow-inner focus:outline-none border ${
+                    errorMessage
+                      ? 'border-red-500/80 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
+                      : 'border-slate-800 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20'
+                  }`}
                 />
                 <button
                   type="button"
@@ -236,6 +262,14 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Inline Error Message */}
+            {errorMessage && (
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             {/* Remember Me */}
             <div className="flex items-center justify-between pt-1">

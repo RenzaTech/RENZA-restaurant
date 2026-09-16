@@ -17,6 +17,7 @@ import {
   TrendingUp,
   ChefHat,
   CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { setToken, isAuthenticated } from '@/lib/auth';
@@ -28,6 +29,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -42,12 +44,15 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
+    setErrorMessage('');
     try {
       const res = await api.post('/api/auth/login', { email, password });
       const { token, user } = res.data;
 
       if (user?.role !== 'restaurant_admin') {
-        toast.error('Access restricted. Restaurant manager credentials required.');
+        const roleMsg = 'Access restricted. Restaurant manager credentials required.';
+        toast.error(roleMsg);
+        setErrorMessage(roleMsg);
         setLoading(false);
         return;
       }
@@ -56,7 +61,21 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${user?.name || 'Manager'}!`);
       router.replace('/dashboard');
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Invalid email or password';
+      const rawMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        '';
+
+      let msg = 'Incorrect password';
+      if (rawMsg) {
+        if (rawMsg.toLowerCase().includes('user not found') || rawMsg.toLowerCase().includes('email')) {
+          msg = rawMsg;
+        } else {
+          msg = 'Incorrect password';
+        }
+      }
+
+      setErrorMessage(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -208,7 +227,10 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
                   placeholder="admin@restaurant.com"
                   autoComplete="email"
                   autoFocus
@@ -231,11 +253,18 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
                   placeholder="••••••••••••"
                   autoComplete="current-password"
                   required
-                  className="w-full pl-10 pr-11 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-inner font-mono text-xs"
+                  className={`w-full pl-10 pr-11 py-3 bg-slate-950/80 rounded-xl text-sm text-white placeholder-slate-500 transition-all shadow-inner focus:outline-none font-mono text-xs border ${
+                    errorMessage
+                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                      : 'border-slate-800 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20'
+                  }`}
                 />
                 <button
                   type="button"
@@ -247,6 +276,14 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Inline Error Message */}
+            {errorMessage && (
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             {/* Remember Device */}
             <div className="flex items-center justify-between pt-1">
