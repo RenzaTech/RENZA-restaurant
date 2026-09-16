@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin, Phone, Search } from 'lucide-react';
+import { MapPin, Phone, Search, Star } from 'lucide-react';
 import Image from 'next/image';
 
-export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
+export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRateUs }) {
   const [isCompact, setIsCompact] = useState(false);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
                 </p>
               )}
 
-              {/* Glassmorphic Contact & Cuisine Badges */}
+              {/* Glassmorphic Contact, Cuisine & Rate Us Badges */}
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:justify-center text-[10px] font-medium text-white/80">
                 {restaurant.cuisineType && (
                   <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 backdrop-blur-md">
@@ -96,6 +96,14 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
                     <span>{restaurant.phone}</span>
                   </a>
                 )}
+                <button
+                  type="button"
+                  onClick={onRateUs}
+                  className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/20 px-2.5 py-0.5 text-amber-300 backdrop-blur-md transition hover:bg-amber-400/30 active:scale-95 font-bold shadow-xs cursor-pointer"
+                >
+                  <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                  <span>Rate Us</span>
+                </button>
               </div>
             </div>
           </div>
@@ -121,13 +129,24 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
             {restaurant.cuisineType && <p className="truncate text-[9px] text-white/50">{restaurant.cuisineType}</p>}
           </div>
         </div>
-        <button
-          onClick={onSearch}
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20 active:scale-90 focus:outline-none focus:ring-2 focus:ring-renza-gold"
-          aria-label="Search menu"
-        >
-          <Search className="h-3.5 w-3.5 text-renza-gold" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onRateUs}
+            className="flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/20 px-2.5 py-1 text-xs text-amber-300 backdrop-blur-xl transition hover:bg-amber-400/30 active:scale-90 font-bold shadow-xs cursor-pointer"
+            aria-label="Rate us on Google Maps"
+          >
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+            <span className="hidden sm:inline">Rate Us</span>
+          </button>
+          <button
+            onClick={onSearch}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20 active:scale-90 focus:outline-none focus:ring-2 focus:ring-renza-gold"
+            aria-label="Search menu"
+          >
+            <Search className="h-3.5 w-3.5 text-renza-gold" />
+          </button>
+        </div>
       </div>
     </>
   );

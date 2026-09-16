@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, User, UtensilsCrossed, Phone, MapPin, Sparkles, Store, Save } from 'lucide-react';
+import { Camera, User, UtensilsCrossed, Phone, MapPin, Sparkles, Store, Save, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,6 +54,7 @@ export default function ProfilePage() {
     cuisineType: '',
     address: '',
     phone: '',
+    googleReviewUrl: '',
   });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -68,6 +69,7 @@ export default function ProfilePage() {
           cuisineType: r.cuisineType || '',
           address: r.address || '',
           phone: r.phone || '',
+          googleReviewUrl: r.googleReviewUrl || '',
         });
         const logo = r.logoUrl || r.logo;
         if (logo) {
@@ -369,6 +371,25 @@ export default function ProfilePage() {
                 rows={2}
                 className="rounded-xl border-slate-200 text-xs resize-none focus:ring-orange-500/20 focus:border-orange-500"
               />
+            </div>
+
+            {/* Google Maps Review URL */}
+            <div className="space-y-1.5 pt-1 border-t border-slate-100">
+              <Label htmlFor="googleReviewUrl" className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                Google Maps Review Link
+              </Label>
+              <Input
+                id="googleReviewUrl"
+                type="url"
+                placeholder="https://g.page/r/.../review or https://maps.google.com/..."
+                value={form.googleReviewUrl}
+                onChange={set('googleReviewUrl')}
+                className="rounded-xl border-slate-200 text-xs h-11 focus:ring-orange-500/20 focus:border-orange-500"
+              />
+              <p className="text-[11px] text-slate-400">
+                Direct Google Review link where customers can submit 5-star ratings. If left blank, it automatically directs customers to your restaurant listing on Google Maps.
+              </p>
             </div>
           </div>
 

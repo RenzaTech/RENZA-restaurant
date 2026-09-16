@@ -75,6 +75,9 @@ const updateProfile = async (req, res) => {
     }
     updateData.phone = phoneCheck.sanitized
   }
+  if (req.body.googleReviewUrl !== undefined) {
+    updateData.googleReviewUrl = req.body.googleReviewUrl?.trim() || null
+  }
 
   // If a logo file was uploaded
   if (req.file) {

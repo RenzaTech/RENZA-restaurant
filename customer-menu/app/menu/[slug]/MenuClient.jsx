@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { UtensilsCrossed } from 'lucide-react';
+import { UtensilsCrossed, Star } from 'lucide-react';
 import { trackEvent } from '../../../utils/analytics';
 import MenuHero from '../../../components/MenuHero';
 import CategoryRail from '../../../components/CategoryRail';
@@ -10,6 +10,7 @@ import DishCard from '../../../components/DishCard';
 import DishSheet from '../../../components/DishSheet';
 import EmptyState from '../../../components/EmptyState';
 import { SkeletonPage } from '../../../components/Skeletons';
+import RateUsModal from '../../../components/RateUsModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const FILTER_IDS = ['veg', 'non-veg', 'vegan', 'jain', 'gluten-free', 'available'];
@@ -92,6 +93,7 @@ export default function MenuPage({ params }) {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [activeFilters, setActiveFilters] = useState([]);
   const [sortBy, setSortBy] = useState('default');
+  const [rateModalOpen, setRateModalOpen] = useState(false);
   const [urlReady, setUrlReady] = useState(false);
   const sectionRefs = useRef({});
   const searchInputRef = useRef(null);
@@ -372,7 +374,12 @@ export default function MenuPage({ params }) {
 
   return (
     <div className="min-h-screen bg-renza-cream font-sans selection:bg-renza-gold selection:text-renza-ink">
-      <MenuHero restaurant={restaurant} resolveImageUrl={resolveImageUrl} onSearch={() => searchInputRef.current?.focus()} />
+      <MenuHero
+        restaurant={restaurant}
+        resolveImageUrl={resolveImageUrl}
+        onSearch={() => searchInputRef.current?.focus()}
+        onRateUs={() => setRateModalOpen(true)}
+      />
       <div className="relative z-40 border-b border-renza-ink/10 bg-renza-cream/80">
         <SearchBar
           ref={searchInputRef}
@@ -423,9 +430,41 @@ export default function MenuPage({ params }) {
             </section>
           ))
         )}
+
+        {/* Rate Us on Google Maps Footer Card */}
+        {filteredGroups.length > 0 && (
+          <div className="mt-12 rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white p-6 sm:p-8 text-center shadow-card backdrop-blur-xl">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20 mb-3">
+              <Star className="h-6 w-6 fill-white text-white" />
+            </div>
+            <h3 className="font-serif text-lg sm:text-xl font-bold text-renza-ink">
+              Enjoyed your meal at {restaurant?.name}?
+            </h3>
+            <p className="mt-1 text-xs text-renza-ink/70 max-w-md mx-auto">
+              Your star rating helps our kitchen grow and helps fellow foodies discover us on Google Maps!
+            </p>
+            <div className="mt-4 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => setRateModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all hover:opacity-95 active:scale-98 cursor-pointer"
+              >
+                <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
+                <span>Rate Us on Google Maps</span>
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {selectedItem && <DishSheet item={selectedItem} onClose={handleSheetClose} resolveImageUrl={resolveImageUrl} triggerRef={triggerCardRef} />}
+
+      {/* Google Maps Rate Us Modal */}
+      <RateUsModal
+        isOpen={rateModalOpen}
+        onClose={() => setRateModalOpen(false)}
+        restaurant={restaurant}
+      />
     </div>
   );
 }

@@ -47,6 +47,7 @@ model Restaurant {
   phone         String?
   status        RestaurantStatus @default(active)
   customMenuUrl String?          @map("custom_menu_url")
+  googleReviewUrl String?        @map("google_review_url")
   adminUsers    User[]
   categories    Category[]
   foodItems     FoodItem[]
