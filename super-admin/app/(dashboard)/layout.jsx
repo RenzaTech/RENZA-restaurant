@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { isAuthenticated, clearToken } from '@/lib/auth'
+import api from '@/lib/api'
 import {
   LayoutDashboard,
   Building2,
@@ -30,7 +31,7 @@ const navItems = [
   },
 ]
 
-function Sidebar({ onClose }) {
+function Sidebar({ onClose, user }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -113,8 +114,8 @@ function Sidebar({ onClose }) {
             <Shield className="w-4 h-4 text-orange-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-white truncate">Super Admin</p>
-            <p className="text-[11px] text-slate-400 truncate">Master Platform Access</p>
+            <p className="text-xs font-bold text-white truncate">{user?.name || 'Super Admin'}</p>
+            <p className="text-[11px] text-slate-400 truncate">{user?.email || 'Master Platform Access'}</p>
           </div>
         </div>
         <button
@@ -134,12 +135,24 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [adminUser, setAdminUser] = useState(null)
 
   useEffect(() => {
     setMounted(true)
     if (!isAuthenticated()) {
       router.replace('/login')
+      return
     }
+
+    // Verify session validity with backend. If email/password changed, 401 triggers clean logout
+    api.get('/api/auth/me')
+      .then((res) => {
+        setAdminUser(res.data)
+      })
+      .catch(() => {
+        clearToken()
+        router.replace('/login')
+      })
   }, [router])
 
   if (!mounted) {
@@ -166,7 +179,7 @@ export default function DashboardLayout({ children }) {
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 flex-shrink-0 h-screen overflow-hidden">
-        <Sidebar />
+        <Sidebar user={adminUser} />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
@@ -177,7 +190,7 @@ export default function DashboardLayout({ children }) {
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative z-50 flex flex-col w-64 h-full shadow-2xl">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
+            <Sidebar user={adminUser} onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
       )}

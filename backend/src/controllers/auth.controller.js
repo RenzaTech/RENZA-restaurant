@@ -36,6 +36,7 @@ const login = async (req, res) => {
     role: user.role,
     restaurantId: user.restaurantId,
     name: user.name,
+    pwh: user.passwordHash ? user.passwordHash.slice(-10) : undefined,
   }
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' })
