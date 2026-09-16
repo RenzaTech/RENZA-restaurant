@@ -12,7 +12,7 @@ import EmptyState from '../../../components/EmptyState';
 import { SkeletonPage } from '../../../components/Skeletons';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const FILTER_IDS = ['veg', 'vegan', 'jain', 'gluten-free', 'available'];
+const FILTER_IDS = ['veg', 'non-veg', 'vegan', 'jain', 'gluten-free', 'available'];
 
 function resolveImageUrl(url) {
   if (!url) return null;
@@ -252,7 +252,18 @@ export default function MenuPage({ params }) {
   };
 
   const handleToggleFilter = (filterId) => {
-    setActiveFilters((current) => current.includes(filterId) ? current.filter((filter) => filter !== filterId) : [...current, filterId]);
+    setActiveFilters((current) => {
+      let next = current.includes(filterId)
+        ? current.filter((filter) => filter !== filterId)
+        : [...current, filterId];
+
+      if (filterId === 'veg' && next.includes('veg')) {
+        next = next.filter((f) => f !== 'non-veg');
+      } else if (filterId === 'non-veg' && next.includes('non-veg')) {
+        next = next.filter((f) => f !== 'veg');
+      }
+      return next;
+    });
   };
 
   const handleClearAll = () => {
@@ -314,6 +325,7 @@ export default function MenuPage({ params }) {
 
         const matchesDiet = activeFilters.every((filter) => {
           if (filter === 'veg') return isVeg;
+          if (filter === 'non-veg') return !isVeg;
           if (filter === 'vegan') return isVegan;
           if (filter === 'jain') return isJain;
           if (filter === 'gluten-free') return isGlutenFree;

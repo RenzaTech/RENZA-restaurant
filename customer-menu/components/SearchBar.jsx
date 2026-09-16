@@ -5,6 +5,7 @@ import { Search, X } from 'lucide-react';
 
 const filterOptions = [
   { id: 'veg', label: 'Pure Veg', emoji: '🌱' },
+  { id: 'non-veg', label: 'Non-Veg', emoji: '🍗' },
   { id: 'vegan', label: 'Vegan', emoji: '🥗' },
   { id: 'jain', label: 'Jain', emoji: '🪔' },
   { id: 'gluten-free', label: 'Gluten-free', emoji: '🌾' },
