@@ -18,9 +18,11 @@ import {
   ExternalLink,
   Filter,
   Trash2,
+  FileSpreadsheet,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
+import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
 
 function StatusBadge({ status }) {
@@ -132,6 +134,32 @@ export default function RestaurantsPage() {
   const [statusUpdating, setStatusUpdating] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [exportingId, setExportingId] = useState(null)
+
+  const handleExport = async (r) => {
+    const id = r._id || r.id
+    setExportingId(id)
+    try {
+      const [detailsRes, analyticsRes] = await Promise.allSettled([
+        api.get(`/api/admin/restaurants/${id}`),
+        api.get(`/api/admin/restaurants/${id}/analytics`),
+      ])
+      const fullRestaurant = detailsRes.status === 'fulfilled'
+        ? (detailsRes.value.data?.restaurant || detailsRes.value.data || r)
+        : r
+      const analytics = analyticsRes.status === 'fulfilled'
+        ? (analyticsRes.value.data?.analytics || analyticsRes.value.data || {})
+        : {}
+
+      exportRestaurantReport(fullRestaurant, analytics)
+      toast.success(`Excel report downloaded for "${fullRestaurant.name}"!`)
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to export Excel report')
+    } finally {
+      setExportingId(null)
+    }
+  }
 
   const fetchRestaurants = async () => {
     setLoading(true)
@@ -216,6 +244,14 @@ export default function RestaurantsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/reports"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold rounded-xl transition-all shadow-xs"
+            title="Restaurant Reports & Excel Exports"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Reports & Exports</span>
+          </Link>
           <button
             onClick={fetchRestaurants}
             disabled={loading}
@@ -353,6 +389,19 @@ export default function RestaurantsPage() {
                             <QrCode className="w-3.5 h-3.5" />
                             <span>QR Studio</span>
                           </Link>
+
+                          <button
+                            onClick={() => handleExport(r)}
+                            disabled={exportingId === id}
+                            className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Download Excel Report (.xlsx)"
+                          >
+                            {exportingId === id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <FileSpreadsheet className="w-3.5 h-3.5" />
+                            )}
+                          </button>
 
                           <Link
                             href={`/restaurants/${id}/edit`}

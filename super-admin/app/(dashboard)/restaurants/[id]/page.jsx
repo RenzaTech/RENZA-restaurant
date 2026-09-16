@@ -30,9 +30,11 @@ import {
   Share2,
   RefreshCw,
   Trash2,
+  FileSpreadsheet,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatDate, formatNumber } from '@/lib/utils'
+import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
@@ -221,7 +223,32 @@ export default function RestaurantDetailPage() {
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
+  const [exportingReport, setExportingReport] = useState(false)
   const analyticsLoadedRef = useRef(false)
+
+  const handleExportReport = async () => {
+    setExportingReport(true)
+    try {
+      // Ensure we have complete data with foodItems and categories
+      let fullRestaurant = restaurant
+      if (!restaurant?.foodItems || !restaurant?.categories) {
+        const res = await api.get(`/api/admin/restaurants/${id}`)
+        fullRestaurant = res.data?.restaurant || res.data || restaurant
+      }
+      let currentAnalytics = analytics
+      if (!currentAnalytics) {
+        const aRes = await api.get(`/api/admin/restaurants/${id}/analytics`)
+        currentAnalytics = aRes.data?.analytics || aRes.data || {}
+      }
+      exportRestaurantReport(fullRestaurant, currentAnalytics)
+      toast.success(`Excel report downloaded for "${fullRestaurant.name}"!`)
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to export Excel report')
+    } finally {
+      setExportingReport(false)
+    }
+  }
 
   const handleDeleteRestaurant = async () => {
     setDeleting(true)
@@ -431,6 +458,20 @@ export default function RestaurantDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={handleExportReport}
+            disabled={exportingReport}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+            title="Download full operational & stock Excel report (.xlsx)"
+          >
+            {exportingReport ? (
+              <div className="w-3.5 h-3.5 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+            )}
+            <span>Export Excel Report</span>
+          </button>
+
           <Link
             href={`/restaurants/${id}/edit`}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-xs"
