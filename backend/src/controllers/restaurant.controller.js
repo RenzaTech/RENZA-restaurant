@@ -4,9 +4,12 @@ const { uploadImage, deleteImage } = require('../lib/storage')
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const todayStart = () => {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d
+  // Support IST (UTC+5:30) date boundary
+  const now = new Date()
+  const istOffsetMs = 5.5 * 60 * 60 * 1000
+  const istDate = new Date(now.getTime() + istOffsetMs)
+  istDate.setUTCHours(0, 0, 0, 0)
+  return new Date(istDate.getTime() - istOffsetMs)
 }
 
 // ─── Profile ──────────────────────────────────────────────────────────────────
@@ -98,23 +101,46 @@ const getDashboard = async (req, res) => {
   const restaurantId = req.user.restaurantId
   const today = todayStart()
 
-  const [todayMenuViews, todayQrScans, todayUnique, availableCount, unavailableCount, totalFoods] =
-    await Promise.all([
-      prisma.analyticsEvent.count({
-        where: { restaurantId, eventType: 'menu_view', createdAt: { gte: today } },
-      }),
-      prisma.analyticsEvent.count({
-        where: { restaurantId, eventType: 'qr_scan', createdAt: { gte: today } },
-      }),
-      prisma.analyticsEvent.findMany({
-        where: { restaurantId, createdAt: { gte: today } },
-        select: { sessionId: true },
-        distinct: ['sessionId'],
-      }),
-      prisma.foodItem.count({ where: { restaurantId, isAvailable: true } }),
-      prisma.foodItem.count({ where: { restaurantId, isAvailable: false } }),
-      prisma.foodItem.count({ where: { restaurantId } }),
-    ])
+  const [
+    todayMenuViews,
+    todayQrScans,
+    todayUnique,
+    totalMenuViews,
+    totalQrScans,
+    totalUnique,
+    availableCount,
+    unavailableCount,
+    totalFoods,
+  ] = await Promise.all([
+    // Today metrics
+    prisma.analyticsEvent.count({
+      where: { restaurantId, eventType: 'menu_view', createdAt: { gte: today } },
+    }),
+    prisma.analyticsEvent.count({
+      where: { restaurantId, eventType: 'qr_scan', createdAt: { gte: today } },
+    }),
+    prisma.analyticsEvent.findMany({
+      where: { restaurantId, createdAt: { gte: today } },
+      select: { sessionId: true },
+      distinct: ['sessionId'],
+    }),
+    // All-time total metrics (adds every day's view and scan counts)
+    prisma.analyticsEvent.count({
+      where: { restaurantId, eventType: 'menu_view' },
+    }),
+    prisma.analyticsEvent.count({
+      where: { restaurantId, eventType: 'qr_scan' },
+    }),
+    prisma.analyticsEvent.findMany({
+      where: { restaurantId },
+      select: { sessionId: true },
+      distinct: ['sessionId'],
+    }),
+    // Dish counts
+    prisma.foodItem.count({ where: { restaurantId, isAvailable: true } }),
+    prisma.foodItem.count({ where: { restaurantId, isAvailable: false } }),
+    prisma.foodItem.count({ where: { restaurantId } }),
+  ])
 
   // Top 3 food items today by item_view
   const topRaw = await prisma.analyticsEvent.groupBy({
@@ -140,6 +166,16 @@ const getDashboard = async (req, res) => {
       menuViews: todayMenuViews,
       qrScans: todayQrScans,
       uniqueVisitors: todayUnique.length,
+    },
+    total: {
+      menuViews: totalMenuViews,
+      qrScans: totalQrScans,
+      uniqueVisitors: totalUnique.length,
+    },
+    allTime: {
+      menuViews: totalMenuViews,
+      qrScans: totalQrScans,
+      uniqueVisitors: totalUnique.length,
     },
     foodItems: {
       total: totalFoods,
