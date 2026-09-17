@@ -48,13 +48,24 @@ export default function FoodItemForm({
   const [imageFile, setImageFile] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [livePreviewUrl, setLivePreviewUrl] = useState(initialData.imageUrl || null);
+  const [removeFrontImage, setRemoveFrontImage] = useState(false);
+
+  const [topViewImageFile, setTopViewImageFile] = useState(null);
+  const [topViewImageError, setTopViewImageError] = useState(false);
+  const [liveTopPreviewUrl, setLiveTopPreviewUrl] = useState(initialData.topViewImageUrl || null);
+  const [removeTopViewImage, setRemoveTopViewImage] = useState(false);
+
+  const [activeAngleTab, setActiveAngleTab] = useState('front');
   const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     if (initialData.imageUrl) {
       setLivePreviewUrl(initialData.imageUrl);
     }
-  }, [initialData.imageUrl]);
+    if (initialData.topViewImageUrl) {
+      setLiveTopPreviewUrl(initialData.topViewImageUrl);
+    }
+  }, [initialData.imageUrl, initialData.topViewImageUrl]);
 
   const initialTags = Array.isArray(initialData.tags)
     ? initialData.tags
@@ -98,7 +109,7 @@ export default function FoodItemForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (imageError) return;
+    if (imageError || topViewImageError) return;
     const formData = new FormData();
     Object.entries(form).forEach(([key, value]) => {
       if (key === 'tags') {
@@ -126,9 +137,20 @@ export default function FoodItemForm({
     formData.append('isGlutenFree', String(isGlutenFree));
     formData.append('specialTags', form.tags.join(', '));
 
+    // Primary Front View Image
     if (imageFile) {
       formData.append('image', imageFile);
+    } else if (removeFrontImage) {
+      formData.append('removeImage', 'true');
     }
+
+    // Secondary Top View Image
+    if (topViewImageFile) {
+      formData.append('topViewImage', topViewImageFile);
+    } else if (removeTopViewImage) {
+      formData.append('removeTopViewImage', 'true');
+    }
+
     onSubmit(formData);
   };
 
@@ -521,45 +543,139 @@ export default function FoodItemForm({
 
         {/* ── RIGHT COLUMN: DISH PHOTOGRAPHY & LIVE PREVIEW (5 COLS) ── */}
         <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-6">
-          {/* Card A: Dish Photography */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold">
-                  <Camera className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-xs sm:text-sm">Dish Photography</h3>
-                  <p className="text-[10px] sm:text-[11px] text-slate-400">
-                    Proportional 4:3 menu photo
-                  </p>
-                </div>
-              </div>
+          {/* Card A: Dish Photography (Dual Views: Front & Top) */}
+          <div className="space-y-4">
+            {/* View Selector Tabs */}
+            <div className="flex rounded-2xl bg-white border border-slate-200/80 p-1.5 gap-1.5 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setActiveAngleTab('front')}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer',
+                  activeAngleTab === 'front'
+                    ? 'bg-gradient-to-r from-orange-500 to-teal-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                )}
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>1. Front View</span>
+                {livePreviewUrl ? (
+                  <span className={cn('w-2 h-2 rounded-full', activeAngleTab === 'front' ? 'bg-white' : 'bg-emerald-500')} title="Front photo uploaded" />
+                ) : (
+                  <span className={cn('text-[10px] font-normal opacity-70', activeAngleTab === 'front' ? 'text-white' : 'text-slate-400')}>+ Add</span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveAngleTab('top')}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer',
+                  activeAngleTab === 'top'
+                    ? 'bg-gradient-to-r from-orange-500 to-teal-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                )}
+              >
+                <UtensilsCrossed className="w-3.5 h-3.5" />
+                <span>2. Top View</span>
+                {liveTopPreviewUrl ? (
+                  <span className={cn('w-2 h-2 rounded-full', activeAngleTab === 'top' ? 'bg-white' : 'bg-emerald-500')} title="Top photo uploaded" />
+                ) : (
+                  <span className={cn('text-[10px] font-normal opacity-70', activeAngleTab === 'top' ? 'text-white' : 'text-slate-400')}>+ Add</span>
+                )}
+              </button>
             </div>
 
-            <ImageUploader
-              dishName={form.name}
-              initialImageUrl={initialData.imageUrl || null}
-              uploadProgress={uploadProgress}
-              onFileChange={setImageFile}
-              onPreviewChange={setLivePreviewUrl}
-              onValidationChange={setImageError}
-            />
+            {/* Active Angle Uploader Slot */}
+            {activeAngleTab === 'front' ? (
+              <ImageUploader
+                key="front-uploader"
+                title="Front View (Plating Profile)"
+                badge="Primary Photo"
+                description="Side/45° angle showcasing plating presentation and dish height."
+                dishName={form.name}
+                initialImageUrl={initialData.imageUrl || null}
+                uploadProgress={uploadProgress}
+                onFileChange={(f) => {
+                  setImageFile(f);
+                  if (f) setRemoveFrontImage(false);
+                }}
+                onPreviewChange={setLivePreviewUrl}
+                onValidationChange={setImageError}
+                onRemove={() => {
+                  setImageFile(null);
+                  setLivePreviewUrl(null);
+                  setRemoveFrontImage(true);
+                }}
+              />
+            ) : (
+              <ImageUploader
+                key="top-uploader"
+                title="Top View (Overhead Angle)"
+                badge="Aerial Photo"
+                description="Bird's-eye angle highlighting garnishes, textures, and ingredient spread."
+                dishName={form.name}
+                initialImageUrl={initialData.topViewImageUrl || null}
+                uploadProgress={uploadProgress}
+                onFileChange={(f) => {
+                  setTopViewImageFile(f);
+                  if (f) setRemoveTopViewImage(false);
+                }}
+                onPreviewChange={setLiveTopPreviewUrl}
+                onValidationChange={setTopViewImageError}
+                onRemove={() => {
+                  setTopViewImageFile(null);
+                  setLiveTopPreviewUrl(null);
+                  setRemoveTopViewImage(true);
+                }}
+              />
+            )}
           </div>
 
           {/* Card B: Real-Time Live Diner Menu Preview */}
           <div className="bg-gradient-to-b from-slate-50/90 to-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4 text-teal-600" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Live Customer Preview
                 </h4>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 border border-teal-200/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-                Real-Time
-              </span>
+
+              {/* Angle Switcher on Preview */}
+              {(livePreviewUrl || liveTopPreviewUrl) ? (
+                <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-[10px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setActiveAngleTab('front')}
+                    className={cn(
+                      'px-2 py-0.5 rounded-lg transition-all',
+                      activeAngleTab === 'front'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    )}
+                  >
+                    Front View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveAngleTab('top')}
+                    className={cn(
+                      'px-2 py-0.5 rounded-lg transition-all',
+                      activeAngleTab === 'top'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    )}
+                  >
+                    Top View
+                  </button>
+                </div>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 border border-teal-200/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                  Real-Time
+                </span>
+              )}
             </div>
 
             <p className="text-[11px] text-slate-400">
@@ -594,6 +710,13 @@ export default function FoodItemForm({
                     ) : (
                       <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[9px] font-bold text-rose-600">
                         Sold Out
+                      </span>
+                    )}
+
+                    {/* Dual photo indicator badge */}
+                    {(livePreviewUrl && liveTopPreviewUrl) && (
+                      <span className="rounded-full bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.2 text-[9px] font-bold">
+                        2 Angles
                       </span>
                     )}
                   </div>
@@ -654,41 +777,56 @@ export default function FoodItemForm({
                   </div>
                 </div>
 
-                {/* Right Photo Thumbnail */}
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs">
-                  {livePreviewUrl ? (
-                    <Image
-                      src={livePreviewUrl}
-                      alt={form.name || 'Dish preview'}
-                      fill
-                      unoptimized={livePreviewUrl.startsWith('blob:')}
-                      className={cn(
-                        'object-cover transition-transform duration-300',
-                        !form.isAvailable && 'grayscale'
-                      )}
-                    />
-                  ) : (
-                    <div className="flex h-full w-full flex-col items-center justify-center p-2 text-center text-slate-400 bg-slate-50">
-                      <UtensilsCrossed className="w-5 h-5 text-slate-300 mb-1" />
-                      <span className="text-[9px] font-bold text-slate-400">
-                        No Photo
-                      </span>
-                    </div>
-                  )}
+                {/* Right Photo Thumbnail with active angle preview */}
+                {(() => {
+                  const currentPreview =
+                    activeAngleTab === 'top'
+                      ? (liveTopPreviewUrl || livePreviewUrl)
+                      : (livePreviewUrl || liveTopPreviewUrl);
+                  const isTopPhotoShowing = currentPreview === liveTopPreviewUrl && Boolean(liveTopPreviewUrl);
 
-                  {!form.isAvailable && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-2xs">
-                      <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow">
-                        Sold Out
-                      </span>
+                  return (
+                    <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs">
+                      {currentPreview ? (
+                        <>
+                          <Image
+                            src={currentPreview}
+                            alt={form.name || 'Dish preview'}
+                            fill
+                            unoptimized={currentPreview.startsWith('blob:')}
+                            className={cn(
+                              'object-cover transition-transform duration-300',
+                              !form.isAvailable && 'grayscale'
+                            )}
+                          />
+                          <span className="absolute bottom-1 left-1 z-10 text-[8px] font-bold px-1.5 py-0.5 rounded bg-black/70 text-white backdrop-blur-xs">
+                            {isTopPhotoShowing ? 'Top View' : 'Front View'}
+                          </span>
+                        </>
+                      ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center p-2 text-center text-slate-400 bg-slate-50">
+                          <UtensilsCrossed className="w-5 h-5 text-slate-300 mb-1" />
+                          <span className="text-[9px] font-bold text-slate-400">
+                            No Photo
+                          </span>
+                        </div>
+                      )}
+
+                      {!form.isAvailable && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-2xs">
+                          <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow">
+                            Sold Out
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             </div>
 
             <p className="text-[10px] text-slate-400 text-center">
-              Diners scan the table QR code to view this live card.
+              Diners scan the table QR code to view this live card and can toggle between Front &amp; Top views.
             </p>
           </div>
         </div>

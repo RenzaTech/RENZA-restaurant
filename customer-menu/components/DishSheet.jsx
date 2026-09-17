@@ -54,9 +54,23 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
   const [isVisible, setIsVisible] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
+  const [frontFailed, setFrontFailed] = useState(false);
+  const [topFailed, setTopFailed] = useState(false);
+  const [activeAngle, setActiveAngle] = useState('front');
   const [shareLabel, setShareLabel] = useState('Share dish');
-  const imageUrl = resolveImageUrl(item.imageUrl);
+
+  const frontImageUrl = resolveImageUrl(item.imageUrl);
+  const topViewImageUrl = resolveImageUrl(item.topViewImageUrl || item.top_view_image_url);
+
+  const hasTopView = Boolean(topViewImageUrl && !topFailed);
+  const hasFrontView = Boolean(frontImageUrl && !frontFailed);
+
+  const currentImageUrl = activeAngle === 'top'
+    ? (hasTopView ? topViewImageUrl : frontImageUrl)
+    : (hasFrontView ? frontImageUrl : topViewImageUrl);
+
+  const hasActiveImage = Boolean(currentImageUrl && (activeAngle === 'top' ? !topFailed : !frontFailed));
+
   const isVeg = item.isVeg !== false && item.foodType !== 'non-veg';
   const isUnavailable = !item.isAvailable;
   const ingredients =
@@ -70,6 +84,12 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
       : [];
   const chilliCount = Math.min(3, Math.max(0, Number(item.spicyLevel) || 0));
   const priceFormatted = (Number(item.price) || 0).toFixed(2);
+
+  useEffect(() => {
+    setActiveAngle('front');
+    setFrontFailed(false);
+    setTopFailed(false);
+  }, [item?.id, item?.name]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -191,35 +211,72 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
           <div className="h-1.5 w-14 rounded-full bg-slate-300 shadow-xs" />
         </div>
 
-        {/* Hero Dish Image */}
-        <button
-          type="button"
-          className={`relative block aspect-[4/3] w-full overflow-hidden bg-renza-charcoal text-left transition-[transform,opacity] duration-500 ease-out focus:outline-none focus:ring-2 focus:ring-inset focus:ring-renza-gold ${
-            isVisible ? 'scale-100 opacity-100' : 'scale-[0.96] opacity-0'
-          } motion-reduce:transition-none`}
-          onClick={() => imageUrl && !imageFailed && setIsZoomed(true)}
-          aria-label={imageUrl && !imageFailed ? 'Zoom dish photo' : undefined}
-        >
-          {imageUrl && !imageFailed ? (
-            <Image
-              src={imageUrl}
-              alt={item.name}
-              fill
-              sizes="(min-width: 768px) 672px, 100vw"
-              placeholder="blur"
-              blurDataURL={getDishBlurDataUrl(item.name)}
-              className="object-cover"
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            <PhotoPlaceholder item={item} />
+        {/* Hero Dish Image Container */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-renza-charcoal">
+          <button
+            type="button"
+            className={`relative block h-full w-full overflow-hidden bg-renza-charcoal text-left transition-[transform,opacity] duration-500 ease-out focus:outline-none focus:ring-2 focus:ring-inset focus:ring-renza-gold ${
+              isVisible ? 'scale-100 opacity-100' : 'scale-[0.96] opacity-0'
+            } motion-reduce:transition-none`}
+            onClick={() => hasActiveImage && setIsZoomed(true)}
+            aria-label={hasActiveImage ? `Zoom ${item.name} ${activeAngle === 'top' ? 'Top' : 'Front'} photo` : undefined}
+          >
+            {hasActiveImage ? (
+              <Image
+                key={currentImageUrl}
+                src={currentImageUrl}
+                alt={`${item.name} (${activeAngle === 'top' ? 'Top View' : 'Front View'})`}
+                fill
+                sizes="(min-width: 768px) 672px, 100vw"
+                placeholder="blur"
+                blurDataURL={getDishBlurDataUrl(item.name)}
+                className="object-cover transition-opacity duration-300"
+                onError={() => {
+                  if (activeAngle === 'top') setTopFailed(true);
+                  else setFrontFailed(true);
+                }}
+              />
+            ) : (
+              <PhotoPlaceholder item={item} />
+            )}
+            {hasActiveImage && (
+              <span className="absolute bottom-4 right-4 rounded-full border border-white/25 bg-black/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-xl shadow-md">
+                Tap to zoom
+              </span>
+            )}
+          </button>
+
+          {/* Interactive Front / Top Angle Switcher */}
+          {hasTopView && hasFrontView && (
+            <div
+              className="absolute top-4 left-4 z-20 flex items-center gap-1.5 p-1 rounded-full bg-black/65 backdrop-blur-xl border border-white/20 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setActiveAngle('front')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                  activeAngle === 'front'
+                    ? 'bg-white text-slate-900 shadow-sm scale-100'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Front View
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveAngle('top')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                  activeAngle === 'top'
+                    ? 'bg-white text-slate-900 shadow-sm scale-100'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Top View
+              </button>
+            </div>
           )}
-          {imageUrl && !imageFailed && (
-            <span className="absolute bottom-4 right-4 rounded-full border border-white/25 bg-black/70 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-xl shadow-md">
-              Tap to zoom
-            </span>
-          )}
-        </button>
+        </div>
 
         {/* Dish Content Body */}
         <div className="space-y-6 p-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-8">
@@ -317,7 +374,7 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
       </div>
 
       {/* Fullscreen Photo Zoom Modal */}
-      {isZoomed && imageUrl && !imageFailed && (
+      {isZoomed && hasActiveImage && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 backdrop-blur-xl"
           role="dialog"
@@ -333,8 +390,47 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
           >
             <X className="h-5 w-5" />
           </button>
+
+          {/* Floating Angle Switcher inside Zoom Modal */}
+          {hasTopView && hasFrontView && (
+            <div
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1.5 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setActiveAngle('front')}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  activeAngle === 'front'
+                    ? 'bg-white text-slate-900 shadow-md'
+                    : 'text-white/85 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Front View
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveAngle('top')}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  activeAngle === 'top'
+                    ? 'bg-white text-slate-900 shadow-md'
+                    : 'text-white/85 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Top View
+              </button>
+            </div>
+          )}
+
           <div className="relative h-full w-full max-h-[85vh] max-w-4xl" onClick={(event) => event.stopPropagation()}>
-            <Image src={imageUrl} alt={item.name} fill sizes="100vw" className="object-contain" />
+            <Image
+              key={currentImageUrl}
+              src={currentImageUrl}
+              alt={`${item.name} (${activeAngle === 'top' ? 'Top View' : 'Front View'})`}
+              fill
+              sizes="100vw"
+              className="object-contain"
+            />
           </div>
         </div>
       )}

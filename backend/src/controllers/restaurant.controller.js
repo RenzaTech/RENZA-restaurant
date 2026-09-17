@@ -387,6 +387,7 @@ const createFood = async (req, res) => {
   }
 
   const imageUrl = req.file ? await uploadImage(req.file, 'renza/dishes') : null
+  const topViewImageUrl = req.topViewFile ? await uploadImage(req.topViewFile, 'renza/dishes') : null
 
   const food = await prisma.foodItem.create({
     data: {
@@ -395,6 +396,7 @@ const createFood = async (req, res) => {
       name: name.trim(),
       price: parsedPrice,
       imageUrl,
+      topViewImageUrl,
       description: description?.trim() || null,
       ingredients: ingredients?.trim() || null,
       spices: spices?.trim() || null,
@@ -529,12 +531,30 @@ const updateFood = async (req, res) => {
   if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true
   if (sortOrder !== undefined) updateData.sortOrder = parseInt(sortOrder) || 0
 
-  // If a new image was uploaded
+  // If a new front image was uploaded
   if (req.file) {
     if (existing.imageUrl) {
       await deleteImage(existing.imageUrl)
     }
     updateData.imageUrl = await uploadImage(req.file, 'renza/dishes')
+  } else if (req.body.removeImage === 'true' || req.body.removeFrontImage === 'true') {
+    if (existing.imageUrl) {
+      await deleteImage(existing.imageUrl)
+    }
+    updateData.imageUrl = null
+  }
+
+  // If a new top view image was uploaded
+  if (req.topViewFile) {
+    if (existing.topViewImageUrl) {
+      await deleteImage(existing.topViewImageUrl)
+    }
+    updateData.topViewImageUrl = await uploadImage(req.topViewFile, 'renza/dishes')
+  } else if (req.body.removeTopViewImage === 'true') {
+    if (existing.topViewImageUrl) {
+      await deleteImage(existing.topViewImageUrl)
+    }
+    updateData.topViewImageUrl = null
   }
 
   const updated = await prisma.foodItem.update({
@@ -558,6 +578,9 @@ const deleteFood = async (req, res) => {
 
   if (food.imageUrl) {
     await deleteImage(food.imageUrl)
+  }
+  if (food.topViewImageUrl) {
+    await deleteImage(food.topViewImageUrl)
   }
 
   await prisma.foodItem.delete({ where: { id: req.params.id } })

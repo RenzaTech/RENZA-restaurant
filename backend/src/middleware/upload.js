@@ -55,10 +55,14 @@ const uploadSingle = (req, res, next) => {
       return next(err)
     }
     if (req.files && req.files.length > 0) {
-      // Find 'image' or 'logo' or fallback to first file
+      // Find 'image' or 'frontImage' or 'logo' or fallback to first file
       req.file =
-        req.files.find((f) => f.fieldname === 'image' || f.fieldname === 'logo') ||
+        req.files.find((f) => f.fieldname === 'image' || f.fieldname === 'frontImage' || f.fieldname === 'logo') ||
         req.files[0]
+
+      // Find top view dish photo if provided
+      req.topViewFile =
+        req.files.find((f) => f.fieldname === 'topViewImage' || f.fieldname === 'top_view_image') || null
     }
     next()
   })

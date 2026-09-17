@@ -150,6 +150,13 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
           </div>
         )}
 
+        {/* Dual View Badge */}
+        {!isUnavailable && Boolean(item.topViewImageUrl || item.top_view_image_url) && (
+          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 rounded-full bg-black/65 backdrop-blur-md px-2 py-0.5 text-[8.5px] font-bold text-white shadow-xs border border-white/20">
+            <span>2 Angles</span>
+          </div>
+        )}
+
         {/* View Details cue on bottom of thumbnail */}
         {!isUnavailable && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-center bg-gradient-to-t from-black/75 via-black/40 to-transparent py-1 text-[9px] font-bold text-white">

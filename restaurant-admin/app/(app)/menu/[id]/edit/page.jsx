@@ -29,10 +29,14 @@ export default function EditFoodItemPage() {
       .then(([foodRes, catRes]) => {
         const food = foodRes.data?.food || foodRes.data;
         const rawImg = food.imageUrl || food.image;
+        const rawTopImg = food.topViewImageUrl || food.top_view_image_url;
         setItem({
           ...food,
           imageUrl: rawImg
             ? (rawImg.startsWith('http') ? rawImg : `${API_URL}${rawImg}`)
+            : null,
+          topViewImageUrl: rawTopImg
+            ? (rawTopImg.startsWith('http') ? rawTopImg : `${API_URL}${rawTopImg}`)
             : null,
         });
         const cats = catRes.data?.categories || catRes.data || [];
