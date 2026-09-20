@@ -13,7 +13,7 @@ export default function CategoryRail({ categories, activeCategory, onSelect, onA
           if (entry.isIntersecting) onActiveChange(entry.target.dataset.categoryId);
         }
       },
-      { rootMargin: '-20% 0px -60% 0px', threshold: 0 }
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
     );
 
     document.querySelectorAll('[data-category-id]').forEach((section) => observer.observe(section));
@@ -28,7 +28,7 @@ export default function CategoryRail({ categories, activeCategory, onSelect, onA
   }, [activeCategory, categories]);
 
   return (
-    <nav className="sticky top-16 z-30 border-b border-white/10 bg-[#090f18]/85 shadow-[0_10px_24px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+    <nav className="sticky top-12 z-40 border-b border-white/10 bg-[#070b11]/90 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-xl">
       <div ref={railRef} className="relative mx-auto flex max-w-[1200px] gap-1.5 overflow-x-auto px-4 py-2.5 scrollbar-hide">
         <span className="absolute bottom-2 left-0 h-9 rounded-full bg-gradient-to-r from-[#f4e5bf] via-[#d7b368] to-[#f2d9a1] shadow-[0_10px_20px_rgba(217,179,108,0.2)] transition-transform duration-300 ease-out" style={highlight} aria-hidden="true" />
         <button data-active={activeCategory === 'all'} onClick={() => onSelect('all')} className={`relative z-10 min-h-10 flex-shrink-0 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all focus:outline-none focus:ring-2 focus:ring-amber-300/70 ${activeCategory === 'all' ? 'text-slate-950' : 'text-slate-300 hover:text-white'}`}>All Dishes</button>

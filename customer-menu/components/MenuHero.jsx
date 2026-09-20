@@ -1,14 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin, Phone, Search, Sparkles, Star } from 'lucide-react';
+import { MapPin, Phone, Search, Star } from 'lucide-react';
 import Image from 'next/image';
 
 export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRateUs }) {
   const [isCompact, setIsCompact] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setIsCompact(window.scrollY > 120);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsCompact(window.scrollY > 70);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -17,96 +26,147 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRate
   const logoUrl = resolveImageUrl(restaurant.logoUrl);
 
   return (
-    <header className={`relative sticky top-0 z-40 overflow-hidden border-b border-white/10 bg-[#070b11]/90 text-slate-50 shadow-[0_18px_38px_rgba(0,0,0,0.32)] backdrop-blur-2xl ${isCompact ? 'h-16' : 'min-h-[20rem]'}`}>
-      {logoUrl && (
-        <Image
-          src={logoUrl}
-          alt=""
-          aria-hidden="true"
-          fill
-          sizes="100vw"
-          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-20 blur-3xl"
-        />
-      )}
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(3,6,11,0.96),rgba(11,17,24,0.9),rgba(3,6,11,0.96))]" />
-      <div className="luxury-divider absolute inset-x-12 top-0 h-px" />
+    <>
+      {/* ── 1. INNOVATIVE COMPACT HERO (Normal document flow, no layout shift) ── */}
+      <header className="relative z-20 overflow-hidden border-b border-white/10 bg-[#070b11] text-slate-50 shadow-md">
+        {/* Subtle Ambient Background Glow */}
+        {logoUrl && (
+          <Image
+            src={logoUrl}
+            alt=""
+            aria-hidden="true"
+            fill
+            sizes="100vw"
+            className="absolute inset-0 h-full w-full scale-125 object-cover opacity-15 blur-3xl"
+          />
+        )}
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(4,7,12,0.97),rgba(11,17,25,0.92),rgba(4,7,12,0.97))]" />
+        <div className="luxury-divider absolute inset-x-8 top-0 h-px" />
 
-      <div className={`relative flex min-h-[20rem] flex-col items-center justify-center px-5 pb-8 pt-10 text-center transition-all duration-500 ease-out ${isCompact ? '-translate-y-16 opacity-0' : 'translate-y-0 opacity-100'}`}>
-        <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[2rem] border border-white/15 bg-white/5 shadow-[0_0_30px_rgba(217,179,108,0.14)] backdrop-blur-xl">
-          {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt={`${restaurant.name} logo`}
-              fill
-              sizes="96px"
-              className="h-full w-full object-cover"
-              onError={(event) => { event.currentTarget.style.display = 'none'; }}
-            />
-          ) : (
-            <span className="font-display text-4xl text-amber-200">{restaurant.name?.charAt(0) || 'R'}</span>
-          )}
-        </div>
+        <div className="relative mx-auto max-w-[1200px] px-4 py-3.5 sm:py-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Luminous Brand Emblem */}
+            <div className="relative flex h-13 w-13 sm:h-15 sm:w-15 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-amber-300/30 bg-white/[0.04] shadow-[0_0_24px_rgba(217,179,108,0.2)] backdrop-blur-xl">
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={`${restaurant.name} logo`}
+                  fill
+                  sizes="60px"
+                  className="h-full w-full object-cover"
+                  onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                />
+              ) : (
+                <span className="font-display text-2xl font-bold text-amber-200">
+                  {restaurant.name?.charAt(0) || 'R'}
+                </span>
+              )}
+            </div>
 
-        <h1 className="glow-text max-w-3xl font-display text-4xl leading-[0.9] tracking-[-0.06em] sm:text-5xl md:text-6xl">{restaurant.name}</h1>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-200/80">
-          {restaurant.cuisineType && <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 tracking-[0.12em] text-[10px] uppercase text-slate-200">{restaurant.cuisineType}</span>}
-          {restaurant.address && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.address}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/10"
-            >
-              <MapPin className="h-3 w-3 text-amber-200" />
-              <span>{restaurant.address}</span>
-            </a>
-          )}
-          {restaurant.phone && (
-            <a
-              href={`tel:${restaurant.phone.replace(/[^0-9+]/g, '')}`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/10"
-            >
-              <Phone className="h-3 w-3 text-amber-200" />
-              <span>{restaurant.phone}</span>
-            </a>
-          )}
-          {onRateUs && (
-            <button
-              type="button"
-              onClick={onRateUs}
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-300/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-200 backdrop-blur-md transition hover:border-amber-300/60 hover:bg-amber-300/25 active:scale-95 cursor-pointer shadow-xs"
-            >
-              <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
-              <span>Rate Us</span>
-            </button>
-          )}
-        </div>
-      </div>
+            {/* Brand Title & Badges */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="glow-text font-display text-xl sm:text-2xl font-bold tracking-tight truncate leading-tight">
+                  {restaurant.name}
+                </h1>
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-300 shrink-0">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Open
+                </span>
+              </div>
 
-      <div className={`absolute inset-x-0 top-0 flex h-16 items-center justify-between px-4 transition-all duration-500 ease-out ${isCompact ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-[0_10px_18px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-            {logoUrl ? <Image src={logoUrl} alt={`${restaurant.name} logo`} fill sizes="44px" className="h-full w-full object-cover" /> : <span className="font-display text-xl text-amber-200">{restaurant.name?.charAt(0) || 'R'}</span>}
+              {restaurant.cuisineType && (
+                <p className="text-[11px] sm:text-xs font-medium text-amber-200/75 tracking-wide truncate mt-0.5">
+                  {restaurant.cuisineType}
+                </p>
+              )}
+
+              {/* Action Pills Row */}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-300">
+                {restaurant.address && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.address}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-slate-300 hover:text-white hover:border-white/20 transition active:scale-95"
+                    title={restaurant.address}
+                  >
+                    <MapPin className="h-2.5 w-2.5 text-amber-200 shrink-0" />
+                    <span className="max-w-[140px] sm:max-w-[220px] truncate">{restaurant.address}</span>
+                  </a>
+                )}
+
+                {restaurant.phone && (
+                  <a
+                    href={`tel:${restaurant.phone.replace(/[^0-9+]/g, '')}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-slate-300 hover:text-white hover:border-white/20 transition active:scale-95"
+                  >
+                    <Phone className="h-2.5 w-2.5 text-amber-200 shrink-0" />
+                    <span>Call</span>
+                  </a>
+                )}
+
+                {onRateUs && (
+                  <button
+                    type="button"
+                    onClick={onRateUs}
+                    className="inline-flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-300/15 px-2.5 py-0.5 text-amber-200 hover:border-amber-300/70 hover:bg-amber-300/25 transition active:scale-95 font-bold cursor-pointer shadow-xs"
+                  >
+                    <Star className="h-2.5 w-2.5 fill-amber-300 text-amber-300 shrink-0" />
+                    <span>Rate Us</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          <span className="truncate font-display text-lg tracking-[-0.04em] text-white">{restaurant.name}</span>
         </div>
-        <div className="flex items-center gap-2">
+      </header>
+
+      {/* ── 2. FIXED ULTRA-SMOOTH FLOATING TOP BAR (Appears on scroll without layout shift) ── */}
+      <div
+        className={`fixed inset-x-0 top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#070b11]/95 px-4 backdrop-blur-xl shadow-lg transition-transform duration-300 ease-out ${
+          isCompact ? 'translate-y-0 opacity-100 pointer-events-auto' : '-translate-y-full opacity-0 pointer-events-none'
+        }`}
+        aria-hidden={!isCompact}
+      >
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="relative flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-amber-300/30 bg-white/5 backdrop-blur-md">
+            {logoUrl ? (
+              <Image src={logoUrl} alt={`${restaurant.name} logo`} fill sizes="28px" className="object-cover" />
+            ) : (
+              <span className="font-display text-sm font-bold text-amber-200">
+                {restaurant.name?.charAt(0) || 'R'}
+              </span>
+            )}
+          </div>
+          <span className="truncate font-display text-sm font-bold tracking-tight text-white max-w-[160px] sm:max-w-xs">
+            {restaurant.name}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
           {onRateUs && (
             <button
               type="button"
               onClick={onRateUs}
-              className="flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-300/15 px-2.5 py-1 text-xs text-amber-200 backdrop-blur-xl transition hover:bg-amber-300/25 active:scale-95 font-bold shadow-xs cursor-pointer"
+              className="flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-300/15 px-2.5 py-1 text-[10px] font-bold text-amber-200 backdrop-blur-md hover:bg-amber-300/25 active:scale-95 transition cursor-pointer"
               aria-label="Rate us on Google Maps"
             >
               <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
-              <span className="hidden sm:inline text-[10px] uppercase tracking-wider">Rate</span>
+              <span>Rate</span>
             </button>
           )}
-          <button onClick={onSearch} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-100 shadow-[0_10px_20px_rgba(0,0,0,0.2)] backdrop-blur-md transition hover:border-amber-300/50 hover:bg-amber-300/10 focus:outline-none focus:ring-2 focus:ring-amber-300/70" aria-label="Search menu">
-            <Search className="h-4 w-4" />
+
+          <button
+            type="button"
+            onClick={onSearch}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 hover:border-amber-300/50 hover:bg-amber-300/10 active:scale-95 transition focus:outline-none focus:ring-1 focus:ring-amber-300/70"
+            aria-label="Search menu"
+          >
+            <Search className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
-    </header>
+    </>
   );
 }

@@ -26,20 +26,20 @@ const SearchBar = forwardRef(function SearchBar(
   ref
 ) {
   return (
-    <div className="mx-auto max-w-[1200px] space-y-2.5 px-4 py-3">
+    <div className="mx-auto max-w-[1200px] space-y-2 px-4 py-2 sm:py-2.5">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
         <input
           ref={ref}
           type="text"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Search dishes or ingredients..."
-          className="min-h-11 w-full rounded-2xl border border-white/10 bg-[#101821]/90 py-3 pl-11 pr-10 text-xs font-medium text-slate-100 outline-none transition shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] placeholder:text-slate-400 focus:border-amber-300/35 focus:ring-2 focus:ring-amber-300/12"
+          className="h-10 w-full rounded-xl border border-white/10 bg-[#101821]/90 py-2 pl-9 pr-9 text-xs font-medium text-slate-100 outline-none transition shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] placeholder:text-slate-400 focus:border-amber-300/35 focus:ring-2 focus:ring-amber-300/12"
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-amber-300/70" aria-label="Clear search">
-            <X className="h-3.5 w-3.5" />
+          <button onClick={() => setSearchQuery('')} className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:text-white focus:outline-none focus:ring-1 focus:ring-amber-300/70" aria-label="Clear search">
+            <X className="h-3 w-3" />
           </button>
         )}
       </div>
@@ -50,12 +50,12 @@ const SearchBar = forwardRef(function SearchBar(
             key={id}
             onClick={() => onToggleFilter(id)}
             aria-pressed={activeFilters.includes(id)}
-            className={`min-h-10 flex-shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-all focus:outline-none focus:ring-2 focus:ring-amber-300/70 ${activeFilters.includes(id) ? 'bg-gradient-to-r from-amber-200 via-[#d9b36c] to-[#f0d7a3] text-slate-950 shadow-[0_10px_18px_rgba(217,179,108,0.28)]' : 'border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/15 hover:text-white'}`}
+            className={`min-h-[30px] flex-shrink-0 rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] transition-all focus:outline-none focus:ring-1 focus:ring-amber-300/70 ${activeFilters.includes(id) ? 'bg-gradient-to-r from-amber-200 via-[#d9b36c] to-[#f0d7a3] text-slate-950 shadow-[0_8px_14px_rgba(217,179,108,0.25)]' : 'border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/15 hover:text-white'}`}
           >
             {label}
           </button>
         ))}
-        <button type="button" onClick={onClearAll} className="min-h-10 flex-shrink-0 rounded-full border border-white/10 bg-transparent px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-white/15 hover:text-white focus:outline-none focus:ring-2 focus:ring-amber-300/70">Clear all</button>
+        <button type="button" onClick={onClearAll} className="min-h-[30px] flex-shrink-0 rounded-full border border-white/10 bg-transparent px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] text-slate-400 transition hover:border-white/15 hover:text-white focus:outline-none focus:ring-1 focus:ring-amber-300/70">Clear all</button>
       </div>
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400" aria-live="polite">

@@ -191,8 +191,8 @@ export default function MenuPage({ params }) {
     setActiveCategory(catId);
     const el = sectionRefs.current[catId];
     if (el) {
-      const navHeight = 52;
-      const top = el.getBoundingClientRect().top + window.scrollY - navHeight - 8;
+      const navHeight = 96;
+      const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
       window.scrollTo({ top, behavior: 'smooth' });
     }
   };
@@ -293,23 +293,28 @@ export default function MenuPage({ params }) {
       </div>
       <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={setActiveCategory} />
 
-      <main className="relative mx-auto max-w-[1280px] space-y-14 px-4 pb-24 pt-8 sm:px-6 lg:space-y-20">
+      <main className="relative mx-auto max-w-[1280px] space-y-10 px-4 pb-24 pt-4 sm:px-6 sm:pt-6 sm:space-y-14">
         {filteredGroups.length === 0 ? (
           <div className="md:col-span-2 xl:col-span-3">
             <EmptyState variant={emptyVariant} onReset={handleClearAll} />
           </div>
         ) : (
           filteredGroups.map((group) => (
-            <section key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} data-category-id={group.id} className="[contain-intrinsic-size:0_480px] [content-visibility:auto]">
-              <div className="mb-6 flex items-end gap-4 px-1">
+            <section
+              key={group.id}
+              ref={(el) => { sectionRefs.current[group.id] = el; }}
+              data-category-id={group.id}
+              className="scroll-mt-28"
+            >
+              <div className="mb-4 sm:mb-6 flex items-end gap-3 sm:gap-4 px-1">
                 <div>
-                  <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.28em] text-amber-200/70">The menu</p>
-                  <h2 className="font-display text-3xl leading-none tracking-[-0.04em] text-white sm:text-4xl">{group.name}</h2>
+                  <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.24em] text-amber-200/70">Category</p>
+                  <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-none tracking-tight text-white">{group.name}</h2>
                 </div>
-                <span className="mb-0.5 rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200">{group.items.length}</span>
-                <div className="mb-2 ml-1 h-px flex-1 bg-gradient-to-r from-amber-200/25 via-white/10 to-transparent" />
+                <span className="mb-0.5 rounded-full border border-amber-300/25 bg-amber-300/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-200">{group.items.length}</span>
+                <div className="mb-1.5 ml-1 h-px flex-1 bg-gradient-to-r from-amber-200/25 via-white/10 to-transparent" />
               </div>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">{group.items.map((item) => <DishCard key={item.id || item._id || item.name} item={item} priority={cardIndex++ < 4} onSelect={handleItemSelect} resolveImageUrl={resolveImageUrl} />)}</div>
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">{group.items.map((item) => <DishCard key={item.id || item._id || item.name} item={item} priority={cardIndex++ < 4} onSelect={handleItemSelect} resolveImageUrl={resolveImageUrl} />)}</div>
             </section>
           ))
         )}
