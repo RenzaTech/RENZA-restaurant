@@ -29,9 +29,9 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-        <meta name="theme-color" content="#0B0B0F" />
+        <meta name="theme-color" content="#05070b" />
       </head>
-      <body className={`${inter.variable} ${playfairDisplay.variable} bg-renza-cream font-sans antialiased min-h-screen`}>
+      <body className={`${inter.variable} ${playfairDisplay.variable} min-h-screen bg-[#05070b] font-sans text-slate-50 antialiased`}>
         {children}
       </body>
     </html>

@@ -256,18 +256,26 @@ export default function MenuPage({ params }) {
   let cardIndex = 0;
 
   return (
-    <div className="min-h-screen bg-renza-cream font-sans selection:bg-renza-gold selection:text-renza-ink">
+    <div className="min-h-screen bg-[#05070b] font-sans text-slate-50 selection:bg-amber-300 selection:text-slate-950">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(217,179,108,0.06),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.04),_transparent_24%)]" aria-hidden="true" />
       <MenuHero restaurant={restaurant} resolveImageUrl={resolveImageUrl} onSearch={() => searchInputRef.current?.focus()} />
-      <div className="border-b border-renza-ink/10 bg-renza-cream/80">
+      <div className="border-b border-white/10 bg-[#0a1018]/80 backdrop-blur-xl">
         <SearchBar ref={searchInputRef} searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeFilters={activeFilters} onToggleFilter={handleToggleFilter} onClearAll={handleClearAll} resultCount={resultCount} />
       </div>
       <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={setActiveCategory} />
 
-      <main className="mx-auto grid max-w-[1200px] grid-cols-1 gap-x-5 px-4 pb-24 pt-3 md:grid-cols-2 xl:grid-cols-3">
+      <main className="relative mx-auto max-w-[1280px] space-y-14 px-4 pb-24 pt-8 sm:px-6 lg:space-y-20">
         {filteredGroups.length === 0 ? <div className="md:col-span-2 xl:col-span-3"><EmptyState variant={emptyVariant} onReset={handleClearAll} /></div> : filteredGroups.map((group) => (
-          <section key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} data-category-id={group.id} className="mt-6 first:mt-3 [contain-intrinsic-size:0_480px] [content-visibility:auto]">
-            <div className="mb-3 flex items-center gap-2 px-1 md:col-span-2 xl:col-span-3"><h2 className="text-base font-black tracking-tight text-slate-900">{group.name}</h2><span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-500">{group.items.length}</span><div className="ml-2 h-px flex-1 bg-slate-200/80" /></div>
-            {group.items.map((item) => <DishCard key={item.id || item._id || item.name} item={item} priority={cardIndex++ < 4} onSelect={handleItemSelect} resolveImageUrl={resolveImageUrl} />)}
+          <section key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} data-category-id={group.id} className="[contain-intrinsic-size:0_480px] [content-visibility:auto]">
+            <div className="mb-6 flex items-end gap-4 px-1">
+              <div>
+                <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.28em] text-amber-200/70">The menu</p>
+                <h2 className="font-display text-3xl leading-none tracking-[-0.04em] text-white sm:text-4xl">{group.name}</h2>
+              </div>
+              <span className="mb-0.5 rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200">{group.items.length}</span>
+              <div className="mb-2 ml-1 h-px flex-1 bg-gradient-to-r from-amber-200/25 via-white/10 to-transparent" />
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">{group.items.map((item) => <DishCard key={item.id || item._id || item.name} item={item} priority={cardIndex++ < 4} onSelect={handleItemSelect} resolveImageUrl={resolveImageUrl} />)}</div>
           </section>
         ))}
       </main>

@@ -3,12 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --renza-ink: #0B0B0F;
-  --renza-charcoal: #16161C;
-  --renza-cream: #FAF7F2;
-  --renza-gold: #C9A227;
-  --renza-ember: #F97316;
-  --renza-sage: #4F7A5B;
+  --renza-ink: #080b11;
+  --renza-charcoal: #101722;
+  --renza-cream: #f8f3eb;
+  --renza-gold: #d9b36c;
+  --renza-ember: #f59e0b;
+  --renza-sage: #7bb28a;
+  --renza-gold-soft: rgba(217, 179, 108, 0.18);
+  --renza-line: rgba(255, 255, 255, 0.08);
+  --renza-surface: rgba(14, 18, 25, 0.84);
 }
 
 * {
@@ -17,33 +20,91 @@
 
 html {
   scroll-behavior: smooth;
+  background: #05070b;
+  color-scheme: dark;
 }
 
 body {
-  background-color: var(--renza-cream);
+  background:
+    radial-gradient(circle at top, rgba(217, 179, 108, 0.15), transparent 28%),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.04), transparent 20%),
+    radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.08), transparent 32%),
+    #05070b;
+  color: #f8fafc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-overflow-scrolling: touch;
 }
 
+::selection {
+  background: rgba(217, 179, 108, 0.34);
+  color: #fffaf1;
+}
+
 .glass {
-  background: rgba(250, 247, 242, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(11, 15, 25, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.luxury-divider {
+  background: linear-gradient(90deg, transparent 0%, rgba(217, 179, 108, 0.5) 50%, transparent 100%);
 }
 
 .text-balance {
   text-wrap: balance;
 }
 
-/* Shimmer skeleton animation */
+.hero-float {
+  animation: heroFloat 6.5s ease-in-out infinite;
+}
+
+.glow-text {
+  background: linear-gradient(135deg, #f8fafc 0%, #d9b36c 30%, #f1e4c4 52%, #f8fafc 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.premium-panel {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+.translucent-card {
+  background: linear-gradient(180deg, rgba(13, 17, 24, 0.86), rgba(10, 14, 19, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+@keyframes heroFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(217, 179, 108, 0);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(217, 179, 108, 0.28);
+  }
+}
+
 .skeleton {
   background: linear-gradient(
     90deg,
-    #e5e7eb 25%,
-    #f3f4f6 50%,
-    #e5e7eb 75%
+    rgba(148, 163, 184, 0.12) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(148, 163, 184, 0.12) 75%
   );
   background-size: 800px 100%;
   animation: shimmer 1.5s infinite linear;
@@ -58,7 +119,6 @@ body {
   }
 }
 
-/* Hide scrollbar for category nav but keep functionality */
 .scrollbar-hide,
 .horizontal-rail {
   -ms-overflow-style: none;
@@ -70,7 +130,6 @@ body {
   display: none;
 }
 
-/* Bottom sheet slide up animation */
 @keyframes slideUp {
   from {
     transform: translateY(100%);
@@ -97,7 +156,6 @@ body {
   animation: fadeIn 0.2s ease forwards;
 }
 
-/* Line clamp for description */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

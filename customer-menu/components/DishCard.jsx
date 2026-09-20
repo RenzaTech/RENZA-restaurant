@@ -32,8 +32,8 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
   const initials = item.name?.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase() || 'R';
 
   const placeholder = (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-renza-charcoal via-renza-ink to-renza-ember/70 text-renza-cream">
-      <UtensilsCrossed className="mb-2 h-8 w-8 text-renza-gold/80" strokeWidth={1.5} />
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(217,179,108,0.35),_rgba(13,18,27,0.96)_55%)] text-white">
+      <UtensilsCrossed className="mb-2 h-8 w-8 text-amber-200/90" strokeWidth={1.5} />
       <span className="font-display text-3xl tracking-wide text-white/90">{initials}</span>
     </div>
   );
@@ -41,14 +41,14 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
   return (
     <article
       ref={ref}
-      className={`group mb-5 overflow-hidden rounded-3xl border border-renza-ink/10 bg-white shadow-card transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-renza-gold focus:ring-offset-2 active:scale-[0.98] motion-reduce:active:scale-100 ${isUnavailable ? 'cursor-default' : 'cursor-pointer hover:-translate-y-1 motion-reduce:hover:translate-y-0'}`}
+      className={`group overflow-hidden rounded-[1.7rem] border border-white/10 bg-[linear-gradient(180deg,rgba(17,20,27,0.9),rgba(8,11,17,0.94))] shadow-[0_16px_30px_rgba(0,0,0,0.26)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-300/60 focus:ring-offset-2 focus:ring-offset-[#05070b] active:scale-[0.98] motion-reduce:active:scale-100 ${isUnavailable ? 'cursor-default opacity-90' : 'cursor-pointer hover:-translate-y-1 hover:border-amber-200/20 hover:shadow-[0_20px_42px_rgba(0,0,0,0.32)] motion-reduce:hover:translate-y-0'}`}
       onClick={isUnavailable ? undefined : (event) => onSelect(item, event.currentTarget)}
       onKeyDown={isUnavailable ? undefined : (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(item, event.currentTarget); } }}
       tabIndex={isUnavailable ? -1 : 0}
       role="button"
       aria-disabled={isUnavailable}
     >
-      <div className={`relative aspect-[4/3] overflow-hidden bg-renza-charcoal ${isUnavailable ? 'grayscale' : ''}`}>
+      <div className={`relative aspect-[4/3] overflow-hidden bg-[#0b1220] ${isUnavailable ? 'grayscale-[0.18]' : ''}`}>
         {imageUrl && !imageFailed ? (
           <Image
             src={imageUrl}
@@ -63,24 +63,24 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
             onError={() => setImageFailed(true)}
           />
         ) : placeholder}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 via-black/25 to-transparent" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/25 to-transparent" aria-hidden="true" />
 
-        <div className="absolute left-4 top-4 rounded-md bg-white/90 p-1.5 shadow-sm backdrop-blur-sm">
+        <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-slate-950/60 p-1.5 shadow-[0_10px_18px_rgba(0,0,0,0.2)] backdrop-blur-md">
           <VegIndicator isVeg={isVeg} />
         </div>
-        {isUnavailable && <div className="absolute right-0 top-5 rounded-l-full bg-renza-ink/90 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-renza-cream">Sold out</div>}
-        <span className="absolute bottom-4 right-4 rounded-full border border-white/30 bg-white/20 px-3 py-1.5 text-sm font-black text-white shadow-lg backdrop-blur-md">
+        {isUnavailable && <div className="absolute right-3 top-3 rounded-full border border-rose-400/25 bg-rose-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-rose-200">Sold out</div>}
+        <span className="absolute bottom-4 right-4 rounded-full border border-amber-200/20 bg-black/50 px-3 py-1.5 text-sm font-black text-amber-100 shadow-[0_12px_20px_rgba(0,0,0,0.22)] backdrop-blur-md">
           ₹{Number(item.price).toFixed(2)}
         </span>
       </div>
 
-      <div className="p-4">
+      <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-3">
-          <h3 className={`text-base font-bold leading-snug tracking-tight ${isUnavailable ? 'text-slate-500' : 'text-slate-900'}`}>{item.name}</h3>
-          {isUnavailable ? <span className="flex-shrink-0 rounded-full border border-rose-200/60 bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold text-rose-600">Sold Out</span> : <span className="flex-shrink-0 text-[10px] font-bold text-emerald-700">Available</span>}
+          <h3 className={`text-base font-bold leading-snug tracking-[-0.02em] ${isUnavailable ? 'text-slate-400' : 'text-white'}`}>{item.name}</h3>
+          {isUnavailable ? <span className="flex-shrink-0 rounded-full border border-rose-400/20 bg-rose-500/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-rose-200">Sold Out</span> : <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">Available</span>}
         </div>
-        <div className="mt-2 min-h-5"><DietaryTags item={item} /></div>
-        {item.description && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">{item.description}</p>}
+        <div className="min-h-5"><DietaryTags item={item} /></div>
+        {item.description && <p className="line-clamp-2 text-xs leading-relaxed text-slate-300">{item.description}</p>}
       </div>
     </article>
   );
