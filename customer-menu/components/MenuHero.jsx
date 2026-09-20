@@ -44,26 +44,8 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRate
         <div className="luxury-divider absolute inset-x-8 top-0 h-px" />
 
         <div className="relative mx-auto max-w-[1200px] px-4 py-3.5 sm:py-4">
-          <div className="flex items-center gap-3 sm:gap-4">
-            {/* Luminous Brand Emblem */}
-            <div className="relative flex h-13 w-13 sm:h-15 sm:w-15 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-amber-300/30 bg-white/[0.04] shadow-[0_0_24px_rgba(217,179,108,0.2)] backdrop-blur-xl">
-              {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt={`${restaurant.name} logo`}
-                  fill
-                  sizes="60px"
-                  className="h-full w-full object-cover"
-                  onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                />
-              ) : (
-                <span className="font-display text-2xl font-bold text-amber-200">
-                  {restaurant.name?.charAt(0) || 'R'}
-                </span>
-              )}
-            </div>
-
-            {/* Brand Title & Badges */}
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            {/* ── Left Column: Brand Title, Badges & Action Pills ── */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="glow-text font-display text-xl sm:text-2xl font-bold tracking-tight truncate leading-tight">
@@ -82,7 +64,7 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRate
               )}
 
               {/* Action Pills Row */}
-              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-300">
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-300">
                 {restaurant.address && (
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.address}`)}`}
@@ -92,7 +74,7 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRate
                     title={restaurant.address}
                   >
                     <MapPin className="h-2.5 w-2.5 text-amber-200 shrink-0" />
-                    <span className="max-w-[140px] sm:max-w-[220px] truncate">{restaurant.address}</span>
+                    <span className="max-w-[130px] sm:max-w-[200px] truncate">{restaurant.address}</span>
                   </a>
                 )}
 
@@ -117,6 +99,23 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRate
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* ── Right Column: Restaurant Logo (Top Right) ── */}
+            <div className="relative flex h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-amber-300/30 bg-slate-900/80 shadow-[0_0_24px_rgba(217,179,108,0.22)] backdrop-blur-xl">
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={`${restaurant.name} logo`}
+                  fill
+                  sizes="64px"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="font-display text-2xl font-bold text-amber-200">
+                  {restaurant.name?.charAt(0) || 'R'}
+                </span>
+              )}
             </div>
           </div>
         </div>
