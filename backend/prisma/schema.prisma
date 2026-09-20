@@ -47,6 +47,7 @@ model Restaurant {
   phone         String?
   status        RestaurantStatus @default(active)
   customMenuUrl String?          @map("custom_menu_url")
+  googleReviewUrl String?        @map("google_review_url")
   adminUsers    User[]
   categories    Category[]
   foodItems     FoodItem[]
@@ -76,8 +77,9 @@ model FoodItem {
   category     Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   name         String
   price        Decimal          @db.Decimal(10, 2)
-  imageUrl     String?          @map("image_url")
-  isVeg        Boolean          @default(false) @map("is_veg")
+  imageUrl        String?          @map("image_url")
+  topViewImageUrl String?          @map("top_view_image_url")
+  isVeg           Boolean          @default(false) @map("is_veg")
   description  String?
   ingredients  String?
   spices       String?

@@ -17,9 +17,12 @@ import {
   Store,
   ExternalLink,
   Filter,
+  Trash2,
+  FileSpreadsheet,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
+import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
 
 function StatusBadge({ status }) {
@@ -77,6 +80,50 @@ function ConfirmDialog({ open, message, onConfirm, onCancel }) {
   )
 }
 
+function DeleteConfirmDialog({ open, restaurant, onConfirm, onCancel, deleting }) {
+  if (!open || !restaurant) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-slate-100">
+        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-4 border border-rose-100">
+          <Trash2 className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Suspended Restaurant?</h3>
+        <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+          Are you sure you want to permanently delete <strong className="text-slate-900">{restaurant.name}</strong>? This action cannot be undone and will delete all associated food items, categories, admin credentials, and analytics.
+        </p>
+        <div className="flex gap-2.5 justify-end">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
+          >
+            {deleting ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Restaurant</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function RestaurantsPage() {
   const router = useRouter()
   const [restaurants, setRestaurants] = useState([])
@@ -85,6 +132,34 @@ export default function RestaurantsPage() {
   const [statusFilter, setStatusFilter] = useState('all') // all | active | suspended
   const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null, currentStatus: null })
   const [statusUpdating, setStatusUpdating] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [exportingId, setExportingId] = useState(null)
+
+  const handleExport = async (r) => {
+    const id = r._id || r.id
+    setExportingId(id)
+    try {
+      const [detailsRes, analyticsRes] = await Promise.allSettled([
+        api.get(`/api/admin/restaurants/${id}`),
+        api.get(`/api/admin/restaurants/${id}/analytics`),
+      ])
+      const fullRestaurant = detailsRes.status === 'fulfilled'
+        ? (detailsRes.value.data?.restaurant || detailsRes.value.data || r)
+        : r
+      const analytics = analyticsRes.status === 'fulfilled'
+        ? (analyticsRes.value.data?.analytics || analyticsRes.value.data || {})
+        : {}
+
+      exportRestaurantReport(fullRestaurant, analytics)
+      toast.success(`Excel report downloaded for "${fullRestaurant.name}"!`)
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to export Excel report')
+    } finally {
+      setExportingId(null)
+    }
+  }
 
   const fetchRestaurants = async () => {
     setLoading(true)
@@ -137,6 +212,22 @@ export default function RestaurantsPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget._id || deleteTarget.id
+    setDeleting(true)
+    try {
+      await api.delete(`/api/admin/restaurants/${id}`)
+      toast.success(`Restaurant "${deleteTarget.name}" deleted successfully`)
+      setRestaurants((prev) => prev.filter((r) => (r._id || r.id) !== id))
+      setDeleteTarget(null)
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to delete restaurant')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* ── HEADER ── */}
@@ -153,6 +244,14 @@ export default function RestaurantsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/reports"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold rounded-xl transition-all shadow-xs"
+            title="Restaurant Reports & Excel Exports"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Reports & Exports</span>
+          </Link>
           <button
             onClick={fetchRestaurants}
             disabled={loading}
@@ -163,7 +262,7 @@ export default function RestaurantsPage() {
           </button>
           <Link
             href="/restaurants/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-orange-500/20"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-orange-500/20"
           >
             <Plus className="w-4 h-4" />
             <span>Onboard Restaurant</span>
@@ -291,6 +390,19 @@ export default function RestaurantsPage() {
                             <span>QR Studio</span>
                           </Link>
 
+                          <button
+                            onClick={() => handleExport(r)}
+                            disabled={exportingId === id}
+                            className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Download Excel Report (.xlsx)"
+                          >
+                            {exportingId === id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <FileSpreadsheet className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+
                           <Link
                             href={`/restaurants/${id}/edit`}
                             title="Edit Restaurant"
@@ -317,6 +429,16 @@ export default function RestaurantsPage() {
                               <ToggleLeft className="w-5 h-5 text-slate-400" />
                             )}
                           </button>
+
+                          {r.status === 'suspended' && (
+                            <button
+                              onClick={() => setDeleteTarget(r)}
+                              title="Delete Suspended Restaurant"
+                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors ml-0.5"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -339,6 +461,15 @@ export default function RestaurantsPage() {
         }`}
         onConfirm={confirmStatusToggle}
         onCancel={() => setConfirmDialog({ open: false, id: null, currentStatus: null })}
+      />
+
+      {/* ── DELETE CONFIRMATION MODAL ── */}
+      <DeleteConfirmDialog
+        open={Boolean(deleteTarget)}
+        restaurant={deleteTarget}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        deleting={deleting}
       />
     </div>
   )

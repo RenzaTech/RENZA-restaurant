@@ -19,7 +19,7 @@ module.exports = {
           charcoal: '#16161C',
           cream: '#FAF7F2',
           gold: '#C9A227',
-          ember: '#F97316',
+          ember: '#00d2c4',
           sage: '#4F7A5B',
         },
       },

@@ -4,16 +4,17 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { isAuthenticated, clearToken } from '@/lib/auth'
+import api from '@/lib/api'
 import {
   LayoutDashboard,
   Building2,
+  FileSpreadsheet,
   LogOut,
   ChevronRight,
   Menu,
   X,
   Shield,
   Activity,
-  Plus,
   ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,9 +30,14 @@ const navItems = [
     label: 'Restaurants & QRs',
     icon: Building2,
   },
+  {
+    href: '/reports',
+    label: 'Reports & Exports',
+    icon: FileSpreadsheet,
+  },
 ]
 
-function Sidebar({ onClose }) {
+function Sidebar({ onClose, user }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -45,7 +51,7 @@ function Sidebar({ onClose }) {
       {/* Logo & Platform Info */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/70">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-tr from-orange-500 to-amber-500 rounded-2xl shadow-lg shadow-orange-500/20">
+          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-tr from-orange-500 to-teal-600 rounded-2xl shadow-lg shadow-orange-500/20">
             <span className="text-xl font-black text-white">R</span>
           </div>
           <div>
@@ -84,7 +90,7 @@ function Sidebar({ onClose }) {
               className={cn(
                 'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all group',
                 isActive
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20'
+                  ? 'bg-gradient-to-r from-orange-500 to-teal-600 text-white shadow-md shadow-orange-500/20'
                   : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
               )}
             >
@@ -96,17 +102,6 @@ function Sidebar({ onClose }) {
             </Link>
           )
         })}
-
-        <div className="pt-6 px-3">
-          <Link
-            href="/restaurants/new"
-            onClick={onClose}
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 text-orange-400 text-xs font-bold border border-orange-500/20 hover:border-orange-500/40 transition-all shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Onboard Restaurant</span>
-          </Link>
-        </div>
       </nav>
 
       {/* Cloud Service Status pill */}
@@ -125,8 +120,8 @@ function Sidebar({ onClose }) {
             <Shield className="w-4 h-4 text-orange-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-white truncate">Super Admin</p>
-            <p className="text-[11px] text-slate-400 truncate">Master Platform Access</p>
+            <p className="text-xs font-bold text-white truncate">{user?.name || 'Super Admin'}</p>
+            <p className="text-[11px] text-slate-400 truncate">{user?.email || 'Master Platform Access'}</p>
           </div>
         </div>
         <button
@@ -146,12 +141,24 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [adminUser, setAdminUser] = useState(null)
 
   useEffect(() => {
     setMounted(true)
     if (!isAuthenticated()) {
       router.replace('/login')
+      return
     }
+
+    // Verify session validity with backend. If email/password changed, 401 triggers clean logout
+    api.get('/api/auth/me')
+      .then((res) => {
+        setAdminUser(res.data)
+      })
+      .catch(() => {
+        clearToken()
+        router.replace('/login')
+      })
   }, [router])
 
   if (!mounted) {
@@ -167,6 +174,7 @@ export default function DashboardLayout({ children }) {
   }
 
   const getPageTitle = () => {
+    if (pathname.startsWith('/reports')) return 'Restaurant Reports & Excel Exports'
     if (pathname.startsWith('/restaurants/new')) return 'Onboard New Restaurant'
     if (pathname.includes('/edit')) return 'Edit Restaurant Profile'
     if (pathname.startsWith('/restaurants/')) return 'Restaurant & QR Analytics'
@@ -178,7 +186,7 @@ export default function DashboardLayout({ children }) {
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 flex-shrink-0 h-screen overflow-hidden">
-        <Sidebar />
+        <Sidebar user={adminUser} />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
@@ -189,7 +197,7 @@ export default function DashboardLayout({ children }) {
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative z-50 flex flex-col w-64 h-full shadow-2xl">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
+            <Sidebar user={adminUser} onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
       )}
@@ -213,17 +221,10 @@ export default function DashboardLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Super Admin Active</span>
             </div>
-            <Link
-              href="/restaurants/new"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-sm shadow-orange-500/20"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>New Restaurant</span>
-            </Link>
           </div>
         </header>
 

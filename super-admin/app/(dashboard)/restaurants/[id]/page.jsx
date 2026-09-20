@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -28,9 +28,13 @@ import {
   Clock,
   TrendingUp,
   Share2,
+  RefreshCw,
+  Trash2,
+  FileSpreadsheet,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatDate, formatNumber } from '@/lib/utils'
+import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
@@ -62,6 +66,50 @@ function ConfirmDialog({ open, message, onConfirm, onCancel }) {
         <div className="flex gap-2.5 justify-end">
           <button onClick={onCancel} className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Cancel</button>
           <button onClick={onConfirm} className="px-4 py-2 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl transition-colors shadow-sm">Confirm</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DeleteConfirmDialog({ open, restaurant, onConfirm, onCancel, deleting }) {
+  if (!open || !restaurant) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-slate-100">
+        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-4 border border-rose-100">
+          <Trash2 className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Suspended Restaurant?</h3>
+        <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+          Are you sure you want to permanently delete <strong className="text-slate-900">{restaurant.name}</strong>? This action cannot be undone and will delete all associated food items, categories, admin credentials, and analytics.
+        </p>
+        <div className="flex gap-2.5 justify-end">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
+          >
+            {deleting ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Restaurant</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
@@ -112,7 +160,7 @@ function HourlyChart({ data }) {
                     style={{ height: `${Math.max(pct, val > 0 ? 6 : 0)}%` }}
                     className={`w-full rounded-t-lg transition-all cursor-pointer ${
                       isPeak
-                        ? 'bg-gradient-to-t from-orange-500 to-amber-400 shadow-sm'
+                        ? 'bg-gradient-to-t from-orange-500 to-teal-400 shadow-sm'
                         : val > 0
                         ? 'bg-orange-200 hover:bg-orange-400'
                         : 'bg-slate-100 hover:bg-slate-200'
@@ -167,9 +215,52 @@ export default function RestaurantDetailPage() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [statusUpdating, setStatusUpdating] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [isEditingUrl, setIsEditingUrl] = useState(false)
   const [customUrlInput, setCustomUrlInput] = useState('')
   const [savingUrl, setSavingUrl] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [exportingReport, setExportingReport] = useState(false)
+  const analyticsLoadedRef = useRef(false)
+
+  const handleExportReport = async () => {
+    setExportingReport(true)
+    try {
+      // Ensure we have complete data with foodItems and categories
+      let fullRestaurant = restaurant
+      if (!restaurant?.foodItems || !restaurant?.categories) {
+        const res = await api.get(`/api/admin/restaurants/${id}`)
+        fullRestaurant = res.data?.restaurant || res.data || restaurant
+      }
+      let currentAnalytics = analytics
+      if (!currentAnalytics) {
+        const aRes = await api.get(`/api/admin/restaurants/${id}/analytics`)
+        currentAnalytics = aRes.data?.analytics || aRes.data || {}
+      }
+      exportRestaurantReport(fullRestaurant, currentAnalytics)
+      toast.success(`Excel report downloaded for "${fullRestaurant.name}"!`)
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to export Excel report')
+    } finally {
+      setExportingReport(false)
+    }
+  }
+
+  const handleDeleteRestaurant = async () => {
+    setDeleting(true)
+    try {
+      await api.delete(`/api/admin/restaurants/${id}`)
+      toast.success(`Restaurant "${restaurant?.name || 'Restaurant'}" deleted permanently`)
+      router.push('/restaurants')
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to delete restaurant')
+      setDeleting(false)
+    }
+  }
 
   const handleStartEditUrl = () => {
     setCustomUrlInput(qrData?.customMenuUrl || qrData?.menuUrl || '')
@@ -233,15 +324,18 @@ export default function RestaurantDetailPage() {
     }
   }, [id])
 
-  const fetchAnalytics = useCallback(async () => {
-    setAnalyticsLoading(true)
+  const fetchAnalytics = useCallback(async (silent = false) => {
+    if (!silent) setAnalyticsLoading(true)
+    setIsRefreshing(true)
     try {
       const res = await api.get(`/api/admin/restaurants/${id}/analytics`)
       setAnalytics(res.data?.analytics || res.data)
+      setLastUpdated(new Date())
     } catch {
-      toast.error('Failed to load analytics')
+      if (!silent) toast.error('Failed to load analytics')
     } finally {
-      setAnalyticsLoading(false)
+      if (!silent) setAnalyticsLoading(false)
+      setIsRefreshing(false)
     }
   }, [id])
 
@@ -249,11 +343,22 @@ export default function RestaurantDetailPage() {
     fetchRestaurant()
   }, [fetchRestaurant])
 
+  // Fetch immediately whenever switching to the analytics tab
   useEffect(() => {
-    if (tab === 'analytics' && !analytics) {
-      fetchAnalytics()
+    if (tab === 'analytics') {
+      fetchAnalytics(analyticsLoadedRef.current)
+      analyticsLoadedRef.current = true
     }
-  }, [tab, analytics, fetchAnalytics])
+  }, [tab, fetchAnalytics])
+
+  // Live real-time polling interval (every 10 seconds)
+  useEffect(() => {
+    if (tab !== 'analytics' || !autoRefresh) return
+    const interval = setInterval(() => {
+      fetchAnalytics(true)
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [tab, autoRefresh, fetchAnalytics])
 
   const handleStatusToggle = async () => {
     setConfirmOpen(false)
@@ -334,7 +439,7 @@ export default function RestaurantDetailPage() {
       {/* ── HERO RESTAURANT HEADER CARD ── */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-orange-500/20 flex-shrink-0">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-orange-500/20 flex-shrink-0">
             {restaurant.name?.charAt(0) || 'R'}
           </div>
           <div>
@@ -353,6 +458,20 @@ export default function RestaurantDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={handleExportReport}
+            disabled={exportingReport}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+            title="Download full operational & stock Excel report (.xlsx)"
+          >
+            {exportingReport ? (
+              <div className="w-3.5 h-3.5 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+            )}
+            <span>Export Excel Report</span>
+          </button>
+
           <Link
             href={`/restaurants/${id}/edit`}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-xs"
@@ -379,6 +498,17 @@ export default function RestaurantDetailPage() {
             )}
             <span>{restaurant.status === 'active' ? 'Suspend Access' : 'Activate Access'}</span>
           </button>
+
+          {restaurant.status === 'suspended' && (
+            <button
+              onClick={() => setDeleteConfirmOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80"
+              title="Permanently delete suspended restaurant"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Restaurant</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -575,6 +705,49 @@ export default function RestaurantDetailPage() {
       {/* ── TAB 2: DINING ANALYTICS ── */}
       {tab === 'analytics' && (
         <div className="space-y-6">
+          {/* Live Data Stream Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/80 px-5 py-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-2.5 w-2.5">
+                {autoRefresh && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${autoRefresh ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              </span>
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                {autoRefresh ? 'Live Stream Active' : 'Live Stream Paused'}
+              </span>
+              {lastUpdated && (
+                <span className="text-[11px] text-slate-400 font-medium">
+                  • Last sync: {lastUpdated.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAutoRefresh((prev) => !prev)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                  autoRefresh
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                {autoRefresh ? 'Auto-Sync (10s)' : 'Resume Auto-Sync'}
+              </button>
+              <button
+                type="button"
+                onClick={() => fetchAnalytics(false)}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-500 text-white text-xs font-bold shadow-xs hover:bg-orange-600 transition-all disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+
           {analyticsLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-24" />)}
@@ -697,6 +870,14 @@ export default function RestaurantDetailPage() {
         } ${restaurant.name}?`}
         onConfirm={handleStatusToggle}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        restaurant={restaurant}
+        onConfirm={handleDeleteRestaurant}
+        onCancel={() => setDeleteConfirmOpen(false)}
+        deleting={deleting}
       />
     </div>
   )

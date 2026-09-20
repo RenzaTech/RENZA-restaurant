@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, LayoutList, Check, X, FolderTree, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, ChevronRight, LayoutList, Check, X, FolderTree, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,6 +42,16 @@ export default function CategoriesPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
+
+  const toggleExpand = (catId) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(catId)) next.delete(catId);
+      else next.add(catId);
+      return next;
+    });
+  };
 
   const fetchCategories = useCallback(() => {
     setLoading(true);
@@ -130,7 +140,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Header card */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
@@ -144,7 +154,7 @@ export default function CategoriesPage() {
             setShowAddInput(true);
             setNewCatName('');
           }}
-          className="w-full sm:w-auto justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
+          className="w-full sm:w-auto justify-center bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white font-bold gap-2 shadow-sm rounded-xl px-4 py-2.5 h-auto text-xs"
         >
           <Plus className="w-4 h-4" />
           Add Category
@@ -213,91 +223,159 @@ export default function CategoriesPage() {
               const isEditing = editId === catId;
               const foodCount = cat._count?.foodItems || cat.foodCount || 0;
 
+              const isExpanded = expandedCategories.has(catId);
+              const foodList = cat.foodItems || [];
+
               return (
                 <div
                   key={catId}
-                  className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-5 flex items-center gap-2.5 sm:gap-4 hover:shadow-md transition-all"
+                  className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-5 hover:shadow-md transition-all space-y-3"
                 >
-                  {/* Category icon/badge */}
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-[11px] sm:text-xs flex-shrink-0 border border-orange-100">
-                    #{index + 1}
-                  </div>
+                  <div className="flex items-center gap-2.5 sm:gap-4">
+                    {/* Category icon/badge */}
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-[11px] sm:text-xs flex-shrink-0 border border-orange-100">
+                      #{index + 1}
+                    </div>
 
-                  {/* Name or Edit Input */}
-                  <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <Input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleEditSave(cat)}
-                          autoFocus
-                          className="h-8 sm:h-9 text-xs rounded-xl"
-                        />
+                    {/* Name or Edit Input */}
+                    <div className="flex-1 min-w-0">
+                      {isEditing ? (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleEditSave(cat)}
+                            autoFocus
+                            className="h-8 sm:h-9 text-xs rounded-xl"
+                          />
+                          <button
+                            onClick={() => handleEditSave(cat)}
+                            disabled={savingEdit}
+                            className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditId(null)}
+                            className="p-1.5 sm:p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
                         <button
-                          onClick={() => handleEditSave(cat)}
-                          disabled={savingEdit}
-                          className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          type="button"
+                          onClick={() => toggleExpand(catId)}
+                          className="w-full text-left min-w-0 group"
                         >
-                          <Check className="w-4 h-4" />
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate group-hover:text-orange-600 transition-colors">
+                              {cat.name}
+                            </h3>
+                            <ChevronRight
+                              className={cn(
+                                'w-3.5 h-3.5 text-slate-400 transition-transform duration-200',
+                                isExpanded && 'rotate-90 text-orange-500'
+                              )}
+                            />
+                          </div>
+                          <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">
+                            {foodCount} {foodCount === 1 ? 'dish' : 'dishes'} in this section • click to {isExpanded ? 'hide' : 'view'}
+                          </p>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Reorder Up/Down */}
+                    <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => handleReorder(index, 'up')}
+                        disabled={index === 0}
+                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+                        title="Move up"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleReorder(index, 'down')}
+                        disabled={index === categories.length - 1}
+                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+                        title="Move down"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </button>
+                    </div>
+
+                    {/* Actions */}
+                    {!isEditing && (
+                      <div className="flex items-center gap-1 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-100 flex-shrink-0">
+                        <button
+                          onClick={() => {
+                            setEditId(catId);
+                            setEditName(cat.name);
+                          }}
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+                          title="Rename category"
+                        >
+                          <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         </button>
                         <button
-                          onClick={() => setEditId(null)}
-                          className="p-1.5 sm:p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200"
+                          onClick={() => setDeleteTarget(cat)}
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          title="Delete category"
                         >
-                          <X className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         </button>
-                      </div>
-                    ) : (
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{cat.name}</h3>
-                        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">
-                          {foodCount} {foodCount === 1 ? 'dish' : 'dishes'} in this section
-                        </p>
                       </div>
                     )}
                   </div>
 
-                  {/* Reorder Up/Down */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                    <button
-                      onClick={() => handleReorder(index, 'up')}
-                      disabled={index === 0}
-                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
-                      title="Move up"
-                    >
-                      <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleReorder(index, 'down')}
-                      disabled={index === categories.length - 1}
-                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-25 disabled:pointer-events-none transition-colors"
-                      title="Move down"
-                    >
-                      <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </button>
-                  </div>
-
-                  {/* Actions */}
-                  {!isEditing && (
-                    <div className="flex items-center gap-1 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-100 flex-shrink-0">
-                      <button
-                        onClick={() => {
-                          setEditId(catId);
-                          setEditName(cat.name);
-                        }}
-                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-colors"
-                        title="Rename category"
-                      >
-                        <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(cat)}
-                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                        title="Delete category"
-                      >
-                        <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                      </button>
+                  {/* Expanded Dish List */}
+                  {isExpanded && (
+                    <div className="pt-3 border-t border-slate-100">
+                      {foodList.length > 0 ? (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                            Assigned Dishes ({foodList.length})
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            {foodList.map((dish) => (
+                              <div
+                                key={dish.id}
+                                className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60 text-xs"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span
+                                    className={cn(
+                                      'w-2 h-2 rounded-full flex-shrink-0',
+                                      dish.isVeg ? 'bg-emerald-500' : 'bg-rose-500'
+                                    )}
+                                    title={dish.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
+                                  />
+                                  <span className="font-semibold text-slate-800 truncate">{dish.name}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <span className="font-bold text-slate-900">₹{dish.price}</span>
+                                  <span
+                                    className={cn(
+                                      'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider',
+                                      dish.isAvailable ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                                    )}
+                                  >
+                                    {dish.isAvailable ? 'Avail' : 'Out'}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-3 px-4 bg-slate-50 rounded-xl text-center">
+                          <p className="text-xs text-slate-400">
+                            No dishes assigned to this category yet. Dishes can be assigned when adding or editing in Menu & Stock.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

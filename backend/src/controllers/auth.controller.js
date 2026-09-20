@@ -22,12 +22,12 @@ const login = async (req, res) => {
   })
 
   if (!user) {
-    return res.status(401).json({ error: 'Invalid email or password' })
+    return res.status(401).json({ error: 'User not found with this email' })
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash)
   if (!isValid) {
-    return res.status(401).json({ error: 'Invalid email or password' })
+    return res.status(401).json({ error: 'Incorrect password' })
   }
 
   const payload = {
@@ -36,6 +36,7 @@ const login = async (req, res) => {
     role: user.role,
     restaurantId: user.restaurantId,
     name: user.name,
+    pwh: user.passwordHash ? user.passwordHash.slice(-10) : undefined,
   }
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' })

@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Store,
   CheckCircle2,
+  AlertCircle,
 } from 'lucide-react'
 import api from '../../lib/api'
 import { setToken, isAuthenticated } from '../../lib/auth'
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -41,12 +43,15 @@ export default function LoginPage() {
     }
 
     setLoading(true)
+    setErrorMessage('')
     try {
       const response = await api.post('/api/auth/login', { email, password })
       const { token, user } = response.data
 
       if (user?.role !== 'superadmin') {
-        toast.error('Access restricted to Super Administrators only.')
+        const roleMsg = 'Access restricted to Super Administrators only.'
+        toast.error(roleMsg)
+        setErrorMessage(roleMsg)
         setLoading(false)
         return
       }
@@ -55,10 +60,21 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${user?.name || 'Administrator'}!`)
       router.replace('/dashboard')
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
+      const rawMsg =
         error.response?.data?.error ||
-        'Invalid credentials. Please verify and try again.'
+        error.response?.data?.message ||
+        ''
+
+      let message = 'Incorrect password'
+      if (rawMsg) {
+        if (rawMsg.toLowerCase().includes('user not found') || rawMsg.toLowerCase().includes('email')) {
+          message = rawMsg
+        } else {
+          message = 'Incorrect password'
+        }
+      }
+
+      setErrorMessage(message)
       toast.error(message)
     } finally {
       setLoading(false)
@@ -76,7 +92,7 @@ export default function LoginPage() {
 
         {/* Top brand */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/25">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center shadow-lg shadow-orange-500/25">
             <span className="text-2xl font-black text-white tracking-tight">R</span>
           </div>
           <div>
@@ -96,7 +112,7 @@ export default function LoginPage() {
 
           <h1 className="text-4xl xl:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-5">
             Command Center for the{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-teal-300 to-orange-500">
               Smart Dining Ecosystem
             </span>
           </h1>
@@ -160,7 +176,7 @@ export default function LoginPage() {
         {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between mb-8">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-teal-600 flex items-center justify-center shadow-md">
               <span className="text-xl font-black text-white">R</span>
             </div>
             <span className="text-lg font-bold text-white">Renza</span>
@@ -198,7 +214,10 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (errorMessage) setErrorMessage('')
+                  }}
                   placeholder="admin@renza.com"
                   autoComplete="email"
                   required
@@ -220,11 +239,18 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (errorMessage) setErrorMessage('')
+                  }}
                   placeholder="••••••••••••"
                   autoComplete="current-password"
                   required
-                  className="w-full pl-10 pr-11 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-inner"
+                  className={`w-full pl-10 pr-11 py-3 bg-slate-950/80 rounded-xl text-sm text-white placeholder-slate-500 transition-all shadow-inner focus:outline-none border ${
+                    errorMessage
+                      ? 'border-red-500/80 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
+                      : 'border-slate-800 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20'
+                  }`}
                 />
                 <button
                   type="button"
@@ -236,6 +262,14 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Inline Error Message */}
+            {errorMessage && (
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             {/* Remember Me */}
             <div className="flex items-center justify-between pt-1">
@@ -254,7 +288,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group mt-3"
+              className="w-full py-3.5 px-5 bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group mt-3"
             >
               {loading ? (
                 <>
@@ -281,7 +315,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="pt-8 text-center text-xs text-slate-500">
-          Renza Hospitality Technologies &copy; {new Date().getFullYear()} · All rights reserved
+          Renza &copy; {new Date().getFullYear()} · All rights reserved
         </div>
       </div>
     </div>

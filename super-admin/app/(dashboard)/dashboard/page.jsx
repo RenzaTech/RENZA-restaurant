@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Trash2,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
@@ -64,25 +65,91 @@ function StatusBadge({ status }) {
   )
 }
 
+function DeleteConfirmDialog({ open, restaurant, onConfirm, onCancel, deleting }) {
+  if (!open || !restaurant) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-slate-100">
+        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-4 border border-rose-100">
+          <Trash2 className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Suspended Restaurant?</h3>
+        <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+          Are you sure you want to permanently delete <strong className="text-slate-900">{restaurant.name}</strong>? This will permanently remove its dishes, categories, admin accounts, and analytics history.
+        </p>
+        <div className="flex gap-2.5 justify-end">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
+          >
+            {deleting ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Restaurant</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const [restaurants, setRestaurants] = useState([])
   const [loading, setLoading] = useState(true)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
-  const fetchData = async () => {
-    setLoading(true)
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const res = await api.get('/api/admin/restaurants')
       setRestaurants(res.data?.restaurants || res.data || [])
     } catch (err) {
-      toast.error('Failed to load platform data')
+      if (!silent) toast.error('Failed to load platform data')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
   useEffect(() => {
     fetchData()
+    const interval = setInterval(() => {
+      fetchData(true)
+    }, 15000)
+    return () => clearInterval(interval)
   }, [])
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget._id || deleteTarget.id
+    setDeleting(true)
+    try {
+      await api.delete(`/api/admin/restaurants/${id}`)
+      toast.success(`Restaurant "${deleteTarget.name}" deleted successfully`)
+      setRestaurants((prev) => prev.filter((r) => (r._id || r.id) !== id))
+      setDeleteTarget(null)
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to delete restaurant')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const totalRestaurants = restaurants.length
   const activeRestaurants = restaurants.filter((r) => r.status === 'active').length
@@ -125,7 +192,7 @@ export default function DashboardPage() {
 
             <Link
               href="/restaurants/new"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold transition-all shadow-md shadow-orange-500/20"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white text-xs font-bold transition-all shadow-md shadow-orange-500/20"
             >
               <Plus className="w-4 h-4" />
               Onboard Restaurant
@@ -265,13 +332,26 @@ export default function DashboardPage() {
                         {formatDate(r.createdAt || r.created_at)}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Link
-                          href={`/restaurants/${id}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-bold transition-colors border border-orange-200/60"
-                        >
-                          <QrCode className="w-3.5 h-3.5" />
-                          <span>QR & Details</span>
-                        </Link>
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/restaurants/${id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-bold transition-colors border border-orange-200/60"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                            <span>QR & Details</span>
+                          </Link>
+
+                          {r.status === 'suspended' && (
+                            <button
+                              onClick={() => setDeleteTarget(r)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition-colors border border-rose-200/60"
+                              title="Delete suspended restaurant"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -281,6 +361,15 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* ── DELETE CONFIRMATION MODAL ── */}
+      <DeleteConfirmDialog
+        open={Boolean(deleteTarget)}
+        restaurant={deleteTarget}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        deleting={deleting}
+      />
     </div>
   )
 }

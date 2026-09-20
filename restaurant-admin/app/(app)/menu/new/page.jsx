@@ -27,7 +27,6 @@ export default function NewFoodItemPage() {
     setUploadProgress(0);
     try {
       await api.post('/api/restaurant/foods', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (event) => {
           if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
         },
@@ -44,16 +43,36 @@ export default function NewFoodItemPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
-      {/* Sub-header */}
-      <div className="sticky top-14 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      {/* Page Heading & Breadcrumb navigation */}
+      <div className="space-y-3">
         <button
+          type="button"
           onClick={() => router.back()}
-          className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors group"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>Back to Menu & Stock</span>
         </button>
-        <h1 className="text-lg font-bold text-gray-900">Add Food Item</h1>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Add Food Item</h2>
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              Upload dish photography, specify pricing, dietary flags, and nutritional details for diners.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
 
       <FoodItemForm

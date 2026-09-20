@@ -14,9 +14,13 @@ const menuRoutes = require('./routes/menu.routes')
 const app = express()
 
 // ─── Ensure uploads directory exists ────────────────────────────────────────
-const uploadsDir = path.join(__dirname, '..', 'uploads')
+const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, '..', 'uploads')
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true })
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true })
+  } catch (err) {
+    console.warn('[Storage] Could not create uploadsDir:', err.message)
+  }
 }
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
@@ -27,8 +31,13 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3001')
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin or matching origins or wildcard
-      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (e.g. mobile apps, curl) or matching origins or wildcard or any vercel.app domain
+      if (
+        !origin ||
+        allowedOrigins.includes('*') ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app')
+      ) {
         callback(null, true)
       } else {
         callback(new Error(`CORS: Origin ${origin} not allowed`))
@@ -87,10 +96,12 @@ app.use((err, _req, res, _next) => {
 
 // ─── Start server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () => {
-  console.log(`🚀 Renza backend running on http://localhost:${PORT}`)
-  console.log(`   Uploads served at http://localhost:${PORT}/uploads`)
-  console.log(`   Allowed origins: ${allowedOrigins.join(', ')}`)
-})
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Renza backend running on http://localhost:${PORT}`)
+    console.log(`   Uploads served at http://localhost:${PORT}/uploads`)
+    console.log(`   Allowed origins: ${allowedOrigins.join(', ')}`)
+  })
+}
 
 module.exports = app

@@ -3,9 +3,13 @@ const path = require('path')
 const fs = require('fs')
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '..', '..', 'uploads')
+const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, '..', '..', 'uploads')
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true })
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true })
+  } catch (err) {
+    console.warn('[Upload] Could not create uploadsDir:', err.message)
+  }
 }
 
 const storage = multer.diskStorage({
@@ -38,13 +42,27 @@ const upload = multer({
 const uploadAny = upload.any()
 
 const uploadSingle = (req, res, next) => {
+  const contentType = req.headers['content-type'] || ''
+  if (!contentType.includes('multipart/form-data')) {
+    return next()
+  }
   uploadAny(req, res, (err) => {
-    if (err) return next(err)
+    if (err) {
+      if (err.message && err.message.includes('Boundary not found')) {
+        console.warn('[Upload] Multipart boundary missing, skipping file parse:', err.message)
+        return next()
+      }
+      return next(err)
+    }
     if (req.files && req.files.length > 0) {
-      // Find 'image' or 'logo' or fallback to first file
+      // Find 'image' or 'frontImage' or 'logo' or fallback to first file
       req.file =
-        req.files.find((f) => f.fieldname === 'image' || f.fieldname === 'logo') ||
+        req.files.find((f) => f.fieldname === 'image' || f.fieldname === 'frontImage' || f.fieldname === 'logo') ||
         req.files[0]
+
+      // Find top view dish photo if provided
+      req.topViewFile =
+        req.files.find((f) => f.fieldname === 'topViewImage' || f.fieldname === 'top_view_image') || null
     }
     next()
   })

@@ -15,6 +15,10 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+    // When sending FormData, delete Content-Type so Axios/browser sets boundary automatically
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -26,7 +30,11 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       clearToken();
-      if (typeof window !== 'undefined') {
+      // Do not redirect if already on login page or if the request is login itself
+      const isLoginRequest = error.config?.url?.includes('/api/auth/login');
+      const isAlreadyOnLogin =
+        typeof window !== 'undefined' && window.location.pathname.startsWith('/login');
+      if (!isLoginRequest && !isAlreadyOnLogin && typeof window !== 'undefined') {
         window.location.href = '/login';
       }
     }

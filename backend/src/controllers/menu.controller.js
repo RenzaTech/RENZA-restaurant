@@ -44,6 +44,7 @@ const getMenu = async (req, res) => {
       logoUrl: restaurant.logoUrl,
       address: restaurant.address,
       phone: restaurant.phone,
+      googleReviewUrl: restaurant.googleReviewUrl,
     },
     categories: restaurant.categories,
     foodItems: restaurant.foodItems,

@@ -37,25 +37,35 @@ import {
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
-function StatCard({ label, value, icon: Icon, color, bgColor, loading, subtitle }) {
+function StatCard({ label, value, icon: Icon, color, bgColor, loading, subtitle, totalLabel, totalValue }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 shadow-xs hover:shadow-md transition-all">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
       {loading ? (
         <div className="space-y-2 sm:space-y-3">
           <Skeleton className="h-3 sm:h-4 w-16 sm:w-24" />
           <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
         </div>
       ) : (
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 truncate">{label}</p>
-            <p className={`text-2xl sm:text-3xl font-black ${color} tracking-tight`}>{value ?? 0}</p>
-            {subtitle && <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 font-medium truncate">{subtitle}</p>}
+        <>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 truncate">{label}</p>
+              <p className={`text-2xl sm:text-3xl font-black ${color} tracking-tight`}>{value ?? 0}</p>
+              {subtitle && <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 font-medium truncate">{subtitle}</p>}
+            </div>
+            <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner ${bgColor}`}>
+              <Icon className={`w-4 h-4 sm:w-6 sm:h-6 ${color}`} />
+            </div>
           </div>
-          <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner ${bgColor}`}>
-            <Icon className={`w-4 h-4 sm:w-6 sm:h-6 ${color}`} />
-          </div>
-        </div>
+          {totalValue !== undefined && (
+            <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-xs">
+              <span className="text-slate-400 font-medium">{totalLabel || 'All-Time Total'}:</span>
+              <span className="font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                {totalValue ?? 0}
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -69,6 +79,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState('today');
 
   useEffect(() => {
     Promise.all([
@@ -90,6 +101,7 @@ export default function DashboardPage() {
   }, []);
 
   const today = dashboardData?.today || {};
+  const total = dashboardData?.total || dashboardData?.allTime || {};
   const foodItems = dashboardData?.foodItems || {};
   const topItems = dashboardData?.topItems || [];
   const restaurantName = profile?.name || 'Kitchen Dashboard';
@@ -119,9 +131,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* ── TOP HERO BANNER ── */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 text-white p-5 sm:p-8 shadow-lg shadow-orange-500/15">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-orange-500 via-orange-600 to-teal-700 text-white p-5 sm:p-8 shadow-lg shadow-orange-500/15">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-5">
           <div className="space-y-1 sm:space-y-1.5 min-w-0">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 text-orange-50 text-[10px] sm:text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
@@ -138,7 +150,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 pt-1 sm:pt-2 md:pt-0 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-1 sm:pt-2 md:pt-0">
             {/* Get Table QR Button */}
             <Button
               onClick={() => setQrModalOpen(true)}
@@ -148,21 +160,9 @@ export default function DashboardPage() {
               <span>Table QR</span>
             </Button>
 
-            {customerMenuUrl && (
-              <a
-                href={customerMenuUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-orange-700/60 hover:bg-orange-700 text-white font-bold text-xs transition-all border border-white/20 shadow-xs flex-1 sm:flex-none"
-              >
-                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>View Menu</span>
-              </a>
-            )}
-
             <Button
               onClick={() => router.push('/menu/new')}
-              className="col-span-2 sm:col-span-1 bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto justify-center"
+              className="bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs gap-1.5 h-auto flex-1 sm:flex-none justify-center"
             >
               <Plus className="w-4 h-4 flex-shrink-0" />
               <span>Add Dish</span>
@@ -177,27 +177,72 @@ export default function DashboardPage() {
       {/* ── 4 STAT CARDS ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Today&apos;s Operations</h2>
-          <span className="text-xs text-slate-400 font-semibold">Real-time sync</span>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {viewMode === 'today' ? "Today's Operations" : "All-Time Operations"}
+            </h2>
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live
+            </span>
+          </div>
+
+          {/* Today vs All-Time Toggle */}
+          <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setViewMode('today')}
+              className={`px-2.5 py-1 rounded-lg transition-all ${
+                viewMode === 'today'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('total')}
+              className={`px-2.5 py-1 rounded-lg transition-all ${
+                viewMode === 'total'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              All-Time Total
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
-            label="Today's Menu Views"
-            value={today.menuViews}
+            label={viewMode === 'today' ? "Today's Menu Views" : "Total Menu Views"}
+            value={viewMode === 'today' ? today.menuViews : total.menuViews}
             icon={Eye}
             color="text-blue-600"
             bgColor="bg-blue-50"
             loading={loading}
-            subtitle={`${today.uniqueVisitors || 0} unique diners`}
+            subtitle={
+              viewMode === 'today'
+                ? `${today.uniqueVisitors || 0} unique diners today`
+                : `${total.uniqueVisitors || 0} diners across all days`
+            }
+            totalLabel={viewMode === 'today' ? 'All-Time Total' : "Today's Count"}
+            totalValue={viewMode === 'today' ? total.menuViews : today.menuViews}
           />
           <StatCard
-            label="Today's QR Scans"
-            value={today.qrScans}
+            label={viewMode === 'today' ? "Today's QR Scans" : "Total QR Scans"}
+            value={viewMode === 'today' ? today.qrScans : total.qrScans}
             icon={QrCode}
             color="text-purple-600"
             bgColor="bg-purple-50"
             loading={loading}
-            subtitle="Camera scan events"
+            subtitle={
+              viewMode === 'today'
+                ? "Camera scan events today"
+                : "Camera scans across all days"
+            }
+            totalLabel={viewMode === 'today' ? 'All-Time Total' : "Today's Count"}
+            totalValue={viewMode === 'today' ? total.qrScans : today.qrScans}
           />
           <StatCard
             label="Available Dishes"

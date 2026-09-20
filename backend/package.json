@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:seed": "node src/seed.js",
     "db:clean": "node src/clean.js",
+    "clean:analytics": "node src/clear-analytics.js",
     "set-admin": "node src/create-admin.js",
     "db:studio": "prisma studio"
   },

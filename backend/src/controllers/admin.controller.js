@@ -464,7 +464,11 @@ const getQRCode = async (req, res) => {
   const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
   const menuUrl = req.query.url || restaurant.customMenuUrl || defaultUrl
 
-  const qrDataUrl = await QRCode.toDataURL(menuUrl, {
+  // Encode ?source=qr into the scanned QR code image
+  const separator = menuUrl.includes('?') ? '&' : '?'
+  const qrTargetUrl = menuUrl.includes('source=') || menuUrl.includes('src=') ? menuUrl : `${menuUrl}${separator}source=qr`
+
+  const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
     errorCorrectionLevel: 'H',
     margin: 2,
     width: 500,
@@ -501,7 +505,11 @@ const updateQRUrl = async (req, res) => {
   const defaultUrl = `${baseCustomerUrl}/menu/${updated.slug}`
   const menuUrl = updated.customMenuUrl || defaultUrl
 
-  const qrDataUrl = await QRCode.toDataURL(menuUrl, {
+  // Encode ?source=qr into the scanned QR code image
+  const separator = menuUrl.includes('?') ? '&' : '?'
+  const qrTargetUrl = menuUrl.includes('source=') || menuUrl.includes('src=') ? menuUrl : `${menuUrl}${separator}source=qr`
+
+  const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
     errorCorrectionLevel: 'H',
     margin: 2,
     width: 500,
@@ -527,7 +535,13 @@ const deleteRestaurant = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  await prisma.restaurant.delete({ where: { id: req.params.id } })
+  await prisma.$transaction(async (tx) => {
+    // Delete any users associated with this restaurant first
+    await tx.user.deleteMany({ where: { restaurantId: req.params.id } })
+    // Delete restaurant (categories, foodItems, and analytics cascade automatically)
+    await tx.restaurant.delete({ where: { id: req.params.id } })
+  })
+
   return res.json({ message: `Restaurant "${restaurant.name}" deleted successfully` })
 }
 
