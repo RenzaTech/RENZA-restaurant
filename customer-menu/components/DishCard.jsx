@@ -65,8 +65,15 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
         ) : placeholder}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/25 to-transparent" aria-hidden="true" />
 
-        <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-slate-950/60 p-1.5 shadow-[0_10px_18px_rgba(0,0,0,0.2)] backdrop-blur-md">
-          <VegIndicator isVeg={isVeg} />
+        <div className="absolute left-4 top-4 flex items-center gap-2">
+          <div className="rounded-full border border-white/15 bg-slate-950/60 p-1.5 shadow-[0_10px_18px_rgba(0,0,0,0.2)] backdrop-blur-md">
+            <VegIndicator isVeg={isVeg} />
+          </div>
+          {Boolean(item.topViewImageUrl || item.top_view_image_url) && !isUnavailable && (
+            <span className="rounded-full border border-white/20 bg-black/65 px-2 py-0.5 text-[9px] font-bold text-amber-200 backdrop-blur-md shadow-xs">
+              2 Angles
+            </span>
+          )}
         </div>
         {isUnavailable && <div className="absolute right-3 top-3 rounded-full border border-rose-400/25 bg-rose-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-rose-200">Sold out</div>}
         <span className="absolute bottom-4 right-4 rounded-full border border-amber-200/20 bg-black/50 px-3 py-1.5 text-sm font-black text-amber-100 shadow-[0_12px_20px_rgba(0,0,0,0.22)] backdrop-blur-md">

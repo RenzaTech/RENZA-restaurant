@@ -1,17 +1,30 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, ArrowUpDown } from 'lucide-react';
 
 const filterOptions = [
   { id: 'veg', label: 'Veg' },
+  { id: 'non-veg', label: 'Non-Veg' },
   { id: 'vegan', label: 'Vegan' },
   { id: 'jain', label: 'Jain' },
   { id: 'gluten-free', label: 'Gluten-free' },
   { id: 'available', label: 'Available now' },
 ];
 
-const SearchBar = forwardRef(function SearchBar({ searchQuery, setSearchQuery, activeFilters, onToggleFilter, onClearAll, resultCount }, ref) {
+const SearchBar = forwardRef(function SearchBar(
+  {
+    searchQuery,
+    setSearchQuery,
+    activeFilters,
+    onToggleFilter,
+    sortBy = 'default',
+    onSortChange,
+    onClearAll,
+    resultCount,
+  },
+  ref
+) {
   return (
     <div className="mx-auto max-w-[1200px] space-y-2.5 px-4 py-3">
       <div className="relative">
@@ -44,7 +57,30 @@ const SearchBar = forwardRef(function SearchBar({ searchQuery, setSearchQuery, a
         ))}
         <button type="button" onClick={onClearAll} className="min-h-10 flex-shrink-0 rounded-full border border-white/10 bg-transparent px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-white/15 hover:text-white focus:outline-none focus:ring-2 focus:ring-amber-300/70">Clear all</button>
       </div>
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400" aria-live="polite">{resultCount} {resultCount === 1 ? 'dish' : 'dishes'} found</p>
+      <div className="flex items-center justify-between gap-2 pt-0.5">
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400" aria-live="polite">
+          {resultCount} {resultCount === 1 ? 'dish' : 'dishes'} found
+        </p>
+
+        {onSortChange && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold hidden xs:inline">Sort:</span>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => onSortChange(e.target.value)}
+                className="appearance-none rounded-xl border border-white/10 bg-[#101821] py-1 pl-2.5 pr-7 text-[11px] font-bold text-amber-200 outline-none transition hover:border-amber-300/40 focus:border-amber-300/60 focus:ring-1 focus:ring-amber-300/30 cursor-pointer"
+                aria-label="Sort dishes by price"
+              >
+                <option value="default" className="bg-[#101821] text-slate-200">Default</option>
+                <option value="price-asc" className="bg-[#101821] text-slate-200">Price: Low to High (₹ ↑)</option>
+                <option value="price-desc" className="bg-[#101821] text-slate-200">Price: High to Low (₹ ↓)</option>
+              </select>
+              <ArrowUpDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-amber-200/70" />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 });

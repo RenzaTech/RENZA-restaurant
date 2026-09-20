@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin, Phone, Search, Sparkles } from 'lucide-react';
+import { MapPin, Phone, Search, Sparkles, Star } from 'lucide-react';
 import Image from 'next/image';
 
-export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
+export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRateUs }) {
   const [isCompact, setIsCompact] = useState(false);
 
   useEffect(() => {
@@ -50,8 +50,36 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
         <h1 className="glow-text max-w-3xl font-display text-4xl leading-[0.9] tracking-[-0.06em] sm:text-5xl md:text-6xl">{restaurant.name}</h1>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-200/80">
           {restaurant.cuisineType && <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 tracking-[0.12em] text-[10px] uppercase text-slate-200">{restaurant.cuisineType}</span>}
-          {restaurant.address && <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5"><MapPin className="h-3 w-3 text-amber-200" />{restaurant.address}</span>}
-          {restaurant.phone && <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5"><Phone className="h-3 w-3 text-amber-200" />{restaurant.phone}</span>}
+          {restaurant.address && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.address}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/10"
+            >
+              <MapPin className="h-3 w-3 text-amber-200" />
+              <span>{restaurant.address}</span>
+            </a>
+          )}
+          {restaurant.phone && (
+            <a
+              href={`tel:${restaurant.phone.replace(/[^0-9+]/g, '')}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/10"
+            >
+              <Phone className="h-3 w-3 text-amber-200" />
+              <span>{restaurant.phone}</span>
+            </a>
+          )}
+          {onRateUs && (
+            <button
+              type="button"
+              onClick={onRateUs}
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-300/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-200 backdrop-blur-md transition hover:border-amber-300/60 hover:bg-amber-300/25 active:scale-95 cursor-pointer shadow-xs"
+            >
+              <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
+              <span>Rate Us</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -62,9 +90,22 @@ export default function MenuHero({ restaurant, resolveImageUrl, onSearch }) {
           </div>
           <span className="truncate font-display text-lg tracking-[-0.04em] text-white">{restaurant.name}</span>
         </div>
-        <button onClick={onSearch} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-100 shadow-[0_10px_20px_rgba(0,0,0,0.2)] backdrop-blur-md transition hover:border-amber-300/50 hover:bg-amber-300/10 focus:outline-none focus:ring-2 focus:ring-amber-300/70" aria-label="Search menu">
-          <Search className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          {onRateUs && (
+            <button
+              type="button"
+              onClick={onRateUs}
+              className="flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-300/15 px-2.5 py-1 text-xs text-amber-200 backdrop-blur-xl transition hover:bg-amber-300/25 active:scale-95 font-bold shadow-xs cursor-pointer"
+              aria-label="Rate us on Google Maps"
+            >
+              <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
+              <span className="hidden sm:inline text-[10px] uppercase tracking-wider">Rate</span>
+            </button>
+          )}
+          <button onClick={onSearch} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-100 shadow-[0_10px_20px_rgba(0,0,0,0.2)] backdrop-blur-md transition hover:border-amber-300/50 hover:bg-amber-300/10 focus:outline-none focus:ring-2 focus:ring-amber-300/70" aria-label="Search menu">
+            <Search className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </header>
   );
