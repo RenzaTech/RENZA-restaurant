@@ -64,10 +64,13 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
     }
   };
 
-  const rawImage = item.imageUrl || item.image;
+  const rawFrontImage = item.imageUrl || item.image;
+  const rawTopImage = item.topViewImageUrl || item.top_view_image_url;
+  const rawImage = rawFrontImage || rawTopImage;
   const imageUrl = rawImage
     ? rawImage.startsWith('http') ? rawImage : `${API_URL}${rawImage}`
     : null;
+  const hasBothImages = Boolean(rawFrontImage && rawTopImage);
 
   const isVeg = item.isVeg === true || item.foodType === 'veg';
 
@@ -80,14 +83,26 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
         {/* Food Image */}
         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200/80 relative">
           {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={item.name}
-              fill
-              sizes="96px"
-              className={cn("object-cover transition-opacity", !item.isAvailable && "opacity-60")}
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
+            <>
+              <Image
+                src={imageUrl}
+                alt={item.name}
+                fill
+                sizes="96px"
+                className={cn("object-cover transition-opacity", !item.isAvailable && "opacity-60")}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              {hasBothImages && (
+                <span className="absolute bottom-1 right-1 z-10 text-[8px] font-bold px-1.5 py-0.5 rounded bg-black/70 text-amber-300 backdrop-blur-xs">
+                  2 Views
+                </span>
+              )}
+              {!rawFrontImage && rawTopImage && (
+                <span className="absolute bottom-1 right-1 z-10 text-[8px] font-bold px-1.5 py-0.5 rounded bg-black/70 text-white backdrop-blur-xs">
+                  Top View
+                </span>
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
               <UtensilsCrossed className="w-6 h-6 sm:w-7 sm:h-7" />

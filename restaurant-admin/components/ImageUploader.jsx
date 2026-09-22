@@ -78,6 +78,7 @@ export default function ImageUploader({
   description = 'Upload dish photography',
   dishName = 'Dish name',
   initialImageUrl = null,
+  currentPreviewUrl,
   uploadProgress = 0,
   onFileChange,
   onPreviewChange,
@@ -88,17 +89,36 @@ export default function ImageUploader({
   const cameraInputRef = useRef(null);
   const objectUrlRef = useRef(null);
 
-  const [previewUrl, setPreviewUrl] = useState(initialImageUrl);
-  const [isExistingLoading, setIsExistingLoading] = useState(Boolean(initialImageUrl));
+  const [previewUrl, setPreviewUrl] = useState(currentPreviewUrl ?? initialImageUrl ?? null);
+  const [isExistingLoading, setIsExistingLoading] = useState(Boolean(initialImageUrl && !currentPreviewUrl));
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
+  // Sync with currentPreviewUrl if controlled/passed from parent
   useEffect(() => {
-    setPreviewUrl(initialImageUrl || null);
-    setIsExistingLoading(Boolean(initialImageUrl));
-    onPreviewChange?.(initialImageUrl || null);
-  }, [initialImageUrl, onPreviewChange]);
+    if (currentPreviewUrl !== undefined) {
+      setPreviewUrl(currentPreviewUrl);
+      if (currentPreviewUrl) setIsExistingLoading(false);
+    }
+  }, [currentPreviewUrl]);
+
+  // Sync initialImageUrl on initial load if no local preview is set
+  useEffect(() => {
+    if (initialImageUrl && !previewUrl && !objectUrlRef.current && currentPreviewUrl === undefined) {
+      setPreviewUrl(initialImageUrl);
+      setIsExistingLoading(true);
+    }
+  }, [initialImageUrl, previewUrl, currentPreviewUrl]);
+
+  // Clean up object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, []);
 
   const showError = (message) => {
     setError(message);
@@ -155,6 +175,8 @@ export default function ImageUploader({
   const handleRemoveClick = () => {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     objectUrlRef.current = null;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
     setPreviewUrl(null);
     setIsExistingLoading(false);
     setError('');

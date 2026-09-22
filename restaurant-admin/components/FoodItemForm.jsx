@@ -586,8 +586,8 @@ export default function FoodItemForm({
               </button>
             </div>
 
-            {/* Active Angle Uploader Slot */}
-            {activeAngleTab === 'front' ? (
+            {/* Front View Uploader Slot */}
+            <div className={cn(activeAngleTab !== 'front' && 'hidden')}>
               <ImageUploader
                 key="front-uploader"
                 title="Front View (Plating Profile)"
@@ -595,6 +595,7 @@ export default function FoodItemForm({
                 description="Side/45° angle showcasing plating presentation and dish height."
                 dishName={form.name}
                 initialImageUrl={initialData.imageUrl || null}
+                currentPreviewUrl={livePreviewUrl}
                 uploadProgress={uploadProgress}
                 onFileChange={(f) => {
                   setImageFile(f);
@@ -608,7 +609,10 @@ export default function FoodItemForm({
                   setRemoveFrontImage(true);
                 }}
               />
-            ) : (
+            </div>
+
+            {/* Top View Uploader Slot */}
+            <div className={cn(activeAngleTab !== 'top' && 'hidden')}>
               <ImageUploader
                 key="top-uploader"
                 title="Top View (Overhead Angle)"
@@ -616,6 +620,7 @@ export default function FoodItemForm({
                 description="Bird's-eye angle highlighting garnishes, textures, and ingredient spread."
                 dishName={form.name}
                 initialImageUrl={initialData.topViewImageUrl || null}
+                currentPreviewUrl={liveTopPreviewUrl}
                 uploadProgress={uploadProgress}
                 onFileChange={(f) => {
                   setTopViewImageFile(f);
@@ -629,7 +634,7 @@ export default function FoodItemForm({
                   setRemoveTopViewImage(true);
                 }}
               />
-            )}
+            </div>
           </div>
 
           {/* Card B: Real-Time Live Diner Menu Preview */}

@@ -25,10 +25,24 @@ export function DietaryTags({ item }) {
 }
 
 const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl, priority = false }, ref) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [activeAngle, setActiveAngle] = useState('front');
+  const [frontFailed, setFrontFailed] = useState(false);
+  const [topFailed, setTopFailed] = useState(false);
+
   const isUnavailable = !item.isAvailable;
   const isVeg = item.isVeg !== false && item.foodType !== 'non-veg';
-  const imageUrl = resolveImageUrl(item.imageUrl);
+  const frontImageUrl = resolveImageUrl(item.imageUrl);
+  const topViewImageUrl = resolveImageUrl(item.topViewImageUrl || item.top_view_image_url);
+
+  const hasFrontView = Boolean(frontImageUrl && !frontFailed);
+  const hasTopView = Boolean(topViewImageUrl && !topFailed);
+  const hasBothViews = hasFrontView && hasTopView;
+
+  const currentImageUrl = activeAngle === 'top'
+    ? (hasTopView ? topViewImageUrl : frontImageUrl)
+    : (hasFrontView ? frontImageUrl : topViewImageUrl);
+
+  const hasAnyImage = Boolean(currentImageUrl && (activeAngle === 'top' ? !topFailed : !frontFailed));
   const initials = item.name?.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase() || 'R';
 
   const placeholder = (
@@ -49,18 +63,22 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
       aria-disabled={isUnavailable}
     >
       <div className={`relative aspect-[4/3] overflow-hidden bg-[#0b1220] ${isUnavailable ? 'grayscale-[0.18]' : ''}`}>
-        {imageUrl && !imageFailed ? (
+        {hasAnyImage ? (
           <Image
-            src={imageUrl}
-            alt={item.name}
+            key={currentImageUrl}
+            src={currentImageUrl}
+            alt={`${item.name} (${activeAngle === 'top' ? 'Top View' : 'Front View'})`}
             fill
             sizes="(min-width: 1280px) 31vw, (min-width: 768px) 47vw, calc(100vw - 2rem)"
             placeholder="blur"
             blurDataURL={getDishBlurDataUrl(item.name)}
             priority={priority}
             loading={priority ? undefined : 'lazy'}
-            className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-            onError={() => setImageFailed(true)}
+            className="object-cover transition-all duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            onError={() => {
+              if (activeAngle === 'top') setTopFailed(true);
+              else setFrontFailed(true);
+            }}
           />
         ) : placeholder}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/25 to-transparent" aria-hidden="true" />
@@ -69,12 +87,59 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
           <div className="rounded-full border border-white/15 bg-slate-950/60 p-1.5 shadow-[0_10px_18px_rgba(0,0,0,0.2)] backdrop-blur-md">
             <VegIndicator isVeg={isVeg} />
           </div>
-          {Boolean(item.topViewImageUrl || item.top_view_image_url) && !isUnavailable && (
+          {hasBothViews && !isUnavailable && (
+            <span className="rounded-full border border-amber-300/30 bg-black/65 px-2 py-0.5 text-[9px] font-bold text-amber-200 backdrop-blur-md shadow-xs flex items-center gap-1">
+              <span>{activeAngle === 'top' ? 'Top View' : 'Front View'}</span>
+              <span className="text-[8px] text-white/50">• 2 Angles</span>
+            </span>
+          )}
+          {!hasBothViews && hasTopView && !isUnavailable && (
             <span className="rounded-full border border-white/20 bg-black/65 px-2 py-0.5 text-[9px] font-bold text-amber-200 backdrop-blur-md shadow-xs">
-              2 Angles
+              Top View
             </span>
           )}
         </div>
+
+        {/* Dual Angle Switcher Pill on Card */}
+        {hasBothViews && !isUnavailable && (
+          <div
+            className="absolute bottom-3.5 left-3.5 z-10 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md border border-white/20 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveAngle('front');
+              }}
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                activeAngle === 'front'
+                  ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+              title="View front presentation"
+            >
+              Front
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveAngle('top');
+              }}
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                activeAngle === 'top'
+                  ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+              title="View top overhead presentation"
+            >
+              Top View
+            </button>
+          </div>
+        )}
+
         {isUnavailable && <div className="absolute right-3 top-3 rounded-full border border-rose-400/25 bg-rose-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-rose-200">Sold out</div>}
         <span className="absolute bottom-4 right-4 rounded-full border border-amber-200/20 bg-black/50 px-3 py-1.5 text-sm font-black text-amber-100 shadow-[0_12px_20px_rgba(0,0,0,0.22)] backdrop-blur-md">
           ₹{Number(item.price).toFixed(2)}

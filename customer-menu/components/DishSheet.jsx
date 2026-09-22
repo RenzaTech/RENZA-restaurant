@@ -189,7 +189,7 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
           {/* Interactive Front / Top Angle Switcher */}
           {hasTopView && hasFrontView && (
             <div
-              className="absolute top-4 left-4 z-20 flex items-center gap-1.5 p-1 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 shadow-lg"
+              className="absolute top-4 left-4 z-20 flex items-center gap-1.5 p-1 rounded-full bg-black/75 backdrop-blur-xl border border-white/20 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -213,6 +213,52 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
                 }`}
               >
                 Top View
+              </button>
+            </div>
+          )}
+
+          {!hasFrontView && hasTopView && (
+            <div className="absolute top-4 left-4 z-20 px-3 py-1 rounded-full bg-black/75 backdrop-blur-xl border border-white/20 text-xs font-bold text-amber-200 shadow-lg">
+              Top View (Aerial)
+            </div>
+          )}
+
+          {/* Dual photo thumbnail strip overlay on hero photo when both exist */}
+          {hasTopView && hasFrontView && (
+            <div
+              className="absolute bottom-4 left-4 z-20 flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setActiveAngle('front')}
+                className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-xl border-2 transition-all shadow-lg ${
+                  activeAngle === 'front'
+                    ? 'border-amber-300 ring-2 ring-amber-300/60 scale-105'
+                    : 'border-white/30 opacity-70 hover:opacity-100'
+                }`}
+                title="View Front angle"
+              >
+                <Image src={frontImageUrl} alt="Front View thumbnail" fill sizes="56px" className="object-cover" />
+                <span className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] font-bold text-white text-center py-0.5">
+                  Front
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveAngle('top')}
+                className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-xl border-2 transition-all shadow-lg ${
+                  activeAngle === 'top'
+                    ? 'border-amber-300 ring-2 ring-amber-300/60 scale-105'
+                    : 'border-white/30 opacity-70 hover:opacity-100'
+                }`}
+                title="View Top overhead angle"
+              >
+                <Image src={topViewImageUrl} alt="Top View thumbnail" fill sizes="56px" className="object-cover" />
+                <span className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] font-bold text-white text-center py-0.5">
+                  Top View
+                </span>
               </button>
             </div>
           )}
