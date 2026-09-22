@@ -162,12 +162,19 @@ export default function MenuPage({ params }) {
     trackEvent(slug, 'menu_view');
   }, [slug, state]);
 
+  const [selectedAngle, setSelectedAngle] = useState('front');
+
   useEffect(() => {
     if (state !== 'ready' || selectedItem) return;
-    const deepLinkedId = new URLSearchParams(window.location.search).get('dish');
+    const searchParams = new URLSearchParams(window.location.search);
+    const deepLinkedId = searchParams.get('dish');
     if (!deepLinkedId) return;
     const deepLinkedItem = categoryGroups.flatMap((group) => group.items).find((item) => String(item.id || item._id) === deepLinkedId);
-    if (deepLinkedItem) setSelectedItem(deepLinkedItem);
+    if (deepLinkedItem) {
+      setSelectedItem(deepLinkedItem);
+      const angleParam = searchParams.get('angle');
+      if (angleParam === 'top') setSelectedAngle('top');
+    }
   }, [categoryGroups, selectedItem, state]);
 
   useEffect(() => {
@@ -183,25 +190,26 @@ export default function MenuPage({ params }) {
   }, [selectedItem, slug]);
 
   const handleCategorySelect = (catId) => {
-    if (catId === 'all') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setActiveCategory('all');
-      return;
-    }
     setActiveCategory(catId);
     const el = sectionRefs.current[catId];
     if (el) {
-      const navHeight = 96;
+      const navHeight = 120;
       const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
       window.scrollTo({ top, behavior: 'smooth' });
     }
   };
 
-  const handleItemSelect = (item, triggerElement) => {
+  const handleItemSelect = (item, triggerElement, angle = 'front') => {
     triggerCardRef.current = triggerElement;
     setSelectedItem(item);
+    setSelectedAngle(angle || 'front');
     const url = new URL(window.location.href);
     url.searchParams.set('dish', item.id || item._id);
+    if (angle && angle !== 'front') {
+      url.searchParams.set('angle', angle);
+    } else {
+      url.searchParams.delete('angle');
+    }
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
   };
 
@@ -217,8 +225,10 @@ export default function MenuPage({ params }) {
 
   const handleSheetClose = useCallback(() => {
     setSelectedItem(null);
+    setSelectedAngle('front');
     const url = new URL(window.location.href);
     url.searchParams.delete('dish');
+    url.searchParams.delete('angle');
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
     const triggerElement = triggerCardRef.current;
     triggerCardRef.current = null;
@@ -345,7 +355,15 @@ export default function MenuPage({ params }) {
         )}
       </main>
 
-      {selectedItem && <DishSheet item={selectedItem} onClose={handleSheetClose} resolveImageUrl={resolveImageUrl} triggerRef={triggerCardRef} />}
+      {selectedItem && (
+        <DishSheet
+          item={selectedItem}
+          initialAngle={selectedAngle}
+          onClose={handleSheetClose}
+          resolveImageUrl={resolveImageUrl}
+          triggerRef={triggerCardRef}
+        />
+      )}
 
       {/* Google Maps Rate Us Modal */}
       <RateUsModal

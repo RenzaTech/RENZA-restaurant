@@ -38,7 +38,7 @@ function DetailCard({ label, children, warning = false }) {
   );
 }
 
-export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }) {
+export default function DishSheet({ item, initialAngle = 'front', onClose, resolveImageUrl, triggerRef }) {
   const overlayRef = useRef(null);
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -49,14 +49,14 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
   const [isZoomed, setIsZoomed] = useState(false);
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
-  const [activeAngle, setActiveAngle] = useState('front');
+  const [activeAngle, setActiveAngle] = useState(initialAngle || 'front');
   const [shareLabel, setShareLabel] = useState('Share dish');
 
   useEffect(() => {
-    setActiveAngle('front');
+    setActiveAngle(initialAngle || 'front');
     setFrontFailed(false);
     setTopFailed(false);
-  }, [item?.id, item?.name]);
+  }, [item?.id, item?.name, initialAngle]);
 
   const frontImageUrl = resolveImageUrl(item.imageUrl);
   const topViewImageUrl = resolveImageUrl(item.topViewImageUrl || item.top_view_image_url);
@@ -113,9 +113,9 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
   }, [isZoomed, onClose]);
 
   const handlePointerDown = (event) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (event.pointerType === 'mouse') return; // touch only
     dragStartRef.current = event.clientY;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
   const handlePointerMove = (event) => {
@@ -128,7 +128,9 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
     const shouldClose = dragOffset > 110;
     dragStartRef.current = null;
     setDragOffset(0);
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    } catch {}
     if (shouldClose) onClose();
   };
 
@@ -148,8 +150,24 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
 
   return (
     <div ref={overlayRef} className="fixed inset-0 z-50 flex items-end bg-slate-950/75 p-0 backdrop-blur-md md:items-center md:p-6" role="dialog" aria-modal="true" aria-labelledby="dish-sheet-title" onClick={(event) => { if (event.target === overlayRef.current) onClose(); }}>
-      <div ref={panelRef} className="relative max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-white/10 bg-[linear-gradient(180deg,#0c121a,#090d14)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] md:rounded-[2rem]" style={{ transform: `translateY(${dragOffset}px)`, opacity: Math.max(0.55, 1 - dragOffset / 420), transition: dragStartRef.current === null ? 'transform 300ms ease, opacity 300ms ease' : 'none' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}>
-        <div className="flex justify-center pb-1 pt-3 md:hidden"><div className="h-1.5 w-12 rounded-full bg-slate-500" /></div>
+      <div
+        ref={panelRef}
+        className="relative max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-white/10 bg-[linear-gradient(180deg,#0c121a,#090d14)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] md:rounded-[2rem]"
+        style={{
+          transform: `translateY(${dragOffset}px)`,
+          opacity: Math.max(0.55, 1 - dragOffset / 420),
+          transition: dragStartRef.current === null ? 'transform 300ms ease, opacity 300ms ease' : 'none'
+        }}
+      >
+        {/* Mobile Pull-to-Dismiss Drag Handle Bar */}
+        <div
+          className="flex justify-center pb-2 pt-3 md:hidden cursor-grab active:cursor-grabbing touch-none select-none"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
+          <div className="h-1.5 w-12 rounded-full bg-slate-500" />
+        </div>
         <button ref={closeButtonRef} onClick={onClose} className="absolute right-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-slate-950/60 text-white backdrop-blur-md transition hover:border-amber-300/40 hover:bg-amber-300/10 focus:outline-none focus:ring-2 focus:ring-amber-300/70" aria-label="Close dish details"><X className="h-5 w-5" /></button>
 
         {/* Hero Photo with Dual Angle Switcher */}
@@ -189,13 +207,20 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
           {/* Interactive Front / Top Angle Switcher */}
           {hasTopView && hasFrontView && (
             <div
-              className="absolute top-4 left-4 z-20 flex items-center gap-1.5 p-1 rounded-full bg-black/75 backdrop-blur-xl border border-white/20 shadow-lg"
+              className="absolute top-4 left-4 z-20 flex items-center gap-1.5 p-1 rounded-full bg-black/75 backdrop-blur-xl border border-white/20 shadow-lg select-none"
               onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
-                onClick={() => setActiveAngle('front')}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveAngle('front');
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   activeAngle === 'front'
                     ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-md'
                     : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -205,8 +230,13 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
               </button>
               <button
                 type="button"
-                onClick={() => setActiveAngle('top')}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveAngle('top');
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   activeAngle === 'top'
                     ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-md'
                     : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -226,13 +256,20 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
           {/* Dual photo thumbnail strip overlay on hero photo when both exist */}
           {hasTopView && hasFrontView && (
             <div
-              className="absolute bottom-4 left-4 z-20 flex items-center gap-2"
+              className="absolute bottom-4 left-4 z-20 flex items-center gap-2 select-none"
               onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
-                onClick={() => setActiveAngle('front')}
-                className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-xl border-2 transition-all shadow-lg ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveAngle('front');
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-xl border-2 transition-all shadow-lg cursor-pointer ${
                   activeAngle === 'front'
                     ? 'border-amber-300 ring-2 ring-amber-300/60 scale-105'
                     : 'border-white/30 opacity-70 hover:opacity-100'
@@ -247,8 +284,13 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
 
               <button
                 type="button"
-                onClick={() => setActiveAngle('top')}
-                className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-xl border-2 transition-all shadow-lg ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveAngle('top');
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-xl border-2 transition-all shadow-lg cursor-pointer ${
                   activeAngle === 'top'
                     ? 'border-amber-300 ring-2 ring-amber-300/60 scale-105'
                     : 'border-white/30 opacity-70 hover:opacity-100'
@@ -296,13 +338,20 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
           {/* Floating Angle Switcher inside Zoom Modal */}
           {hasTopView && hasFrontView && (
             <div
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/25 shadow-2xl"
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/25 shadow-2xl select-none"
               onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
-                onClick={() => setActiveAngle('front')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveAngle('front');
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   activeAngle === 'front'
                     ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-md'
                     : 'text-white/85 hover:text-white hover:bg-white/10'
@@ -312,8 +361,13 @@ export default function DishSheet({ item, onClose, resolveImageUrl, triggerRef }
               </button>
               <button
                 type="button"
-                onClick={() => setActiveAngle('top')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveAngle('top');
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   activeAngle === 'top'
                     ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-md'
                     : 'text-white/85 hover:text-white hover:bg-white/10'

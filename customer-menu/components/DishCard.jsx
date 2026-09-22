@@ -56,8 +56,8 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
     <article
       ref={ref}
       className={`group overflow-hidden rounded-[1.7rem] border border-white/10 bg-[linear-gradient(180deg,rgba(17,20,27,0.9),rgba(8,11,17,0.94))] shadow-[0_16px_30px_rgba(0,0,0,0.26)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-300/60 focus:ring-offset-2 focus:ring-offset-[#05070b] active:scale-[0.98] motion-reduce:active:scale-100 ${isUnavailable ? 'cursor-default opacity-90' : 'cursor-pointer hover:-translate-y-1 hover:border-amber-200/20 hover:shadow-[0_20px_42px_rgba(0,0,0,0.32)] motion-reduce:hover:translate-y-0'}`}
-      onClick={isUnavailable ? undefined : (event) => onSelect(item, event.currentTarget)}
-      onKeyDown={isUnavailable ? undefined : (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(item, event.currentTarget); } }}
+      onClick={isUnavailable ? undefined : (event) => onSelect(item, event.currentTarget, activeAngle)}
+      onKeyDown={isUnavailable ? undefined : (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(item, event.currentTarget, activeAngle); } }}
       tabIndex={isUnavailable ? -1 : 0}
       role="button"
       aria-disabled={isUnavailable}
@@ -103,9 +103,10 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
         {/* Dual Angle Switcher Pill on Card */}
         {hasBothViews && !isUnavailable && (
           <div
-            className="absolute bottom-3.5 left-3.5 z-10 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md border border-white/20 shadow-lg"
+            className="absolute bottom-3.5 left-3.5 z-10 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md border border-white/20 shadow-lg select-none"
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <button
               type="button"
@@ -113,7 +114,9 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
                 e.stopPropagation();
                 setActiveAngle('front');
               }}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                 activeAngle === 'front'
                   ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -128,7 +131,9 @@ const DishCard = forwardRef(function DishCard({ item, onSelect, resolveImageUrl,
                 e.stopPropagation();
                 setActiveAngle('top');
               }}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                 activeAngle === 'top'
                   ? 'bg-gradient-to-r from-amber-200 to-[#d9b36c] text-slate-950 shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
