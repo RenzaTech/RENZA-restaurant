@@ -5,7 +5,7 @@ import { UtensilsCrossed, Star } from 'lucide-react';
 import { trackEvent } from '../../../utils/analytics';
 import MenuHero from '../../../components/MenuHero';
 import CategoryRail from '../../../components/CategoryRail';
-import SearchBar from '../../../components/SearchBar';
+import SearchBar, { DietaryFilters } from '../../../components/SearchBar';
 import DishCard from '../../../components/DishCard';
 import DishSheet from '../../../components/DishSheet';
 import EmptyState from '../../../components/EmptyState';
@@ -293,6 +293,16 @@ export default function MenuPage({ params }) {
           ref={searchInputRef}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+        />
+      </div>
+      <CategoryRail
+        categories={allCategories}
+        activeCategory={activeCategory}
+        onSelect={handleCategorySelect}
+        onActiveChange={setActiveCategory}
+      />
+      <div className="border-b border-white/10 bg-[#080d14]/70 backdrop-blur-xl">
+        <DietaryFilters
           activeFilters={activeFilters}
           onToggleFilter={handleToggleFilter}
           sortBy={sortBy}
@@ -301,7 +311,6 @@ export default function MenuPage({ params }) {
           resultCount={resultCount}
         />
       </div>
-      <CategoryRail categories={allCategories} activeCategory={activeCategory} onSelect={handleCategorySelect} onActiveChange={setActiveCategory} />
 
       <main className="relative mx-auto max-w-[1280px] space-y-10 px-4 pb-24 pt-4 sm:px-6 sm:pt-6 sm:space-y-14">
         {filteredGroups.length === 0 ? (

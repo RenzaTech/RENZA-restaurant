@@ -3,7 +3,7 @@
 import { forwardRef } from 'react';
 import { Search, X, ArrowUpDown } from 'lucide-react';
 
-const filterOptions = [
+export const filterOptions = [
   { id: 'veg', label: 'Veg' },
   { id: 'non-veg', label: 'Non-Veg' },
   { id: 'vegan', label: 'Vegan' },
@@ -12,21 +12,15 @@ const filterOptions = [
   { id: 'available', label: 'Available now' },
 ];
 
-const SearchBar = forwardRef(function SearchBar(
+export const SearchBar = forwardRef(function SearchBar(
   {
     searchQuery,
     setSearchQuery,
-    activeFilters,
-    onToggleFilter,
-    sortBy = 'default',
-    onSortChange,
-    onClearAll,
-    resultCount,
   },
   ref
 ) {
   return (
-    <div className="mx-auto max-w-[1200px] space-y-2 px-4 py-2 sm:py-2.5">
+    <div className="mx-auto max-w-[1200px] px-4 py-2 sm:py-2.5">
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
         <input
@@ -38,11 +32,30 @@ const SearchBar = forwardRef(function SearchBar(
           className="h-10 w-full rounded-xl border border-white/10 bg-[#101821]/90 py-2 pl-9 pr-9 text-xs font-medium text-slate-100 outline-none transition shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] placeholder:text-slate-400 focus:border-amber-300/35 focus:ring-2 focus:ring-amber-300/12"
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:text-white focus:outline-none focus:ring-1 focus:ring-amber-300/70" aria-label="Clear search">
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:text-white focus:outline-none focus:ring-1 focus:ring-amber-300/70 cursor-pointer"
+            aria-label="Clear search"
+          >
             <X className="h-3 w-3" />
           </button>
         )}
       </div>
+    </div>
+  );
+});
+
+export function DietaryFilters({
+  activeFilters,
+  onToggleFilter,
+  sortBy = 'default',
+  onSortChange,
+  onClearAll,
+  resultCount,
+}) {
+  return (
+    <div className="mx-auto max-w-[1200px] space-y-2 px-4 py-2 sm:py-2.5">
+      {/* Dietary filter pills (Veg, Non-Veg, Vegan, Jain, etc.) */}
       <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-hide" aria-label="Menu filters">
         {filterOptions.map(({ id, label }) => (
           <button
@@ -50,13 +63,27 @@ const SearchBar = forwardRef(function SearchBar(
             key={id}
             onClick={() => onToggleFilter(id)}
             aria-pressed={activeFilters.includes(id)}
-            className={`min-h-[30px] flex-shrink-0 rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] transition-all focus:outline-none focus:ring-1 focus:ring-amber-300/70 ${activeFilters.includes(id) ? 'bg-gradient-to-r from-amber-200 via-[#d9b36c] to-[#f0d7a3] text-slate-950 shadow-[0_8px_14px_rgba(217,179,108,0.25)]' : 'border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/15 hover:text-white'}`}
+            className={`min-h-[30px] flex-shrink-0 rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] transition-all focus:outline-none focus:ring-1 focus:ring-amber-300/70 cursor-pointer ${
+              activeFilters.includes(id)
+                ? 'bg-gradient-to-r from-amber-200 via-[#d9b36c] to-[#f0d7a3] text-slate-950 shadow-[0_8px_14px_rgba(217,179,108,0.25)]'
+                : 'border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/15 hover:text-white'
+            }`}
           >
             {label}
           </button>
         ))}
-        <button type="button" onClick={onClearAll} className="min-h-[30px] flex-shrink-0 rounded-full border border-white/10 bg-transparent px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] text-slate-400 transition hover:border-white/15 hover:text-white focus:outline-none focus:ring-1 focus:ring-amber-300/70">Clear all</button>
+        {activeFilters.length > 0 && (
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="min-h-[30px] flex-shrink-0 rounded-full border border-white/10 bg-transparent px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] text-slate-400 transition hover:border-white/15 hover:text-white focus:outline-none focus:ring-1 focus:ring-amber-300/70 cursor-pointer"
+          >
+            Clear all
+          </button>
+        )}
       </div>
+
+      {/* Results Count & Sort Dropdown */}
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400" aria-live="polite">
           {resultCount} {resultCount === 1 ? 'dish' : 'dishes'} found
@@ -83,6 +110,6 @@ const SearchBar = forwardRef(function SearchBar(
       </div>
     </div>
   );
-});
+}
 
 export default SearchBar;

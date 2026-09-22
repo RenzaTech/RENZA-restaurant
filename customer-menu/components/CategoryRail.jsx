@@ -27,8 +27,16 @@ export default function CategoryRail({ categories, activeCategory, onSelect, onA
   }, [activeCategory]);
 
   return (
-    <nav className="sticky top-12 z-40 border-b border-white/10 bg-[#070b11]/90 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-      <div ref={railRef} className="mx-auto flex max-w-[1200px] items-center gap-1.5 overflow-x-auto px-4 py-2.5 scrollbar-hide">
+    <nav className="sticky top-12 z-40 border-b border-white/10 bg-[#070b11]/95 shadow-[0_8px_20px_rgba(0,0,0,0.25)] backdrop-blur-xl" aria-label="Categories">
+      <div className="mx-auto max-w-[1200px] px-4 pt-2.5 pb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-200/85">
+            Categories
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-r from-amber-200/20 via-white/5 to-transparent" />
+        </div>
+      </div>
+      <div ref={railRef} className="mx-auto flex max-w-[1200px] items-center gap-1.5 overflow-x-auto px-4 pb-2.5 pt-0.5 scrollbar-hide">
         <button
           type="button"
           data-active={activeCategory === 'all'}
