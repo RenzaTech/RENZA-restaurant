@@ -14,6 +14,11 @@ const RATING_MESSAGES = {
 export function resolveGoogleReviewUrl(restaurant) {
   const customUrl = restaurant?.googleReviewUrl?.trim();
   if (customUrl) {
+    // If it contains placeid= in query params
+    const match = customUrl.match(/[?&]placeid=([a-zA-Z0-9_-]+)/i);
+    if (match) {
+      return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(match[1])}`;
+    }
     // If it's a raw Place ID (starts with ChIJ or has no slashes and is long)
     if (customUrl.startsWith('ChIJ') || (!customUrl.includes('/') && customUrl.length > 20)) {
       return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(customUrl)}`;

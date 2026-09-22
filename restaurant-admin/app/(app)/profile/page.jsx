@@ -15,6 +15,10 @@ import { cn } from '@/lib/utils';
 function formatGoogleReviewUrl(url) {
   if (!url || !url.trim()) return '';
   const clean = url.trim();
+  const match = clean.match(/[?&]placeid=([a-zA-Z0-9_-]+)/i);
+  if (match) {
+    return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(match[1])}`;
+  }
   if (clean.startsWith('ChIJ') || (!clean.includes('/') && clean.length > 20)) {
     return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(clean)}`;
   }
