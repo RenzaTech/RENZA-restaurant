@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Eye,
   QrCode,
   CheckCircle2,
   XCircle,
@@ -79,7 +78,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [viewMode, setViewMode] = useState('today');
 
   useEffect(() => {
     Promise.all([
@@ -179,70 +177,32 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              {viewMode === 'today' ? "Today's Operations" : "All-Time Operations"}
+              Today&apos;s Operations
             </h2>
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
+            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Live
             </span>
           </div>
-
-          {/* Today vs All-Time Toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold">
-            <button
-              type="button"
-              onClick={() => setViewMode('today')}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                viewMode === 'today'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('total')}
-              className={`px-2.5 py-1 rounded-lg transition-all ${
-                viewMode === 'total'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              All-Time Total
-            </button>
-          </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
-            label={viewMode === 'today' ? "Today's Menu Views" : "Total Menu Views"}
-            value={viewMode === 'today' ? today.menuViews : total.menuViews}
-            icon={Eye}
-            color="text-blue-600"
-            bgColor="bg-blue-50"
-            loading={loading}
-            subtitle={
-              viewMode === 'today'
-                ? `${today.uniqueVisitors || 0} unique diners today`
-                : `${total.uniqueVisitors || 0} diners across all days`
-            }
-            totalLabel={viewMode === 'today' ? 'All-Time Total' : "Today's Count"}
-            totalValue={viewMode === 'today' ? total.menuViews : today.menuViews}
-          />
-          <StatCard
-            label={viewMode === 'today' ? "Today's QR Scans" : "Total QR Scans"}
-            value={viewMode === 'today' ? today.qrScans : total.qrScans}
+            label="Total QR Scans"
+            value={total.qrScans ?? 0}
             icon={QrCode}
             color="text-purple-600"
             bgColor="bg-purple-50"
             loading={loading}
-            subtitle={
-              viewMode === 'today'
-                ? "Camera scan events today"
-                : "Camera scans across all days"
-            }
-            totalLabel={viewMode === 'today' ? 'All-Time Total' : "Today's Count"}
-            totalValue={viewMode === 'today' ? total.qrScans : today.qrScans}
+            subtitle="All-time camera scan events"
+          />
+          <StatCard
+            label="Today's QR Scans"
+            value={today.qrScans ?? 0}
+            icon={QrCode}
+            color="text-indigo-600"
+            bgColor="bg-indigo-50"
+            loading={loading}
+            subtitle="Camera scan events today"
           />
           <StatCard
             label="Available Dishes"
