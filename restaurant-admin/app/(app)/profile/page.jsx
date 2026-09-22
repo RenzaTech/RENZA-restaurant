@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, User, UtensilsCrossed, Phone, MapPin, Sparkles, Store, Save, Star } from 'lucide-react';
+import { Camera, User, UtensilsCrossed, Phone, MapPin, Sparkles, Store, Save, Star, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+
+function formatGoogleReviewUrl(url) {
+  if (!url || !url.trim()) return '';
+  const clean = url.trim();
+  if (clean.startsWith('ChIJ') || (!clean.includes('/') && clean.length > 20)) {
+    return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(clean)}`;
+  }
+  if (clean.includes('g.page') && !clean.includes('/review')) {
+    return `${clean.replace(/\/+$/, '')}/review`;
+  }
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    return `https://${clean}`;
+  }
+  return clean;
+}
 
 function validatePhoneNumber(phone) {
   if (!phone || !phone.trim()) return { valid: true };
@@ -125,8 +140,18 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
+      const formattedReviewUrl = formatGoogleReviewUrl(form.googleReviewUrl);
       const formData = new FormData();
-      Object.entries(form).forEach(([k, v]) => formData.append(k, v));
+      Object.entries(form).forEach(([k, v]) => {
+        if (k === 'googleReviewUrl') {
+          formData.append(k, formattedReviewUrl);
+        } else {
+          formData.append(k, v);
+        }
+      });
+      if (formattedReviewUrl !== form.googleReviewUrl) {
+        setForm((f) => ({ ...f, googleReviewUrl: formattedReviewUrl }));
+      }
       if (logoFile) {
         formData.append('image', logoFile);
         formData.append('logo', logoFile);
@@ -374,22 +399,60 @@ export default function ProfilePage() {
             </div>
 
             {/* Google Maps Review URL */}
-            <div className="space-y-1.5 pt-1 border-t border-slate-100">
-              <Label htmlFor="googleReviewUrl" className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                Google Maps Review Link
-              </Label>
-              <Input
-                id="googleReviewUrl"
-                type="url"
-                placeholder="https://g.page/r/.../review or https://maps.google.com/..."
-                value={form.googleReviewUrl}
-                onChange={set('googleReviewUrl')}
-                className="rounded-xl border-slate-200 text-xs h-11 focus:ring-orange-500/20 focus:border-orange-500"
-              />
-              <p className="text-[11px] text-slate-400">
-                Direct Google Review link where customers can submit 5-star ratings. If left blank, it automatically directs customers to your restaurant listing on Google Maps.
-              </p>
+            <div className="space-y-2 pt-1 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="googleReviewUrl" className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  Google Maps Review Link
+                </Label>
+                {form.googleReviewUrl?.trim() && (
+                  <a
+                    href={formatGoogleReviewUrl(form.googleReviewUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 hover:underline"
+                    title="Open this link to verify it opens the review prompt"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Test Review Link
+                  </a>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="googleReviewUrl"
+                  type="url"
+                  placeholder="https://g.page/r/.../review or Place ID (ChIJ...)"
+                  value={form.googleReviewUrl}
+                  onChange={set('googleReviewUrl')}
+                  className="rounded-xl border-slate-200 text-xs h-11 focus:ring-orange-500/20 focus:border-orange-500"
+                />
+                {form.googleReviewUrl?.trim() && (
+                  <a
+                    href={formatGoogleReviewUrl(form.googleReviewUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1 px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Test</span>
+                  </a>
+                )}
+              </div>
+              <div className="rounded-xl border border-amber-200/60 bg-amber-50/70 p-3 text-[11px] text-amber-900 leading-relaxed space-y-1">
+                <p className="font-bold text-amber-950 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  How to get your direct 5-star Google Review link:
+                </p>
+                <ol className="list-decimal list-inside space-y-0.5 text-amber-900/90 text-[10.5px]">
+                  <li>Open your <strong>Google Business Profile</strong> or search your restaurant on Google Maps.</li>
+                  <li>Click <strong>&ldquo;Ask for reviews&rdquo;</strong> or <strong>&ldquo;Share review form&rdquo;</strong> to copy your review link.</li>
+                  <li>Paste the link above (e.g., <code>https://g.page/r/.../review</code> or Place ID <code>ChIJ...</code>).</li>
+                </ol>
+                <p className="text-slate-500 text-[10px] pt-0.5">
+                  * If left blank, it automatically directs customers to your restaurant listing on Google Maps with review intent.
+                </p>
+              </div>
             </div>
           </div>
 

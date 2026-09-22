@@ -11,6 +11,30 @@ const RATING_MESSAGES = {
   5: { text: "Outstanding! We're thrilled you loved it!", subtitle: "Share your love directly on Google Maps!" },
 };
 
+export function resolveGoogleReviewUrl(restaurant) {
+  const customUrl = restaurant?.googleReviewUrl?.trim();
+  if (customUrl) {
+    // If it's a raw Place ID (starts with ChIJ or has no slashes and is long)
+    if (customUrl.startsWith('ChIJ') || (!customUrl.includes('/') && customUrl.length > 20)) {
+      return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(customUrl)}`;
+    }
+    // If it's a g.page shortlink without /review
+    if (customUrl.includes('g.page') && !customUrl.includes('/review')) {
+      return `${customUrl.replace(/\/+$/, '')}/review`;
+    }
+    // Prepend https:// if protocol is missing
+    if (!customUrl.startsWith('http://') && !customUrl.startsWith('https://')) {
+      return `https://${customUrl}`;
+    }
+    return customUrl;
+  }
+
+  // Fallback when no direct review link configured:
+  // Querying Google Search with 'write a review' intent opens the Google Business Review prompt
+  const query = `${restaurant?.name || ''} ${restaurant?.address || ''} write a review`.trim();
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}
+
 export default function RateUsModal({ isOpen, onClose, restaurant }) {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
@@ -42,17 +66,10 @@ export default function RateUsModal({ isOpen, onClose, restaurant }) {
 
   const currentRating = hoverRating || rating;
   const ratingInfo = RATING_MESSAGES[currentRating] || RATING_MESSAGES[5];
+  const targetReviewUrl = resolveGoogleReviewUrl(restaurant);
 
-  // Resolve target Google Maps URL
-  const googleMapsUrl =
-    restaurant?.googleReviewUrl ||
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      `${restaurant?.name || ''} ${restaurant?.address || ''}`.trim()
-    )}`;
-
-  const handleOpenGoogleReview = () => {
+  const handleReviewClick = () => {
     setHasSubmitted(true);
-    window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -75,7 +92,7 @@ export default function RateUsModal({ isOpen, onClose, restaurant }) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer"
           aria-label="Close dialog"
         >
           <X className="h-4 w-4" />
@@ -112,14 +129,14 @@ export default function RateUsModal({ isOpen, onClose, restaurant }) {
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
-                    className="p-1 rounded-full transition-transform duration-150 hover:scale-125 active:scale-95 focus:outline-none"
+                    className="p-1 rounded-full transition-transform duration-150 hover:scale-125 active:scale-95 focus:outline-none cursor-pointer"
                     aria-label={`${star} star${star > 1 ? 's' : ''}`}
                   >
                     <Star
-                      className={`h-8 w-8 sm:h-9 sm:w-9 transition-colors ${
+                      className={`h-8 w-8 sm:h-9 sm:w-9 transition-all ${
                         isFilled
-                          ? 'fill-amber-400 text-amber-400 drop-shadow-sm'
-                          : 'fill-slate-100 text-slate-300'
+                          ? 'fill-amber-400 text-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'
+                          : 'fill-slate-100 text-slate-300 hover:text-amber-200'
                       }`}
                     />
                   </button>
@@ -147,26 +164,28 @@ export default function RateUsModal({ isOpen, onClose, restaurant }) {
               <span className="font-bold text-slate-900 block">
                 Google Maps Verified Review
               </span>
-              Tapping below directly opens {restaurant?.name}&apos;s review page on Google Maps to submit your star rating and review.
+              Clicking below opens {restaurant?.name}&apos;s rating page directly on Google Maps to submit your review with your Google account.
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={handleOpenGoogleReview}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all hover:opacity-95 active:scale-98"
+            <a
+              href={targetReviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleReviewClick}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-5 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all hover:opacity-95 hover:shadow-blue-600/40 active:scale-98 cursor-pointer"
             >
-              <MapPin className="h-4 w-4 text-amber-300 fill-amber-300" />
-              <span>Submit Rating on Google Maps</span>
-              <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-            </button>
+              <Star className="h-4 w-4 fill-amber-300 text-amber-300 shrink-0" />
+              <span>Submit {rating}-Star Rating on Google Maps</span>
+              <ExternalLink className="h-3.5 w-3.5 opacity-80 shrink-0" />
+            </a>
 
             {hasSubmitted && (
               <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] font-semibold text-emerald-600 animate-in fade-in">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>Thank you for reviewing us on Google Maps!</span>
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <span>Opening Google Maps to complete your {rating}-star rating! Thank you!</span>
               </div>
             )}
           </div>
