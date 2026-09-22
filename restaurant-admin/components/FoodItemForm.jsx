@@ -524,21 +524,23 @@ export default function FoodItemForm({
             )}
           </div>
 
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full h-12 text-xs sm:text-sm font-bold rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white shadow-md shadow-orange-500/20 transition-all duration-200"
-            disabled={submitting}
-          >
-            {submitting ? (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Saving Changes...
-              </span>
-            ) : (
-              submitLabel
-            )}
-          </Button>
+          {/* Submit Button (Desktop: shown in left column; Mobile: hidden here, moved to the last after image uploads) */}
+          <div className="hidden lg:block pt-2">
+            <Button
+              type="submit"
+              className="w-full h-12 text-xs sm:text-sm font-bold rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white shadow-md shadow-orange-500/20 transition-all duration-200 cursor-pointer"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving Changes...
+                </span>
+              ) : (
+                submitLabel
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* ── RIGHT COLUMN: DISH PHOTOGRAPHY & LIVE PREVIEW (5 COLS) ── */}
@@ -833,6 +835,24 @@ export default function FoodItemForm({
             <p className="text-[10px] text-slate-400 text-center">
               Diners scan the table QR code to view this live card and can toggle between Front &amp; Top views.
             </p>
+          </div>
+
+          {/* Submit Button (Mobile Responsive: positioned in the last, after image uploads and preview) */}
+          <div className="block lg:hidden pt-2 pb-6">
+            <Button
+              type="submit"
+              className="w-full h-12 text-sm font-bold rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white shadow-lg shadow-orange-500/25 transition-all duration-200 active:scale-98 cursor-pointer"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving Changes...
+                </span>
+              ) : (
+                submitLabel
+              )}
+            </Button>
           </div>
         </div>
       </div>
