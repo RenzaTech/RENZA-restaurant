@@ -1,171 +1,131 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapPin, Phone, Search, Star } from 'lucide-react';
 import Image from 'next/image';
+import { Search, X, MapPin, Phone } from 'lucide-react';
 
-export default function MenuHero({ restaurant, resolveImageUrl, onSearch, onRateUs }) {
-  const [isCompact, setIsCompact] = useState(false);
+export default function MenuHero({
+  restaurant,
+  resolveImageUrl,
+  searchQuery,
+  setSearchQuery,
+  searchInputRef,
+}) {
+  const logoUrl = resolveImageUrl ? resolveImageUrl(restaurant?.logoUrl) : null;
+  const heroCoverUrl =
+    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2000&q=80';
 
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsCompact(window.scrollY > 70);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const logoUrl = resolveImageUrl(restaurant.logoUrl);
+  const handleScrollToMenu = (e) => {
+    e.preventDefault();
+    const menuEl = document.getElementById('menuSection');
+    if (menuEl) {
+      menuEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
-    <>
-      {/* ── 1. INNOVATIVE COMPACT HERO (Normal document flow, no layout shift) ── */}
-      <header className="relative z-20 overflow-hidden border-b border-white/10 bg-[#070b11] text-slate-50 shadow-md">
-        {/* Subtle Ambient Background Glow */}
-        {logoUrl && (
-          <Image
-            src={logoUrl}
-            alt=""
-            aria-hidden="true"
-            fill
-            sizes="100vw"
-            className="absolute inset-0 h-full w-full scale-125 object-cover opacity-15 blur-3xl"
-          />
-        )}
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(4,7,12,0.97),rgba(11,17,25,0.92),rgba(4,7,12,0.97))]" />
-        <div className="luxury-divider absolute inset-x-8 top-0 h-px" />
-
-        <div className="relative mx-auto max-w-[1200px] px-4 py-3.5 sm:py-4">
-          <div className="flex items-start justify-between gap-3 sm:gap-4">
-            {/* ── Left Column: Brand Title, Badges & Action Pills ── */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="glow-text font-display text-xl sm:text-2xl font-bold tracking-tight truncate leading-tight">
-                  {restaurant.name}
-                </h1>
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-300 shrink-0">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Open
-                </span>
-              </div>
-
-              {restaurant.cuisineType && (
-                <p className="text-[11px] sm:text-xs font-medium text-amber-200/75 tracking-wide truncate mt-0.5">
-                  {restaurant.cuisineType}
-                </p>
-              )}
-
-              {/* Action Pills Row */}
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-300">
-                {restaurant.address && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.address}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-slate-300 hover:text-white hover:border-white/20 transition active:scale-95"
-                    title={restaurant.address}
-                  >
-                    <MapPin className="h-2.5 w-2.5 text-amber-200 shrink-0" />
-                    <span className="max-w-[130px] sm:max-w-[200px] truncate">{restaurant.address}</span>
-                  </a>
-                )}
-
-                {restaurant.phone && (
-                  <a
-                    href={`tel:${restaurant.phone.replace(/[^0-9+]/g, '')}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-slate-300 hover:text-white hover:border-white/20 transition active:scale-95"
-                  >
-                    <Phone className="h-2.5 w-2.5 text-amber-200 shrink-0" />
-                    <span>Call</span>
-                  </a>
-                )}
-
-                {onRateUs && (
-                  <button
-                    type="button"
-                    onClick={onRateUs}
-                    className="inline-flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-300/15 px-2.5 py-0.5 text-amber-200 hover:border-amber-300/70 hover:bg-amber-300/25 transition active:scale-95 font-bold cursor-pointer shadow-xs"
-                  >
-                    <Star className="h-2.5 w-2.5 fill-amber-300 text-amber-300 shrink-0" />
-                    <span>Rate Us</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* ── Right Column: Restaurant Logo (Top Right) ── */}
-            <div className="relative flex h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-amber-300/30 bg-slate-900/80 shadow-[0_0_24px_rgba(217,179,108,0.22)] backdrop-blur-xl">
-              {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt={`${restaurant.name} logo`}
-                  fill
-                  sizes="64px"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="font-display text-2xl font-bold text-amber-200">
-                  {restaurant.name?.charAt(0) || 'R'}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* ── 2. FIXED ULTRA-SMOOTH FLOATING TOP BAR (Appears on scroll without layout shift) ── */}
+    <section className="cinematic-hero" id="heroSection">
+      {/* Background Image & Shading */}
       <div
-        className={`fixed inset-x-0 top-0 z-50 flex h-12 items-center justify-between border-b border-white/10 bg-[#070b11]/95 px-4 backdrop-blur-xl shadow-lg transition-transform duration-300 ease-out ${
-          isCompact ? 'translate-y-0 opacity-100 pointer-events-auto' : '-translate-y-full opacity-0 pointer-events-none'
-        }`}
-        aria-hidden={!isCompact}
-      >
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="relative flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-amber-300/30 bg-white/5 backdrop-blur-md">
-            {logoUrl ? (
-              <Image src={logoUrl} alt={`${restaurant.name} logo`} fill sizes="28px" className="object-cover" />
-            ) : (
-              <span className="font-display text-sm font-bold text-amber-200">
-                {restaurant.name?.charAt(0) || 'R'}
-              </span>
-            )}
-          </div>
-          <span className="truncate font-display text-sm font-bold tracking-tight text-white max-w-[160px] sm:max-w-xs">
-            {restaurant.name}
-          </span>
-        </div>
+        className="hero-bg-image"
+        style={{ backgroundImage: `url('${heroCoverUrl}')` }}
+      />
+      <div className="hero-photo-shade" />
 
-        <div className="flex items-center gap-1.5">
-          {onRateUs && (
+      {/* Top Search Bar */}
+      <div className="hero-top-search-wrap">
+        <div className="hero-search-bar">
+          <Search className="hero-search-icon !ml-0 !mr-2.5 h-4 w-4 text-[#d4b15d]" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            className="hero-search-input"
+            placeholder="Search dishes or ingredients..."
+            value={searchQuery || ''}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
             <button
               type="button"
-              onClick={onRateUs}
-              className="flex items-center gap-1 rounded-full border border-amber-300/40 bg-amber-300/15 px-2.5 py-1 text-[10px] font-bold text-amber-200 backdrop-blur-md hover:bg-amber-300/25 active:scale-95 transition cursor-pointer"
-              aria-label="Rate us on Google Maps"
+              onClick={() => setSearchQuery('')}
+              className="text-[#d4b15d] hover:text-[#f5d98f] p-1"
+              aria-label="Clear search"
             >
-              <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
-              <span>Rate</span>
+              <X className="h-4 w-4" />
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={onSearch}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 hover:border-amber-300/50 hover:bg-amber-300/10 active:scale-95 transition focus:outline-none focus:ring-1 focus:ring-amber-300/70"
-            aria-label="Search menu"
-          >
-            <Search className="h-3.5 w-3.5" />
-          </button>
         </div>
       </div>
-    </>
+
+      {/* Center Circular Lens Badge */}
+      <div className="hero-center-badge">
+        <div className="center-lens-circle">
+          {logoUrl ? (
+            <div className="relative h-14 w-14 overflow-hidden rounded-full border border-amber-300/40 mb-1">
+              <Image
+                src={logoUrl}
+                alt={restaurant?.name || 'Restaurant Logo'}
+                fill
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <svg className="center-brand-svg" viewBox="0 0 100 100" fill="none">
+              <path
+                d="M50 10 C35 25 25 35 25 50 C25 65 35 75 50 90 C65 75 75 65 75 50 C75 35 65 25 50 10 Z"
+                fill="#C9A84C"
+                opacity="0.95"
+              />
+              <circle cx="50" cy="50" r="14" fill="#070A12" />
+              <path d="M42 50 Q50 42 58 50" stroke="#F5D77F" strokeWidth="2" fill="none" />
+            </svg>
+          )}
+
+          <div className="center-lens-text gold-accent-text">
+            {restaurant?.name || 'Royal Dining'}
+          </div>
+
+          {restaurant?.cuisineType && (
+            <span className="text-[10px] tracking-widest text-amber-200/80 font-bold uppercase mt-1">
+              {restaurant.cuisineType}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Restaurant Contact / Location Meta */}
+      {(restaurant?.address || restaurant?.phone) && (
+        <div className="relative z-20 flex flex-wrap items-center justify-center gap-3 px-4 text-[11px] text-slate-300/90 -mt-2">
+          {restaurant?.address && (
+            <span className="inline-flex items-center gap-1 bg-black/60 px-3 py-1 rounded border border-white/10 backdrop-blur-md">
+              <MapPin className="h-3 w-3 text-[#d4b15d]" />
+              <span className="truncate max-w-[260px]">{restaurant.address}</span>
+            </span>
+          )}
+          {restaurant?.phone && (
+            <span className="inline-flex items-center gap-1 bg-black/60 px-3 py-1 rounded border border-white/10 backdrop-blur-md">
+              <Phone className="h-3 w-3 text-[#d4b15d]" />
+              <span>{restaurant.phone}</span>
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Bottom CTA Pill */}
+      <div className="hero-bottom-bar">
+        <a
+          href="#menuSection"
+          onClick={handleScrollToMenu}
+          className="hero-shop-pill gold-accent-btn"
+        >
+          <span>Explore Menu</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      {/* Curved Arc Divider */}
+      <div className="hero-curved-arc" />
+    </section>
   );
 }
