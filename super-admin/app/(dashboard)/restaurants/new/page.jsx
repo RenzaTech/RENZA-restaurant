@@ -229,31 +229,18 @@ export default function CreateRestaurantPage() {
 
               <div className="pt-2 border-t border-slate-100 space-y-3">
                 <FormField
-                  label="Super Admin Master Feedback URL"
+                  label="Renza Platform Feedback / App Issue URL"
                   icon={MessageSquareText}
-                  hint="Optional master Google Form or survey link for this tenant"
+                  hint="Optional Google Form or survey. When added, diners see '[ Report an app issue / Renza Feedback ]' in the footer."
                 >
                   <input
                     type="url"
                     value={form.superAdminFeedbackUrl}
                     onChange={set('superAdminFeedbackUrl')}
-                    placeholder="https://forms.gle/superadmin-feedback-form"
+                    placeholder="https://forms.gle/renza-feedback-form"
                     className={inputCls}
                   />
                 </FormField>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    id="newOverrideToggle"
-                    type="checkbox"
-                    checked={form.overrideFeedbackUrl}
-                    onChange={(e) => setForm((prev) => ({ ...prev, overrideFeedbackUrl: e.target.checked }))}
-                    className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
-                  />
-                  <label htmlFor="newOverrideToggle" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                    Enable Master Override (prioritize this feedback form over restaurant manager&apos;s URL)
-                  </label>
-                </div>
               </div>
             </div>
           </div>

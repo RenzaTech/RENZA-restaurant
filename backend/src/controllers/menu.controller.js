@@ -33,9 +33,11 @@ const getMenu = async (req, res) => {
     return res.status(403).json({ error: 'This restaurant menu is currently unavailable' })
   }
 
-  const activeFeedbackUrl = (restaurant.overrideFeedbackUrl && restaurant.superAdminFeedbackUrl?.trim())
-    ? restaurant.superAdminFeedbackUrl.trim()
-    : (restaurant.feedbackUrl?.trim() || null)
+  // Dining feedback is managed by the restaurant admin for diner experience
+  const diningFeedbackUrl = restaurant.feedbackUrl?.trim() || null
+
+  // Renza platform feedback / issue reporting is managed by Super Admin and displayed in the footer
+  const renzaFeedbackUrl = restaurant.superAdminFeedbackUrl?.trim() || process.env.RENZA_FEEDBACK_URL || null
 
   // Return all items with isAvailable flag (frontend decides what to show)
   return res.json({
@@ -49,7 +51,8 @@ const getMenu = async (req, res) => {
       address: restaurant.address,
       phone: restaurant.phone,
       googleReviewUrl: restaurant.googleReviewUrl,
-      feedbackUrl: activeFeedbackUrl,
+      feedbackUrl: diningFeedbackUrl,
+      superAdminFeedbackUrl: renzaFeedbackUrl,
     },
     categories: restaurant.categories,
     foodItems: restaurant.foodItems,

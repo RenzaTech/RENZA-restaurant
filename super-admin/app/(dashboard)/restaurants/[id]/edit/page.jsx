@@ -225,7 +225,7 @@ export default function EditRestaurantPage() {
           </div>
         </div>
 
-        {/* ── CARD 2: MASTER FEEDBACK & OVERRIDE CONTROLS ── */}
+        {/* ── CARD 2: RENZA PLATFORM FEEDBACK & ISSUE REPORTING ── */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 flex-wrap gap-2">
             <div className="flex items-center gap-3">
@@ -233,70 +233,39 @@ export default function EditRestaurantPage() {
                 <MessageSquareText className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900">Dining Feedback Form &amp; Master Override</h2>
-                <p className="text-xs text-slate-400">Configure hierarchy and override rules for customer feedback links</p>
+                <h2 className="text-base font-bold text-slate-900">Renza Platform Feedback &amp; App Issue Link</h2>
+                <p className="text-xs text-slate-400">Controls the &ldquo;[ Report an app issue / Renza Feedback ]&rdquo; link in the menu footer</p>
               </div>
             </div>
 
-            {/* Live Status Indicator Badge */}
+            {/* Status Badge */}
             <div>
-              {form.overrideFeedbackUrl && form.superAdminFeedbackUrl?.trim() ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  Super Admin Override Active
-                </span>
-              ) : form.feedbackUrl?.trim() ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
-                  Restaurant Admin Form Active
+              {form.superAdminFeedbackUrl?.trim() ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Active in Diner Footer
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
                   <span className="w-2 h-2 rounded-full bg-slate-400" />
-                  Feedback Button Hidden (No Form)
+                  Not Configured
                 </span>
               )}
             </div>
           </div>
 
-          {/* Master Override Toggle Switch */}
-          <div className="p-4 rounded-xl border border-purple-100 bg-purple-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600" />
-                <label htmlFor="overrideToggle" className="text-xs font-bold text-slate-900 cursor-pointer">
-                  Enable Master Override by Super Admin
-                </label>
-              </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                When enabled, the customer menu will display your Super Admin feedback form URL regardless of what the restaurant manager entered.
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer shrink-0">
-              <input
-                id="overrideToggle"
-                type="checkbox"
-                checked={form.overrideFeedbackUrl}
-                onChange={(e) => setForm((prev) => ({ ...prev, overrideFeedbackUrl: e.target.checked }))}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600" />
-            </label>
-          </div>
-
           <div className="space-y-4">
-            {/* Super Admin Master URL */}
             <FormField
-              label="Super Admin Master Feedback Form URL"
-              icon={ShieldAlert}
-              hint="Platform-level Google Form or survey link. Takes top priority on customer menu when override is enabled."
+              label="Renza Platform Feedback / App Issue Form URL"
+              icon={MessageSquareText}
+              hint="Google Form, Microsoft Form, or Typeform for diners to report app bugs or give feedback on Renza platform"
             >
               <div className="flex items-center gap-2">
                 <input
                   type="url"
                   value={form.superAdminFeedbackUrl}
                   onChange={set('superAdminFeedbackUrl')}
-                  placeholder="https://forms.gle/superadmin-feedback-form"
+                  placeholder="https://forms.gle/renza-feedback-form"
                   className={inputCls}
                 />
                 {form.superAdminFeedbackUrl?.trim() && (
@@ -312,6 +281,17 @@ export default function EditRestaurantPage() {
                 )}
               </div>
             </FormField>
+
+            <div className="p-3.5 rounded-xl bg-purple-50/60 border border-purple-100 text-[11px] text-purple-900 leading-relaxed">
+              <p className="font-bold text-purple-950">Footer Display Preview:</p>
+              <p className="text-purple-800 mt-0.5">
+                When provided, diners will see:
+              </p>
+              <div className="mt-2 py-2 px-3 bg-white rounded-lg border border-purple-200/80 font-mono text-[10px] text-slate-700">
+                <div className="text-amber-600 font-bold">Powered by Renza QR Platform</div>
+                <div className="text-slate-500 mt-1">[ Report an app issue / Renza Feedback ]</div>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -496,20 +496,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {overrideFeedbackUrl && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-3.5 flex items-start gap-3 shadow-xs">
-                  <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                  <div className="text-xs text-amber-900 leading-relaxed">
-                    <p className="font-bold text-amber-950">
-                      Super Admin Master Override Active
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-amber-800/90">
-                      The Super Admin has enabled a master feedback form override for your restaurant. Your live customer menu will display the master form. The URL you enter below will remain saved as your fallback if the override is turned off.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               <div className="flex items-center gap-2">
                 <Input
                   id="feedbackUrl"

@@ -548,10 +548,10 @@ export default function RestaurantDetailPage() {
                 { icon: Phone, label: 'Phone', value: restaurant.phone },
                 {
                   icon: MessageSquareText,
-                  label: 'Dining Feedback Form',
-                  value: (restaurant.overrideFeedbackUrl && restaurant.superAdminFeedbackUrl)
-                    ? `${restaurant.superAdminFeedbackUrl} (Super Admin Override Active)`
-                    : (restaurant.feedbackUrl ? `${restaurant.feedbackUrl} (Restaurant Admin Form)` : 'Disabled / Hidden (No Form)'),
+                  label: 'Renza Platform Feedback Link',
+                  value: restaurant.superAdminFeedbackUrl
+                    ? `${restaurant.superAdminFeedbackUrl} (Active in Diner Footer)`
+                    : 'Not Configured (Footer link hidden)',
                 },
                 { icon: Calendar, label: 'Created On', value: formatDate(restaurant.createdAt || restaurant.created_at) },
               ].map(({ icon: Icon, label, value }) => (

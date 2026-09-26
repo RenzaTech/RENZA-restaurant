@@ -1196,7 +1196,7 @@ body {
 .renza-footer {
   width: min(100%, 1240px);
   margin: 0 auto;
-  padding: 0 1.2rem 2.5rem;
+  padding: 0 1.2rem 3rem;
   text-align: center;
   color: rgba(246,242,235,0.7);
   font-size: 0.72rem;
@@ -1204,7 +1204,34 @@ body {
   text-transform: uppercase;
 }
 .renza-footer div + div {
-  margin-top: 0.4rem;
+  margin-top: 0.45rem;
+}
+.renza-footer-branding {
+  font-weight: 600;
+  color: #d4b15d;
+  letter-spacing: 0.16em;
+}
+.renza-footer-feedback {
+  margin-top: 0.6rem !important;
+}
+.renza-issue-link {
+  display: inline-block;
+  color: rgba(246, 242, 235, 0.65);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.renza-issue-link:hover {
+  color: #f6f2eb;
+  background: rgba(212, 177, 93, 0.15);
+  border-color: rgba(212, 177, 93, 0.4);
+  transform: translateY(-1px);
 }
 .heart {
   color: #d66b5c;
