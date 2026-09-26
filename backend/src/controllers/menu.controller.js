@@ -33,6 +33,10 @@ const getMenu = async (req, res) => {
     return res.status(403).json({ error: 'This restaurant menu is currently unavailable' })
   }
 
+  const activeFeedbackUrl = (restaurant.overrideFeedbackUrl && restaurant.superAdminFeedbackUrl?.trim())
+    ? restaurant.superAdminFeedbackUrl.trim()
+    : (restaurant.feedbackUrl?.trim() || null)
+
   // Return all items with isAvailable flag (frontend decides what to show)
   return res.json({
     restaurant: {
@@ -45,6 +49,7 @@ const getMenu = async (req, res) => {
       address: restaurant.address,
       phone: restaurant.phone,
       googleReviewUrl: restaurant.googleReviewUrl,
+      feedbackUrl: activeFeedbackUrl,
     },
     categories: restaurant.categories,
     foodItems: restaurant.foodItems,

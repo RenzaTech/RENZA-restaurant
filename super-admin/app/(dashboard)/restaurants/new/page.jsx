@@ -18,6 +18,7 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
+  MessageSquareText,
 } from 'lucide-react'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
@@ -51,6 +52,8 @@ export default function CreateRestaurantPage() {
     description: '',
     address: '',
     phone: '',
+    superAdminFeedbackUrl: '',
+    overrideFeedbackUrl: false,
     adminName: '',
     adminEmail: '',
     adminPassword: '',
@@ -93,6 +96,8 @@ export default function CreateRestaurantPage() {
         description: form.description.trim(),
         address: form.address.trim(),
         phone: form.phone.trim(),
+        superAdminFeedbackUrl: form.superAdminFeedbackUrl.trim() || null,
+        overrideFeedbackUrl: form.overrideFeedbackUrl,
         adminName: form.adminName.trim(),
         adminEmail: form.adminEmail.trim(),
         adminPassword: form.adminPassword,
@@ -221,6 +226,35 @@ export default function CreateRestaurantPage() {
                   className={inputCls}
                 />
               </FormField>
+
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <FormField
+                  label="Super Admin Master Feedback URL"
+                  icon={MessageSquareText}
+                  hint="Optional master Google Form or survey link for this tenant"
+                >
+                  <input
+                    type="url"
+                    value={form.superAdminFeedbackUrl}
+                    onChange={set('superAdminFeedbackUrl')}
+                    placeholder="https://forms.gle/superadmin-feedback-form"
+                    className={inputCls}
+                  />
+                </FormField>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    id="newOverrideToggle"
+                    type="checkbox"
+                    checked={form.overrideFeedbackUrl}
+                    onChange={(e) => setForm((prev) => ({ ...prev, overrideFeedbackUrl: e.target.checked }))}
+                    className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
+                  />
+                  <label htmlFor="newOverrideToggle" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                    Enable Master Override (prioritize this feedback form over restaurant manager&apos;s URL)
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -60,6 +60,7 @@ export function exportRestaurantReport(restaurant, analytics = {}) {
     ['Contact Phone', restaurant.phone || 'N/A'],
     ['Physical Address', restaurant.address || 'N/A'],
     ['Google Maps Review URL', restaurant.googleReviewUrl || 'Auto-generated'],
+    ['Feedback Form URL', (restaurant.overrideFeedbackUrl && restaurant.superAdminFeedbackUrl) ? `${restaurant.superAdminFeedbackUrl} (Master Override)` : (restaurant.feedbackUrl || 'None')],
     ['Primary Admin Name', restaurant.adminName || restaurant.adminUsers?.[0]?.name || 'N/A'],
     ['Primary Admin Email', restaurant.adminEmail || restaurant.adminUsers?.[0]?.email || 'N/A'],
     ['Registration Date', formatDate(restaurant.createdAt)],

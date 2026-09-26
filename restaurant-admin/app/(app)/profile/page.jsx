@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, User, UtensilsCrossed, Phone, MapPin, Sparkles, Store, Save, Star, ExternalLink } from 'lucide-react';
+import { Camera, User, UtensilsCrossed, Phone, MapPin, Sparkles, Store, Save, Star, ExternalLink, MessageSquareText, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+
+function formatUrl(url) {
+  if (!url || !url.trim()) return '';
+  const clean = url.trim();
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    return `https://${clean}`;
+  }
+  return clean;
+}
 
 function formatGoogleReviewUrl(url) {
   if (!url || !url.trim()) return '';
@@ -74,7 +83,9 @@ export default function ProfilePage() {
     address: '',
     phone: '',
     googleReviewUrl: '',
+    feedbackUrl: '',
   });
+  const [overrideFeedbackUrl, setOverrideFeedbackUrl] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -89,7 +100,9 @@ export default function ProfilePage() {
           address: r.address || '',
           phone: r.phone || '',
           googleReviewUrl: r.googleReviewUrl || '',
+          feedbackUrl: r.feedbackUrl || '',
         });
+        setOverrideFeedbackUrl(Boolean(r.overrideFeedbackUrl));
         const logo = r.logoUrl || r.logo;
         if (logo) {
           setLogoPreview(logo.startsWith('http') ? logo : `${API_URL}${logo}`);
@@ -145,16 +158,22 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       const formattedReviewUrl = formatGoogleReviewUrl(form.googleReviewUrl);
+      const formattedFeedbackUrl = formatUrl(form.feedbackUrl);
       const formData = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (k === 'googleReviewUrl') {
           formData.append(k, formattedReviewUrl);
+        } else if (k === 'feedbackUrl') {
+          formData.append(k, formattedFeedbackUrl);
         } else {
           formData.append(k, v);
         }
       });
       if (formattedReviewUrl !== form.googleReviewUrl) {
         setForm((f) => ({ ...f, googleReviewUrl: formattedReviewUrl }));
+      }
+      if (formattedFeedbackUrl !== form.feedbackUrl) {
+        setForm((f) => ({ ...f, feedbackUrl: formattedFeedbackUrl }));
       }
       if (logoFile) {
         formData.append('image', logoFile);
@@ -453,9 +472,76 @@ export default function ProfilePage() {
                   <li>Click <strong>&ldquo;Ask for reviews&rdquo;</strong> or <strong>&ldquo;Share review form&rdquo;</strong> to copy your review link.</li>
                   <li>Paste the link above (e.g., <code>https://g.page/r/.../review</code> or Place ID <code>ChIJ...</code>).</li>
                 </ol>
-                <p className="text-slate-500 text-[10px] pt-0.5">
-                  * If left blank, it automatically directs customers to your restaurant listing on Google Maps with review intent.
+              </div>
+            </div>
+
+            {/* Dining Feedback Form URL */}
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="feedbackUrl" className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <MessageSquareText className="w-3.5 h-3.5 text-orange-500" />
+                  Customer Feedback Form Link (Google Form / Survey)
+                </Label>
+                {form.feedbackUrl?.trim() && (
+                  <a
+                    href={formatUrl(form.feedbackUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 hover:underline"
+                    title="Open your feedback form in a new tab"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Test Form Link
+                  </a>
+                )}
+              </div>
+
+              {overrideFeedbackUrl && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-3.5 flex items-start gap-3 shadow-xs">
+                  <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                  <div className="text-xs text-amber-900 leading-relaxed">
+                    <p className="font-bold text-amber-950">
+                      Super Admin Master Override Active
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-amber-800/90">
+                      The Super Admin has enabled a master feedback form override for your restaurant. Your live customer menu will display the master form. The URL you enter below will remain saved as your fallback if the override is turned off.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <Input
+                  id="feedbackUrl"
+                  type="url"
+                  placeholder="https://forms.gle/xyz or https://docs.google.com/forms/..."
+                  value={form.feedbackUrl}
+                  onChange={set('feedbackUrl')}
+                  className="rounded-xl border-slate-200 text-xs h-11 focus:ring-orange-500/20 focus:border-orange-500"
+                />
+                {form.feedbackUrl?.trim() && (
+                  <a
+                    href={formatUrl(form.feedbackUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1 px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Test</span>
+                  </a>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 text-[11px] text-slate-600 leading-relaxed space-y-1">
+                <p className="font-bold text-slate-800 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-orange-500" />
+                  How Customer Feedback works on your menu:
                 </p>
+                <ul className="list-disc list-inside space-y-0.5 text-slate-600 text-[10.5px]">
+                  <li>Paste a <strong>Google Form</strong>, <strong>Typeform</strong>, or survey link.</li>
+                  <li>When filled, a &ldquo;💬 Share Dining Feedback&rdquo; button appears on your customer menu.</li>
+                  <li>If left blank, no feedback button will be shown to your diners.</li>
+                </ul>
               </div>
             </div>
           </div>

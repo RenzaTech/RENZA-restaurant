@@ -109,6 +109,9 @@ const listRestaurants = async (_req, res) => {
         address: r.address,
         phone: r.phone,
         status: r.status,
+        feedbackUrl: r.feedbackUrl,
+        superAdminFeedbackUrl: r.superAdminFeedbackUrl,
+        overrideFeedbackUrl: r.overrideFeedbackUrl,
         createdAt: r.createdAt,
         adminUsers: r.adminUsers,
         adminEmail: r.adminUsers?.[0]?.email || null,
@@ -143,7 +146,7 @@ const listRestaurants = async (_req, res) => {
  * Create a new restaurant with its admin user
  */
 const createRestaurant = async (req, res) => {
-  const { name, description, cuisineType, address, phone } = req.body
+  const { name, description, cuisineType, address, phone, feedbackUrl, superAdminFeedbackUrl, overrideFeedbackUrl } = req.body
   const adminName = (req.body.adminName || req.body.admin?.name || '').trim()
   const adminEmail = (req.body.adminEmail || req.body.admin?.email || '').trim()
   const adminPassword = req.body.adminPassword || req.body.admin?.password || ''
@@ -177,6 +180,12 @@ const createRestaurant = async (req, res) => {
   const slug = await getUniqueSlug(name)
   const passwordHash = await bcrypt.hash(adminPassword, 12)
 
+  let cleanFeedbackUrl = feedbackUrl?.trim() || null
+  if (cleanFeedbackUrl && !/^https?:\/\//i.test(cleanFeedbackUrl)) cleanFeedbackUrl = `https://${cleanFeedbackUrl}`
+
+  let cleanSuperAdminFeedbackUrl = superAdminFeedbackUrl?.trim() || null
+  if (cleanSuperAdminFeedbackUrl && !/^https?:\/\//i.test(cleanSuperAdminFeedbackUrl)) cleanSuperAdminFeedbackUrl = `https://${cleanSuperAdminFeedbackUrl}`
+
   // Create restaurant and admin in a transaction
   const result = await prisma.$transaction(async (tx) => {
     const restaurant = await tx.restaurant.create({
@@ -187,6 +196,9 @@ const createRestaurant = async (req, res) => {
         cuisineType: cuisineType?.trim() || null,
         address: address?.trim() || null,
         phone: phone?.trim() || null,
+        feedbackUrl: cleanFeedbackUrl,
+        superAdminFeedbackUrl: cleanSuperAdminFeedbackUrl,
+        overrideFeedbackUrl: overrideFeedbackUrl === true || overrideFeedbackUrl === 'true',
       },
     })
 
@@ -261,7 +273,7 @@ const getRestaurant = async (req, res) => {
  * PUT /api/admin/restaurants/:id
  */
 const updateRestaurant = async (req, res) => {
-  const { name, description, cuisineType, address, phone, logoUrl } = req.body
+  const { name, description, cuisineType, address, phone, logoUrl, feedbackUrl, superAdminFeedbackUrl, overrideFeedbackUrl, googleReviewUrl } = req.body
 
   const restaurant = await prisma.restaurant.findUnique({ where: { id: req.params.id } })
   if (!restaurant) {
@@ -278,6 +290,21 @@ const updateRestaurant = async (req, res) => {
   if (address !== undefined) updateData.address = address?.trim() || null
   if (phone !== undefined) updateData.phone = phone?.trim() || null
   if (logoUrl !== undefined) updateData.logoUrl = logoUrl || null
+  if (googleReviewUrl !== undefined) updateData.googleReviewUrl = googleReviewUrl?.trim() || null
+
+  if (feedbackUrl !== undefined) {
+    let fb = feedbackUrl?.trim() || null
+    if (fb && !/^https?:\/\//i.test(fb)) fb = `https://${fb}`
+    updateData.feedbackUrl = fb
+  }
+  if (superAdminFeedbackUrl !== undefined) {
+    let sFb = superAdminFeedbackUrl?.trim() || null
+    if (sFb && !/^https?:\/\//i.test(sFb)) sFb = `https://${sFb}`
+    updateData.superAdminFeedbackUrl = sFb
+  }
+  if (overrideFeedbackUrl !== undefined) {
+    updateData.overrideFeedbackUrl = overrideFeedbackUrl === true || overrideFeedbackUrl === 'true'
+  }
 
   const updated = await prisma.restaurant.update({
     where: { id: req.params.id },

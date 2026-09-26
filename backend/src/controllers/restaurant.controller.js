@@ -78,6 +78,13 @@ const updateProfile = async (req, res) => {
   if (req.body.googleReviewUrl !== undefined) {
     updateData.googleReviewUrl = req.body.googleReviewUrl?.trim() || null
   }
+  if (req.body.feedbackUrl !== undefined) {
+    let fbUrl = req.body.feedbackUrl?.trim() || null
+    if (fbUrl && !/^https?:\/\//i.test(fbUrl)) {
+      fbUrl = `https://${fbUrl}`
+    }
+    updateData.feedbackUrl = fbUrl
+  }
 
   // If a logo file was uploaded
   if (req.file) {

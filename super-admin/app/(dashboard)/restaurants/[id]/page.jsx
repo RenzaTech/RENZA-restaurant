@@ -31,6 +31,7 @@ import {
   RefreshCw,
   Trash2,
   FileSpreadsheet,
+  MessageSquareText,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatDate, formatNumber } from '@/lib/utils'
@@ -545,6 +546,13 @@ export default function RestaurantDetailPage() {
                 { icon: Mail, label: 'Admin Email', value: restaurant.adminEmail || restaurant.admin_email || restaurant.adminUsers?.[0]?.email },
                 { icon: MapPin, label: 'Address', value: restaurant.address },
                 { icon: Phone, label: 'Phone', value: restaurant.phone },
+                {
+                  icon: MessageSquareText,
+                  label: 'Dining Feedback Form',
+                  value: (restaurant.overrideFeedbackUrl && restaurant.superAdminFeedbackUrl)
+                    ? `${restaurant.superAdminFeedbackUrl} (Super Admin Override Active)`
+                    : (restaurant.feedbackUrl ? `${restaurant.feedbackUrl} (Restaurant Admin Form)` : 'Disabled / Hidden (No Form)'),
+                },
                 { icon: Calendar, label: 'Created On', value: formatDate(restaurant.createdAt || restaurant.created_at) },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 border border-slate-100">

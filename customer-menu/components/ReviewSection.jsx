@@ -1,8 +1,18 @@
 'use client';
 
+function formatExternalUrl(url) {
+  if (!url || !url.trim()) return '';
+  const clean = url.trim();
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    return `https://${clean}`;
+  }
+  return clean;
+}
+
 export default function ReviewSection({ restaurant, onRateUs }) {
   const reviewUrl = restaurant?.googleReviewUrl;
   const feedbackUrl = restaurant?.feedbackUrl;
+  const targetFeedbackUrl = feedbackUrl ? formatExternalUrl(feedbackUrl) : null;
 
   return (
     <section className="review-section" aria-labelledby="reviewHeading">
@@ -33,10 +43,10 @@ export default function ReviewSection({ restaurant, onRateUs }) {
             </button>
           )}
 
-          {feedbackUrl && (
+          {targetFeedbackUrl && (
             <a
               className="review-form-link !bg-transparent !text-amber-200 border border-amber-300/40 hover:!bg-amber-300/10"
-              href={feedbackUrl}
+              href={targetFeedbackUrl}
               target="_blank"
               rel="noreferrer"
             >
