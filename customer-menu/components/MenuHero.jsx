@@ -24,14 +24,14 @@ export default function MenuHero({
 
   return (
     <section className="cinematic-hero" id="heroSection">
-      {/* Background Image & Shading */}
+      {/* Background Image & Ambient Shade */}
       <div
         className="hero-bg-image"
         style={{ backgroundImage: `url('${heroCoverUrl}')` }}
       />
       <div className="hero-photo-shade" />
 
-      {/* Top Search Bar */}
+      {/* ── Top Bar: Search Bar ── */}
       <div className="hero-top-search-wrap">
         <div className="hero-search-bar">
           <Search className="hero-search-icon !ml-0 !mr-2.5 h-4 w-4 text-[#d4b15d]" />
@@ -47,7 +47,7 @@ export default function MenuHero({
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="text-[#d4b15d] hover:text-[#f5d98f] p-1"
+              className="text-[#d4b15d] hover:text-[#f5d98f] p-1 transition"
               aria-label="Clear search"
             >
               <X className="h-4 w-4" />
@@ -56,8 +56,9 @@ export default function MenuHero({
         </div>
       </div>
 
-      {/* Center Circular Lens Badge */}
-      <div className="hero-center-badge">
+      {/* ── Center Unified Brand Block ── */}
+      <div className="relative z-20 flex flex-col items-center justify-center text-center my-auto py-5 px-4 w-full max-w-xl">
+        {/* Center Circular Lens Badge */}
         <div className="center-lens-circle">
           {logoUrl ? (
             <div className="relative h-14 w-14 overflow-hidden rounded-full border border-amber-300/40 mb-1">
@@ -85,33 +86,49 @@ export default function MenuHero({
           </div>
 
           {restaurant?.cuisineType && (
-            <span className="text-[10px] tracking-widest text-amber-200/80 font-bold uppercase mt-1">
+            <span className="text-[10px] tracking-[0.2em] text-amber-200/85 font-bold uppercase mt-1">
               {restaurant.cuisineType}
             </span>
           )}
         </div>
+
+        {/* Restaurant Description (Bigger, elegant font & centered) */}
+        {restaurant?.description && (
+          <p className="mt-4 font-display text-base sm:text-lg italic text-[#f6f2eb] max-w-md mx-auto leading-relaxed drop-shadow px-2">
+            &ldquo;{restaurant.description}&rdquo;
+          </p>
+        )}
+
+        {/* Location & Phone Number Meta Badges (Bigger, properly aligned) */}
+        {(restaurant?.address || restaurant?.phone) && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+            {restaurant?.address && (
+              <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(212,177,93,0.35)] bg-[rgba(6,9,13,0.85)] px-4 py-2 shadow-lg backdrop-blur-md">
+                <MapPin className="h-4 w-4 text-[#d4b15d] flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium tracking-wide text-[#f6f2eb]">
+                  {restaurant.address}
+                </span>
+              </div>
+            )}
+
+            {restaurant?.phone && (
+              <a
+                href={`tel:${restaurant.phone}`}
+                className="inline-flex items-center gap-2 rounded-full border border-[rgba(212,177,93,0.35)] bg-[rgba(6,9,13,0.85)] px-4 py-2 shadow-lg backdrop-blur-md transition hover:border-[#d4b15d] active:scale-95"
+                title="Call restaurant"
+              >
+                <Phone className="h-4 w-4 text-[#d4b15d] flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium tracking-wide text-[#f6f2eb]">
+                  {restaurant.phone}
+                </span>
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Restaurant Contact / Location Meta */}
-      {(restaurant?.address || restaurant?.phone) && (
-        <div className="relative z-20 flex flex-wrap items-center justify-center gap-3 px-4 text-[11px] text-slate-300/90 -mt-2">
-          {restaurant?.address && (
-            <span className="inline-flex items-center gap-1 bg-black/60 px-3 py-1 rounded border border-white/10 backdrop-blur-md">
-              <MapPin className="h-3 w-3 text-[#d4b15d]" />
-              <span className="truncate max-w-[260px]">{restaurant.address}</span>
-            </span>
-          )}
-          {restaurant?.phone && (
-            <span className="inline-flex items-center gap-1 bg-black/60 px-3 py-1 rounded border border-white/10 backdrop-blur-md">
-              <Phone className="h-3 w-3 text-[#d4b15d]" />
-              <span>{restaurant.phone}</span>
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Bottom CTA Pill */}
-      <div className="hero-bottom-bar">
+      {/* ── Bottom CTA Pill ── */}
+      <div className="hero-bottom-bar !mb-8">
         <a
           href="#menuSection"
           onClick={handleScrollToMenu}
