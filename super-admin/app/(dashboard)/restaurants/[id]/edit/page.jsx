@@ -14,7 +14,6 @@ import {
   MessageSquareText,
   ShieldCheck,
   ShieldAlert,
-  Star,
   ExternalLink,
 } from 'lucide-react'
 import api from '@/lib/api'
@@ -113,8 +112,6 @@ export default function EditRestaurantPage() {
         description: form.description.trim(),
         address: form.address.trim(),
         phone: form.phone.trim(),
-        googleReviewUrl: form.googleReviewUrl?.trim() || null,
-        feedbackUrl: form.feedbackUrl?.trim() || null,
         superAdminFeedbackUrl: form.superAdminFeedbackUrl?.trim() || null,
         overrideFeedbackUrl: form.overrideFeedbackUrl,
       })
@@ -292,7 +289,7 @@ export default function EditRestaurantPage() {
             <FormField
               label="Super Admin Master Feedback Form URL"
               icon={ShieldAlert}
-              hint="e.g. platform Google Form or centralized survey (takes top priority when override is enabled)"
+              hint="Platform-level Google Form or survey link. Takes top priority on customer menu when override is enabled."
             >
               <div className="flex items-center gap-2">
                 <input
@@ -305,62 +302,6 @@ export default function EditRestaurantPage() {
                 {form.superAdminFeedbackUrl?.trim() && (
                   <a
                     href={form.superAdminFeedbackUrl.startsWith('http') ? form.superAdminFeedbackUrl : `https://${form.superAdminFeedbackUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Test</span>
-                  </a>
-                )}
-              </div>
-            </FormField>
-
-            {/* Restaurant Admin Fallback URL */}
-            <FormField
-              label="Restaurant's Own Feedback Form URL (Fallback)"
-              icon={MessageSquareText}
-              hint="Configured by the restaurant admin in their profile. Used whenever Super Admin override is OFF."
-            >
-              <div className="flex items-center gap-2">
-                <input
-                  type="url"
-                  value={form.feedbackUrl}
-                  onChange={set('feedbackUrl')}
-                  placeholder="https://forms.gle/restaurant-feedback-form"
-                  className={inputCls}
-                />
-                {form.feedbackUrl?.trim() && (
-                  <a
-                    href={form.feedbackUrl.startsWith('http') ? form.feedbackUrl : `https://${form.feedbackUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Test</span>
-                  </a>
-                )}
-              </div>
-            </FormField>
-
-            {/* Google Maps Direct Review Link */}
-            <FormField
-              label="Google Maps Direct Review Link"
-              icon={Star}
-              hint="Direct review trigger URL (Place ID or g.page/r/.../review)"
-            >
-              <div className="flex items-center gap-2">
-                <input
-                  type="url"
-                  value={form.googleReviewUrl}
-                  onChange={set('googleReviewUrl')}
-                  placeholder="https://g.page/r/.../review or https://search.google.com/local/writereview?placeid=..."
-                  className={inputCls}
-                />
-                {form.googleReviewUrl?.trim() && (
-                  <a
-                    href={form.googleReviewUrl.startsWith('http') ? form.googleReviewUrl : `https://${form.googleReviewUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 inline-flex items-center gap-1 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
