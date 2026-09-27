@@ -2,7 +2,7 @@ import './globals.css';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
-  title: 'Renza Restaurant Admin',
+  title: 'Scanzaa Restaurant Admin',
   description: 'Manage your restaurant menu and profile',
 };
 
