@@ -49,20 +49,22 @@ function Sidebar({ onClose, user }) {
   return (
     <div className="flex flex-col h-full bg-slate-950 text-white w-64 border-r border-slate-850 select-none">
       {/* Logo & Platform Info */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/70">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-tr from-orange-500 to-teal-600 rounded-2xl shadow-lg shadow-orange-500/20">
-            <span className="text-xl font-black text-white">R</span>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/70">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <img
+              src="/scanzaa-horizontal-logo.png"
+              alt="SCANZAA"
+              className="h-7 w-auto object-contain"
+            />
+            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-400 border border-teal-500/30 uppercase tracking-wider">
+              ADMIN
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold text-white tracking-tight">Renza</span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase tracking-wider">
-                Admin
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">Control Center</p>
-          </div>
+          <p className="text-[11px] font-medium text-slate-400 pl-0.5 tracking-wide flex items-center gap-1">
+            <span>powered by</span>
+            <span className="text-white font-semibold">Renza</span>
+          </p>
         </div>
         {onClose && (
           <button
@@ -116,12 +118,14 @@ function Sidebar({ onClose, user }) {
       {/* Bottom user section */}
       <div className="p-3 border-t border-slate-800/70">
         <div className="flex items-center gap-3 px-3 py-2 mb-1">
-          <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center flex-shrink-0">
-            <Shield className="w-4 h-4 text-orange-400" />
+          <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center flex-shrink-0">
+            <img src="/scanzaa-icon.png" alt="SCANZAA" className="w-4 h-4 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-white truncate">{user?.name || 'Super Admin'}</p>
-            <p className="text-[11px] text-slate-400 truncate">{user?.email || 'Master Platform Access'}</p>
+            <p className="text-xs font-bold text-white truncate">
+              {user?.name === 'Renza Admin' ? 'Scanzaa Admin' : (user?.name || 'Scanzaa Admin')}
+            </p>
+            <p className="text-[11px] text-slate-400 truncate">{user?.email || 'renzaa.technical@gmail.com'}</p>
           </div>
         </div>
         <button
@@ -221,7 +225,20 @@ export default function DashboardLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
+            {/* SCANZAA powered by Renza Brand Badge */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950 border border-slate-800 text-white shadow-xs">
+              <img
+                src="/scanzaa-icon.png"
+                alt="SCANZAA"
+                className="w-4 h-4 object-contain"
+              />
+              <span className="font-extrabold tracking-tight text-white text-xs">SCANZAA</span>
+              <span className="text-[10px] text-slate-400 font-medium border-l border-slate-700 pl-2">
+                powered by <span className="text-teal-400 font-semibold">Renza</span>
+              </span>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Super Admin Active</span>
             </div>

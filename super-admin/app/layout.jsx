@@ -2,10 +2,10 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 
 export const metadata = {
-  title: 'Renza Super Admin',
-  description: 'Renza Restaurant Platform - Super Admin Portal',
+  title: 'SCANZAA Super Admin — Powered by Renza',
+  description: 'SCANZAA Restaurant Platform - Super Admin Portal',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/scanzaa-icon.png',
   },
 }
 
