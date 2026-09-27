@@ -106,15 +106,6 @@ function Sidebar({ onClose, user }) {
         })}
       </nav>
 
-      {/* Cloud Service Status pill */}
-      <div className="mx-3 mb-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-semibold text-slate-300">Live Cloud Core</span>
-        </div>
-        <p className="text-[10px] text-slate-500 mt-1">Neon Cloud DB & Cloudinary Connected</p>
-      </div>
-
       {/* Bottom user section */}
       <div className="p-3 border-t border-slate-800/70">
         <div className="flex items-center gap-3 px-3 py-2 mb-1">
@@ -236,11 +227,6 @@ export default function DashboardLayout({ children }) {
               <span className="text-[10px] text-slate-400 font-medium border-l border-slate-700 pl-2">
                 powered by <span className="text-teal-400 font-semibold">Renza</span>
               </span>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Super Admin Active</span>
             </div>
           </div>
         </header>

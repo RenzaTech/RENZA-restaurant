@@ -10,7 +10,6 @@ import {
   ArrowUpRight,
   RefreshCw,
   Plus,
-  Sparkles,
   Store,
   ChevronRight,
   CheckCircle2,
@@ -168,10 +167,6 @@ export default function DashboardPage() {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-6 sm:p-8 shadow-md border border-slate-800">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold uppercase tracking-wider border border-orange-500/30">
-              <Sparkles className="w-3.5 h-3.5" />
-              Master Governance
-            </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
               Platform Overview
             </h1>
