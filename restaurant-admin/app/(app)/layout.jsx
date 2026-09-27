@@ -133,7 +133,7 @@ export default function AppLayout({ children }) {
             </div>
           )}
           <div className="min-w-0">
-            <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest leading-none">Renza Partner</p>
+            <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest leading-none">Scanzaa</p>
             <p className="text-sm font-bold text-white truncate mt-1">{restaurant.name || 'Kitchen Portal'}</p>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function AppLayout({ children }) {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Renza Partner</p>
+                  <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Scanzaa</p>
                   <p className="text-xs font-bold text-white truncate">{restaurant.name || 'Kitchen'}</p>
                 </div>
               </div>
@@ -296,14 +296,6 @@ export default function AppLayout({ children }) {
               <h1 className="font-extrabold text-slate-900 text-sm sm:text-base md:text-lg tracking-tight truncate">
                 {getPageTitle()}
               </h1>
-            </div>
-
-            {/* Live status badge */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Menu Live</span>
-              </div>
             </div>
           </div>
         </header>

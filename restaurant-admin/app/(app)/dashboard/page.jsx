@@ -141,11 +141,11 @@ export default function DashboardPage() {
             <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight truncate">
               {restaurantName}
             </h2>
-            <p className="text-orange-100 text-xs sm:text-sm flex items-center gap-2 font-medium flex-wrap">
-              {cuisineType && <span>★ {cuisineType}</span>}
-              {cuisineType && <span>•</span>}
-              <span className="bg-white/25 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold">Menu Live</span>
-            </p>
+            {cuisineType && (
+              <p className="text-orange-100 text-xs sm:text-sm flex items-center gap-2 font-medium flex-wrap">
+                <span>★ {cuisineType}</span>
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-1 sm:pt-2 md:pt-0">
