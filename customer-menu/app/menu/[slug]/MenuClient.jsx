@@ -12,6 +12,7 @@ import Footer from '../../../components/Footer';
 import EmptyState from '../../../components/EmptyState';
 import RateUsModal from '../../../components/RateUsModal';
 import { SkeletonPage } from '../../../components/Skeletons';
+import SplashScreen from '../../../components/SplashScreen';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const FILTER_IDS = ['veg', 'non-veg', 'vegan', 'jain', 'gluten-free', 'available'];
@@ -66,6 +67,7 @@ export default function MenuClient({ params }) {
   const [sortBy, setSortBy] = useState('default');
   const [rateModalOpen, setRateModalOpen] = useState(false);
   const [urlReady, setUrlReady] = useState(false);
+  const [splashFinished, setSplashFinished] = useState(false);
 
   const sectionRefs = useRef({});
   const searchInputRef = useRef(null);
@@ -144,7 +146,26 @@ export default function MenuClient({ params }) {
       setCategoryGroups(groups);
       setState('ready');
     } catch (err) {
-      setState('error');
+      try {
+        const fallback = await import('../../../data/anbude-cafe-menu.json');
+        const data = fallback.default || fallback;
+        setRestaurant(data.restaurant || data);
+        let items = data.foodItems || data.items || data.menuItems || [];
+        if (items.length === 0 && data.categories && Array.isArray(data.categories)) {
+          items = data.categories.flatMap((cat) =>
+            (cat.items || cat.foodItems || []).map((item) => ({
+              ...item,
+              categoryId: cat.id || cat._id,
+              categoryName: item.categoryName || cat.name,
+            }))
+          );
+        }
+        const groups = groupItemsByCategory(items, data.categories || []);
+        setCategoryGroups(groups);
+        setState('ready');
+      } catch (fallbackErr) {
+        setState('error');
+      }
     }
   }, [slug]);
 
@@ -282,32 +303,42 @@ export default function MenuClient({ params }) {
 
   const resultCount = filteredGroups.reduce((total, group) => total + group.items.length, 0);
 
-  if (state === 'loading') return <SkeletonPage />;
-  if (state === 'notfound') return <EmptyState variant="notFound" />;
-  if (state === 'suspended') return <EmptyState variant="suspended" />;
-  if (state === 'error') {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#06090d] px-6 text-center text-slate-100">
-        <h2 className="mb-2 font-display text-2xl font-bold text-amber-200">Connection Issue</h2>
-        <p className="mb-6 max-w-xs text-xs text-slate-400">
-          Could not connect to the dining network. Check your internet connection and retry.
-        </p>
-        <button
-          onClick={fetchMenu}
-          className="gold-accent-btn rounded px-6 py-2.5 text-xs font-bold uppercase tracking-wider"
-        >
-          Retry Loading Menu
-        </button>
-      </div>
-    );
-  }
-
   const allCategories = categoryGroups.map((g) => ({ id: g.id, name: g.name }));
   let cardIndex = 0;
 
   return (
     <div className="min-h-screen bg-[#06090d] font-sans text-[#f6f2eb]">
-      {/* ════ 1. CINEMATIC HERO ════ */}
+      {!splashFinished && (
+        <SplashScreen
+          isLoading={state === 'loading'}
+          restaurant={restaurant}
+          minDuration={2300}
+          onFinish={() => setSplashFinished(true)}
+        />
+      )}
+
+      {state === 'loading' ? (
+        <SkeletonPage />
+      ) : state === 'notfound' ? (
+        <EmptyState variant="notFound" />
+      ) : state === 'suspended' ? (
+        <EmptyState variant="suspended" />
+      ) : state === 'error' ? (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-[#06090d] px-6 text-center text-slate-100">
+          <h2 className="mb-2 font-display text-2xl font-bold text-amber-200">Connection Issue</h2>
+          <p className="mb-6 max-w-xs text-xs text-slate-400">
+            Could not connect to the dining network. Check your internet connection and retry.
+          </p>
+          <button
+            onClick={fetchMenu}
+            className="gold-accent-btn rounded px-6 py-2.5 text-xs font-bold uppercase tracking-wider"
+          >
+            Retry Loading Menu
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* ════ 1. CINEMATIC HERO ════ */}
       <MenuHero
         restaurant={restaurant}
         resolveImageUrl={resolveImageUrl}
@@ -415,6 +446,8 @@ export default function MenuClient({ params }) {
         onClose={() => setRateModalOpen(false)}
         restaurant={restaurant}
       />
+        </>
+      )}
     </div>
   );
 }

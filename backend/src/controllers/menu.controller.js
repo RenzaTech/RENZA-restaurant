@@ -1,3 +1,5 @@
+const path = require('path')
+const fs = require('fs')
 const crypto = require('crypto')
 const prisma = require('../lib/prisma')
 
@@ -10,20 +12,33 @@ const VALID_EVENT_TYPES = ['qr_scan', 'menu_view', 'item_view']
 const getMenu = async (req, res) => {
   const { slug } = req.params
 
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { slug },
-    include: {
-      categories: {
-        orderBy: { sortOrder: 'asc' },
-      },
-      foodItems: {
-        include: {
-          category: { select: { id: true, name: true } },
+  let restaurant = null
+  try {
+    restaurant = await prisma.restaurant.findUnique({
+      where: { slug },
+      include: {
+        categories: {
+          orderBy: { sortOrder: 'asc' },
         },
-        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        foodItems: {
+          include: {
+            category: { select: { id: true, name: true } },
+          },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        },
       },
-    },
-  })
+    })
+  } catch (dbErr) {
+    console.warn('[Menu] Database offline or unreachable. Loading fallback json:', dbErr.message)
+    const fallbackFile = path.join(__dirname, '..', '..', 'data', `${slug}-menu.json`)
+    const defaultFile = path.join(__dirname, '..', '..', 'data', 'anbude-cafe-menu.json')
+    const targetFile = fs.existsSync(fallbackFile) ? fallbackFile : (fs.existsSync(defaultFile) ? defaultFile : null)
+    if (targetFile) {
+      const fallbackData = JSON.parse(fs.readFileSync(targetFile, 'utf8'))
+      return res.json(fallbackData)
+    }
+    throw dbErr
+  }
 
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
