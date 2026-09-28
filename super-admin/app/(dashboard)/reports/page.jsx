@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   ExternalLink,
   ChevronRight,
-  Sparkles,
   Layers,
   ArrowDownToLine,
   Store,
@@ -127,19 +126,6 @@ export default function ReportsPage() {
     }
   }
 
-  // Calculate platform totals
-  const totalDishes = restaurants.reduce(
-    (sum, r) => sum + (r.foodItemCount ?? r.foodItemsCount ?? r.food_items_count ?? r._count?.foodItems ?? 0),
-    0
-  )
-  const totalScans = restaurants.reduce(
-    (sum, r) => sum + (r.totalScans ?? r.total_scans ?? r.analytics?.allTime?.qrScans ?? 0),
-    0
-  )
-  const totalViews = restaurants.reduce(
-    (sum, r) => sum + (r.totalMenuViews ?? r.analytics?.allTime?.menuViews ?? 0),
-    0
-  )
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -151,10 +137,6 @@ export default function ReportsPage() {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>RENZA Operational Intelligence</span>
-            </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
               Restaurant Reports & Excel Exports
             </h1>
@@ -186,26 +168,6 @@ export default function ReportsPage() {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-          </div>
-        </div>
-
-        {/* ── METRIC TILES ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800/80 relative z-10">
-          <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-800">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Restaurants</p>
-            <p className="text-xl sm:text-2xl font-black text-white mt-1">{formatNumber(restaurants.length)}</p>
-          </div>
-          <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-800">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dishes in Stock</p>
-            <p className="text-xl sm:text-2xl font-black text-orange-400 mt-1">{formatNumber(totalDishes)}</p>
-          </div>
-          <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-800">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Scans</p>
-            <p className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">{formatNumber(totalScans)}</p>
-          </div>
-          <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-800">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Menu Views</p>
-            <p className="text-xl sm:text-2xl font-black text-teal-400 mt-1">{formatNumber(totalViews)}</p>
           </div>
         </div>
       </div>
