@@ -40,6 +40,14 @@ import toast from 'react-hot-toast'
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
+  if (status === 'setup') {
+    return (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-amber-50 text-amber-700 border border-amber-200/60">
+        <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-amber-500 animate-pulse" />
+        Setup Mode
+      </span>
+    )
+  }
   const isActive = status === 'active'
   return (
     <span
@@ -50,7 +58,7 @@ function StatusBadge({ status }) {
       }`}
     >
       <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-      {isActive ? 'Active' : 'Suspended'}
+      {isActive ? 'Live' : 'Suspended'}
     </span>
   )
 }
@@ -216,6 +224,7 @@ export default function RestaurantDetailPage() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [statusUpdating, setStatusUpdating] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [targetStatus, setTargetStatus] = useState(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [isEditingUrl, setIsEditingUrl] = useState(false)
@@ -361,14 +370,25 @@ export default function RestaurantDetailPage() {
     return () => clearInterval(interval)
   }, [tab, autoRefresh, fetchAnalytics])
 
+  const handleOpenStatusModal = (status) => {
+    setTargetStatus(status)
+    setConfirmOpen(true)
+  }
+
   const handleStatusToggle = async () => {
     setConfirmOpen(false)
     setStatusUpdating(true)
-    const newStatus = restaurant.status === 'active' ? 'suspended' : 'active'
+    const newStatus = targetStatus || (restaurant.status === 'active' ? 'suspended' : 'active')
     try {
       await api.patch(`/api/admin/restaurants/${id}/status`, { status: newStatus })
       setRestaurant((prev) => ({ ...prev, status: newStatus }))
-      toast.success(`Restaurant ${newStatus === 'active' ? 'activated' : 'suspended'}`)
+      toast.success(
+        newStatus === 'active'
+          ? '🚀 Restaurant is now Live! Customer view counts will now start.'
+          : newStatus === 'setup'
+          ? '🟡 Restaurant switched to Setup Mode. View counting is paused.'
+          : '🔴 Restaurant suspended successfully.'
+      )
     } catch {
       toast.error('Failed to update status')
     } finally {
@@ -481,29 +501,54 @@ export default function RestaurantDetailPage() {
             <span>Edit Profile</span>
           </Link>
 
-          <button
-            onClick={() => setConfirmOpen(true)}
-            disabled={statusUpdating}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs disabled:opacity-50 ${
-              restaurant.status === 'active'
-                ? 'text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80'
-                : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80'
-            }`}
-          >
-            {statusUpdating ? (
-              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : restaurant.status === 'active' ? (
-              <ToggleRight className="w-4 h-4" />
-            ) : (
-              <ToggleLeft className="w-4 h-4" />
-            )}
-            <span>{restaurant.status === 'active' ? 'Suspend Access' : 'Activate Access'}</span>
-          </button>
+          {/* Status Mode Controls */}
+          {restaurant.status === 'setup' ? (
+            <button
+              onClick={() => handleOpenStatusModal('active')}
+              disabled={statusUpdating}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
+            >
+              {statusUpdating ? (
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span>🚀 Set to Live Mode</span>
+              )}
+            </button>
+          ) : restaurant.status === 'active' ? (
+            <button
+              onClick={() => handleOpenStatusModal('setup')}
+              disabled={statusUpdating}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 disabled:opacity-50 cursor-pointer"
+            >
+              {statusUpdating ? (
+                <div className="w-3.5 h-3.5 border-2 border-amber-700 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span>🛠️ Switch to Setup Mode</span>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => handleOpenStatusModal('active')}
+              disabled={statusUpdating}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 disabled:opacity-50 cursor-pointer"
+            >
+              <span>Activate Access</span>
+            </button>
+          )}
 
-          {restaurant.status === 'suspended' && (
+          {/* Suspend button if not suspended */}
+          {restaurant.status !== 'suspended' ? (
+            <button
+              onClick={() => handleOpenStatusModal('suspended')}
+              disabled={statusUpdating}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 disabled:opacity-50 cursor-pointer"
+            >
+              <span>Suspend</span>
+            </button>
+          ) : (
             <button
               onClick={() => setDeleteConfirmOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 cursor-pointer"
               title="Permanently delete suspended restaurant"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -512,6 +557,30 @@ export default function RestaurantDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Setup Mode Info Banner */}
+      {restaurant.status === 'setup' && (
+        <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl mt-0.5">🟡</span>
+            <div>
+              <p className="text-sm font-bold text-amber-950">
+                This restaurant is currently in Setup Mode
+              </p>
+              <p className="text-xs text-amber-800/90 mt-0.5 leading-relaxed">
+                Staff can add dishes, upload photos, and test QR codes on phones freely. Real customer view counts and analytics are completely paused.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleOpenStatusModal('active')}
+            disabled={statusUpdating}
+            className="shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-xs cursor-pointer"
+          >
+            🚀 Launch to Live Mode
+          </button>
+        </div>
+      )}
 
       {/* ── TABS NAVIGATION ── */}
       <div className="flex gap-2 border-b border-slate-200/80 pb-px">
@@ -873,11 +942,18 @@ export default function RestaurantDetailPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        message={`Are you sure you want to ${
-          restaurant.status === 'active' ? 'suspend' : 'activate'
-        } ${restaurant.name}?`}
+        message={
+          targetStatus === 'active'
+            ? `Are you sure you want to set ${restaurant.name} to LIVE Mode? Real customer view counts and analytics will start tracking from now.`
+            : targetStatus === 'setup'
+            ? `Are you sure you want to switch ${restaurant.name} back to SETUP Mode? View counting will be paused while staff updates dishes.`
+            : `Are you sure you want to SUSPEND access to ${restaurant.name}?`
+        }
         onConfirm={handleStatusToggle}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={() => {
+          setConfirmOpen(false)
+          setTargetStatus(null)
+        }}
       />
 
       <DeleteConfirmDialog

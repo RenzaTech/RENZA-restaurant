@@ -45,6 +45,14 @@ function StatCard({ label, value, icon: Icon, color, bgGradient, loading, hint }
 }
 
 function StatusBadge({ status }) {
+  if (status === 'setup') {
+    return (
+      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold tracking-wide bg-amber-50 text-amber-700 border border-amber-200/60">
+        <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-amber-500 animate-pulse" />
+        Setup Mode
+      </span>
+    )
+  }
   const isActive = status === 'active'
   return (
     <span
@@ -59,7 +67,7 @@ function StatusBadge({ status }) {
           isActive ? 'bg-emerald-500' : 'bg-rose-500'
         }`}
       />
-      {isActive ? 'Active' : 'Suspended'}
+      {isActive ? 'Live' : 'Suspended'}
     </span>
   )
 }

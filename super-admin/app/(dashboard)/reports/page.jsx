@@ -24,6 +24,14 @@ import { exportRestaurantReport, exportAllRestaurantsReport } from '@/lib/excelE
 import toast from 'react-hot-toast'
 
 function StatusBadge({ status }) {
+  if (status === 'setup') {
+    return (
+      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold tracking-wide bg-amber-50 text-amber-700 border border-amber-200/60">
+        <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-amber-500 animate-pulse" />
+        Setup Mode
+      </span>
+    )
+  }
   const isActive = status === 'active'
   return (
     <span
@@ -34,7 +42,7 @@ function StatusBadge({ status }) {
       }`}
     >
       <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-      {isActive ? 'Active' : 'Suspended'}
+      {isActive ? 'Live' : 'Suspended'}
     </span>
   )
 }
@@ -186,18 +194,23 @@ export default function ReportsPage() {
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs w-full sm:w-auto">
-          {['all', 'active', 'suspended'].map((status) => (
+        <div className="flex gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs w-full sm:w-auto overflow-x-auto">
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'setup', label: 'Setup Mode' },
+            { id: 'active', label: 'Live' },
+            { id: 'suspended', label: 'Suspended' },
+          ].map(({ id, label }) => (
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`flex-1 sm:flex-none py-1.5 px-3 rounded-lg text-xs font-bold capitalize transition-all ${
-                statusFilter === status
+              key={id}
+              onClick={() => setStatusFilter(id)}
+              className={`flex-1 sm:flex-none py-1.5 px-3 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                statusFilter === id
                   ? 'bg-orange-500 text-white shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              {status}
+              {label}
             </button>
           ))}
         </div>

@@ -316,7 +316,7 @@ const updateRestaurant = async (req, res) => {
 
 /**
  * PATCH /api/admin/restaurants/:id/status
- * Toggle active ↔ suspended
+ * Update status: setup ↔ active (Live) ↔ suspended
  */
 const toggleStatus = async (req, res) => {
   const restaurant = await prisma.restaurant.findUnique({ where: { id: req.params.id } })
@@ -324,7 +324,29 @@ const toggleStatus = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  const targetStatus = req.body?.status || (restaurant.status === 'active' ? 'suspended' : 'active')
+  let targetStatus = req.body?.status
+  if (!targetStatus) {
+    if (restaurant.status === 'setup') {
+      targetStatus = 'active'
+    } else if (restaurant.status === 'active') {
+      targetStatus = 'suspended'
+    } else {
+      targetStatus = 'active'
+    }
+  }
+
+  if (!['setup', 'active', 'suspended'].includes(targetStatus)) {
+    return res.status(400).json({ error: 'Invalid status. Must be setup, active, or suspended.' })
+  }
+
+  // If moving from setup to active (Go Live), wipe any accidental test events
+  // so real customer view counts strictly begin from zero!
+  if (restaurant.status === 'setup' && targetStatus === 'active') {
+    await prisma.analyticsEvent.deleteMany({
+      where: { restaurantId: req.params.id },
+    }).catch(() => {})
+  }
+
   const updated = await prisma.restaurant.update({
     where: { id: req.params.id },
     data: { status: targetStatus },

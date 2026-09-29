@@ -31,7 +31,7 @@ const navItems = [
 export default function AppLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [restaurant, setRestaurant] = useState({ name: '', slug: '', cuisineType: '', logo: null });
+  const [restaurant, setRestaurant] = useState({ name: '', slug: '', status: '', cuisineType: '', logo: null });
   const [logoError, setLogoError] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -54,6 +54,7 @@ export default function AppLayout({ children }) {
             setRestaurant({
               name: data.name,
               slug: data.slug || '',
+              status: data.status || 'setup',
               cuisineType: data.cuisineType || '',
               logo: fullLogo,
             });
@@ -297,8 +298,35 @@ export default function AppLayout({ children }) {
                 {getPageTitle()}
               </h1>
             </div>
+
+            {/* Status indicator */}
+            <div className="flex items-center gap-2">
+              {restaurant.status === 'setup' ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  🟡 Setup Mode (Views Paused)
+                </span>
+              ) : restaurant.status === 'active' ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  🟢 Live Menu
+                </span>
+              ) : null}
+            </div>
           </div>
         </header>
+
+        {/* Setup Mode alert strip */}
+        {restaurant.status === 'setup' && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-xs font-medium text-amber-900 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <span>
+                <strong>🟡 Setup Mode Active:</strong> You can add dishes and test QR codes freely. Diner view counts are paused until Super Admin launches this restaurant to Live Mode.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 pb-28 sm:pb-24 lg:pb-10 overflow-y-auto bg-slate-50 w-full">

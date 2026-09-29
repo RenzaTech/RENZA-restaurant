@@ -44,7 +44,7 @@ const getMenu = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  if (restaurant.status !== 'active') {
+  if (restaurant.status === 'suspended') {
     return res.status(403).json({ error: 'This restaurant menu is currently unavailable' })
   }
 
@@ -60,6 +60,8 @@ const getMenu = async (req, res) => {
       id: restaurant.id,
       name: restaurant.name,
       slug: restaurant.slug,
+      status: restaurant.status,
+      isSetupMode: restaurant.status === 'setup',
       description: restaurant.description,
       cuisineType: restaurant.cuisineType,
       logoUrl: restaurant.logoUrl,
@@ -95,6 +97,12 @@ const trackEvent = async (req, res) => {
   const restaurant = await prisma.restaurant.findUnique({ where: { slug } })
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  // If restaurant is in Setup Mode or Suspended, DO NOT count views or scans
+  // Counting officially starts only once Super Admin sets the restaurant to Live Mode ('active')
+  if (restaurant.status !== 'active') {
+    return res.json({ ok: true, tracked: false, reason: 'Restaurant is in setup mode' })
   }
 
   // Hash the client IP for privacy

@@ -173,12 +173,13 @@ export default function MenuClient({ params }) {
     fetchMenu();
   }, [fetchMenu]);
 
-  // Analytics
+  // Analytics (strictly paused when in Setup Mode)
   useEffect(() => {
     if (state !== 'ready') return;
+    if (restaurant?.isSetupMode || restaurant?.status === 'setup') return;
     trackEvent(slug, 'qr_scan');
     trackEvent(slug, 'menu_view');
-  }, [slug, state]);
+  }, [slug, state, restaurant?.isSetupMode, restaurant?.status]);
 
   // Deep-linking
   useEffect(() => {
@@ -196,18 +197,19 @@ export default function MenuClient({ params }) {
     }
   }, [categoryGroups, selectedItem, state]);
 
-  // Track dish view
+  // Track dish view (paused in Setup Mode)
   useEffect(() => {
     if (!selectedItem) {
       trackedItemRef.current = null;
       return;
     }
+    if (restaurant?.isSetupMode || restaurant?.status === 'setup') return;
     const itemId = selectedItem.id || selectedItem._id;
     const trackingKey = String(itemId || selectedItem.name);
     if (trackedItemRef.current === trackingKey) return;
     trackedItemRef.current = trackingKey;
     trackEvent(slug, 'item_view', itemId);
-  }, [selectedItem, slug]);
+  }, [selectedItem, slug, restaurant?.isSetupMode, restaurant?.status]);
 
   const handleCategorySelect = (catId) => {
     setActiveCategory(catId);
@@ -338,6 +340,14 @@ export default function MenuClient({ params }) {
         </div>
       ) : (
         <>
+          {(restaurant?.isSetupMode || restaurant?.status === 'setup') && (
+            <div className="sticky top-0 z-50 bg-gradient-to-r from-amber-950/95 via-amber-900/95 to-amber-950/95 border-b border-amber-500/40 px-3 py-1.5 text-center backdrop-blur-md shadow-md">
+              <span className="text-[11px] font-sans font-bold text-amber-200 tracking-wide flex items-center justify-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                🛠️ Menu Setup in Progress · Test Mode (Views are not counted)
+              </span>
+            </div>
+          )}
           {/* ════ 1. CINEMATIC HERO ════ */}
       <MenuHero
         restaurant={restaurant}

@@ -13,6 +13,7 @@ enum UserRole {
 }
 
 enum RestaurantStatus {
+  setup
   active
   suspended
 }
@@ -45,7 +46,7 @@ model Restaurant {
   logoUrl       String?          @map("logo_url")
   address       String?
   phone         String?
-  status        RestaurantStatus @default(active)
+  status        RestaurantStatus @default(setup)
   customMenuUrl String?          @map("custom_menu_url")
   googleReviewUrl String?        @map("google_review_url")
   feedbackUrl           String?  @map("feedback_url")
