@@ -302,14 +302,12 @@ export default function AppLayout({ children }) {
             {/* Status indicator */}
             <div className="flex items-center gap-2">
               {restaurant.status === 'setup' ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  🟡 Setup Mode (Views Paused)
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                  Setup Mode (Views Paused)
                 </span>
               ) : restaurant.status === 'active' ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  🟢 Live Menu
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                  Live Menu
                 </span>
               ) : null}
             </div>
@@ -320,9 +318,8 @@ export default function AppLayout({ children }) {
         {restaurant.status === 'setup' && (
           <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-xs font-medium text-amber-900 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
               <span>
-                <strong>🟡 Setup Mode Active:</strong> You can add dishes and test QR codes freely. Diner view counts are paused until Super Admin launches this restaurant to Live Mode.
+                <strong>Setup Mode Active:</strong> You can add dishes and test QR codes freely. Diner view counts are paused until Super Admin launches this restaurant to Live Mode.
               </span>
             </div>
           </div>

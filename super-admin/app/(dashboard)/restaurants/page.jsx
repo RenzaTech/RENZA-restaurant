@@ -215,7 +215,7 @@ export default function RestaurantsPage() {
         targetStatus === 'active'
           ? '🚀 Restaurant is now Live! Real view counts will now start.'
           : targetStatus === 'setup'
-          ? '🟡 Restaurant switched to Setup Mode. View counting is paused.'
+          ? 'Restaurant switched to Setup Mode. View counting is paused.'
           : '🔴 Restaurant suspended successfully.'
       )
     } catch {

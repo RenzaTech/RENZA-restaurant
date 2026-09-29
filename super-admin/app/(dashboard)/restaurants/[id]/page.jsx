@@ -32,6 +32,7 @@ import {
   Trash2,
   FileSpreadsheet,
   MessageSquareText,
+  Wrench,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatDate, formatNumber } from '@/lib/utils'
@@ -386,8 +387,8 @@ export default function RestaurantDetailPage() {
         newStatus === 'active'
           ? '🚀 Restaurant is now Live! Customer view counts will now start.'
           : newStatus === 'setup'
-          ? '🟡 Restaurant switched to Setup Mode. View counting is paused.'
-          : '🔴 Restaurant suspended successfully.'
+          ? 'Restaurant switched to Setup Mode. View counting is paused.'
+          : 'Restaurant suspended successfully.'
       )
     } catch {
       toast.error('Failed to update status')
@@ -561,8 +562,10 @@ export default function RestaurantDetailPage() {
       {/* Setup Mode Info Banner */}
       {restaurant.status === 'setup' && (
         <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl mt-0.5">🟡</span>
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-200/80 flex items-center justify-center shrink-0 text-amber-700">
+              <Wrench className="w-5 h-5" />
+            </div>
             <div>
               <p className="text-sm font-bold text-amber-950">
                 This restaurant is currently in Setup Mode

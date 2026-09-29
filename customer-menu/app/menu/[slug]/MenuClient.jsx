@@ -343,7 +343,6 @@ export default function MenuClient({ params }) {
           {(restaurant?.isSetupMode || restaurant?.status === 'setup') && (
             <div className="sticky top-0 z-50 bg-gradient-to-r from-amber-950/95 via-amber-900/95 to-amber-950/95 border-b border-amber-500/40 px-3 py-1.5 text-center backdrop-blur-md shadow-md">
               <span className="text-[11px] font-sans font-bold text-amber-200 tracking-wide flex items-center justify-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                 🛠️ Menu Setup in Progress · Test Mode (Views are not counted)
               </span>
             </div>
