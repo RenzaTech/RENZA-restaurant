@@ -37,15 +37,18 @@ export function DietaryTags({ item }) {
   if (item.isVegan) tags.push({ emoji: '🥗', label: 'Vegan' });
   if (item.isGlutenFree) tags.push({ emoji: '🌾', label: 'Gluten-Free' });
 
-  const prep = (item.preparationType || item.dishStyle || '').toLowerCase();
-  if (prep === 'dry') {
-    tags.push({ emoji: '🍗', label: 'Dry' });
-  } else if (prep === 'gravy') {
-    tags.push({ emoji: '🍲', label: 'Gravy' });
-  } else if (prep === 'semi-gravy') {
-    tags.push({ emoji: '🥘', label: 'Semi-Gravy' });
-  } else if (prep === 'both') {
-    tags.push({ emoji: '🔄', label: 'Dry & Gravy' });
+  const hasPrepPrices = Boolean(item.preparationPrices);
+  if (!hasPrepPrices) {
+    const prep = (item.preparationType || item.dishStyle || '').toLowerCase();
+    if (prep === 'dry') {
+      tags.push({ emoji: '🍗', label: 'Dry' });
+    } else if (prep === 'gravy') {
+      tags.push({ emoji: '🍲', label: 'Gravy' });
+    } else if (prep === 'semi-gravy') {
+      tags.push({ emoji: '🥘', label: 'Semi-Gravy' });
+    } else if (prep === 'both') {
+      tags.push({ emoji: '🔄', label: 'Dry & Gravy' });
+    }
   }
 
   if (tags.length === 0) return null;
@@ -56,6 +59,48 @@ export function DietaryTags({ item }) {
       ))}
     </div>
   );
+}
+
+export function parsePortions(item) {
+  if (!item?.portionPrices) return null;
+  try {
+    const raw = typeof item.portionPrices === 'string' ? JSON.parse(item.portionPrices) : item.portionPrices;
+    if (raw && typeof raw === 'object') {
+      const list = [];
+      if (raw.quarter !== undefined && raw.quarter !== null && Number(raw.quarter) > 0) {
+        list.push({ key: 'quarter', name: 'Quarter', short: '1/4', price: Number(raw.quarter) });
+      }
+      if (raw.half !== undefined && raw.half !== null && Number(raw.half) > 0) {
+        list.push({ key: 'half', name: 'Half', short: '1/2', price: Number(raw.half) });
+      }
+      if (raw.full !== undefined && raw.full !== null && Number(raw.full) > 0) {
+        list.push({ key: 'full', name: 'Full', short: 'Full', price: Number(raw.full) });
+      }
+      if (list.length > 0) return list;
+    }
+  } catch {}
+  return null;
+}
+
+export function parsePreparationPrices(item) {
+  if (!item?.preparationPrices) return null;
+  try {
+    const raw = typeof item.preparationPrices === 'string' ? JSON.parse(item.preparationPrices) : item.preparationPrices;
+    if (raw && typeof raw === 'object') {
+      const list = [];
+      if (raw.dry !== undefined && raw.dry !== null && Number(raw.dry) > 0) {
+        list.push({ key: 'dry', name: 'Dry', emoji: '🍗', price: Number(raw.dry) });
+      }
+      if (raw.gravy !== undefined && raw.gravy !== null && Number(raw.gravy) > 0) {
+        list.push({ key: 'gravy', name: 'Gravy', emoji: '🍲', price: Number(raw.gravy) });
+      }
+      if (raw.semiGravy !== undefined && raw.semiGravy !== null && Number(raw.semiGravy) > 0) {
+        list.push({ key: 'semiGravy', name: 'Semi-Gravy', emoji: '🥘', price: Number(raw.semiGravy) });
+      }
+      if (list.length > 0) return list;
+    }
+  } catch {}
+  return null;
 }
 
 const DishCard = forwardRef(function DishCard(
@@ -104,30 +149,15 @@ const DishCard = forwardRef(function DishCard(
     </div>
   );
 
-function parsePortions(item) {
-  if (!item?.portionPrices) return null;
-  try {
-    const raw = typeof item.portionPrices === 'string' ? JSON.parse(item.portionPrices) : item.portionPrices;
-    if (raw && typeof raw === 'object') {
-      const list = [];
-      if (raw.quarter !== undefined && raw.quarter !== null && Number(raw.quarter) > 0) {
-        list.push({ key: 'quarter', name: 'Quarter', short: '1/4', price: Number(raw.quarter) });
-      }
-      if (raw.half !== undefined && raw.half !== null && Number(raw.half) > 0) {
-        list.push({ key: 'half', name: 'Half', short: '1/2', price: Number(raw.half) });
-      }
-      if (raw.full !== undefined && raw.full !== null && Number(raw.full) > 0) {
-        list.push({ key: 'full', name: 'Full', short: 'Full', price: Number(raw.full) });
-      }
-      if (list.length > 0) return list;
-    }
-  } catch {}
-  return null;
-}
-
+  const prepPrices = parsePreparationPrices(item);
   const portions = parsePortions(item);
   let priceDisplay = '';
-  if (portions && portions.length > 0) {
+  if (prepPrices && prepPrices.length > 0) {
+    const prices = prepPrices.map((p) => p.price);
+    const minP = Math.min(...prices);
+    const maxP = Math.max(...prices);
+    priceDisplay = minP === maxP ? `₹${minP.toFixed(0)}` : `₹${minP.toFixed(0)} – ₹${maxP.toFixed(0)}`;
+  } else if (portions && portions.length > 0) {
     const prices = portions.map((p) => p.price);
     const minP = Math.min(...prices);
     const maxP = Math.max(...prices);
@@ -225,6 +255,20 @@ function parsePortions(item) {
       <div className="dish-info">
         <h3 className="dish-name">{item.name}</h3>
         <div className="dish-price">{priceDisplay}</div>
+
+        {prepPrices && prepPrices.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {prepPrices.map((p) => (
+              <span
+                key={p.key}
+                className="inline-flex items-center gap-1 text-[10px] font-sans font-semibold tracking-wider px-1.5 py-0.5 rounded bg-[rgba(212,177,93,0.12)] text-[#e8c879] border border-[rgba(212,177,93,0.25)]"
+              >
+                <span>{p.emoji}</span>
+                <span>{p.name}: ₹{p.price}</span>
+              </span>
+            ))}
+          </div>
+        )}
 
         {portions && portions.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">

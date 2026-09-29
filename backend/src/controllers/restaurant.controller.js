@@ -367,10 +367,41 @@ const createFood = async (req, res) => {
     }
   }
 
+  // Clean and parse preparationPrices if provided
+  let cleanPreparationPrices = null
+  if (req.body.preparationPrices) {
+    try {
+      const parsed = typeof req.body.preparationPrices === 'string'
+        ? JSON.parse(req.body.preparationPrices)
+        : req.body.preparationPrices
+      if (parsed && typeof parsed === 'object') {
+        const obj = {}
+        if (parsed.dry !== undefined && parsed.dry !== '' && !isNaN(parseFloat(parsed.dry)) && parseFloat(parsed.dry) > 0) {
+          obj.dry = parseFloat(parsed.dry)
+        }
+        if (parsed.gravy !== undefined && parsed.gravy !== '' && !isNaN(parseFloat(parsed.gravy)) && parseFloat(parsed.gravy) > 0) {
+          obj.gravy = parseFloat(parsed.gravy)
+        }
+        if (parsed.semiGravy !== undefined && parsed.semiGravy !== '' && !isNaN(parseFloat(parsed.semiGravy)) && parseFloat(parsed.semiGravy) > 0) {
+          obj.semiGravy = parseFloat(parsed.semiGravy)
+        }
+        if (Object.keys(obj).length > 0) {
+          cleanPreparationPrices = JSON.stringify(obj)
+        }
+      }
+    } catch {
+      cleanPreparationPrices = null
+    }
+  }
+
   let parsedPrice = parseFloat(price)
   if (isNaN(parsedPrice) || parsedPrice <= 0) {
     if (cleanPortionPrices) {
       const obj = JSON.parse(cleanPortionPrices)
+      const values = Object.values(obj).filter(v => v > 0)
+      if (values.length > 0) parsedPrice = Math.min(...values)
+    } else if (cleanPreparationPrices) {
+      const obj = JSON.parse(cleanPreparationPrices)
       const values = Object.values(obj).filter(v => v > 0)
       if (values.length > 0) parsedPrice = Math.min(...values)
     }
@@ -436,6 +467,9 @@ const createFood = async (req, res) => {
       resolvedPreparationType = p
     }
   }
+  if (!resolvedPreparationType && cleanPreparationPrices) {
+    resolvedPreparationType = 'both'
+  }
 
   const imageUrl = req.file ? await uploadImage(req.file, 'renza/dishes') : null
   const topViewImageUrl = req.topViewFile ? await uploadImage(req.topViewFile, 'renza/dishes') : null
@@ -447,6 +481,7 @@ const createFood = async (req, res) => {
       name: name.trim(),
       price: parsedPrice,
       portionPrices: cleanPortionPrices,
+      preparationPrices: cleanPreparationPrices,
       preparationType: resolvedPreparationType,
       imageUrl,
       topViewImageUrl,
@@ -552,12 +587,55 @@ const updateFood = async (req, res) => {
     }
   }
 
+  // Clean and parse preparationPrices if provided
+  if (req.body.preparationPrices !== undefined) {
+    let cleanPrepPrices = null
+    if (req.body.preparationPrices) {
+      try {
+        const parsed = typeof req.body.preparationPrices === 'string'
+          ? JSON.parse(req.body.preparationPrices)
+          : req.body.preparationPrices
+        if (parsed && typeof parsed === 'object') {
+          const obj = {}
+          if (parsed.dry !== undefined && parsed.dry !== '' && !isNaN(parseFloat(parsed.dry)) && parseFloat(parsed.dry) > 0) {
+            obj.dry = parseFloat(parsed.dry)
+          }
+          if (parsed.gravy !== undefined && parsed.gravy !== '' && !isNaN(parseFloat(parsed.gravy)) && parseFloat(parsed.gravy) > 0) {
+            obj.gravy = parseFloat(parsed.gravy)
+          }
+          if (parsed.semiGravy !== undefined && parsed.semiGravy !== '' && !isNaN(parseFloat(parsed.semiGravy)) && parseFloat(parsed.semiGravy) > 0) {
+            obj.semiGravy = parseFloat(parsed.semiGravy)
+          }
+          if (Object.keys(obj).length > 0) {
+            cleanPrepPrices = JSON.stringify(obj)
+          }
+        }
+      } catch {
+        cleanPrepPrices = null
+      }
+    }
+    updateData.preparationPrices = cleanPrepPrices
+    if (cleanPrepPrices && !updateData.preparationType && !existing.preparationType) {
+      updateData.preparationType = 'both'
+    }
+  }
+
   let parsedPrice = price !== undefined && price !== '' ? parseFloat(price) : NaN
   if (isNaN(parsedPrice) || parsedPrice <= 0) {
     const effectivePortionPrices = updateData.portionPrices !== undefined ? updateData.portionPrices : existing.portionPrices
+    const effectivePrepPrices = updateData.preparationPrices !== undefined ? updateData.preparationPrices : existing.preparationPrices
+
     if (effectivePortionPrices) {
       try {
         const obj = JSON.parse(effectivePortionPrices)
+        const values = Object.values(obj).filter(v => v > 0)
+        if (values.length > 0) parsedPrice = Math.min(...values)
+      } catch {
+        // ignore
+      }
+    } else if (effectivePrepPrices) {
+      try {
+        const obj = JSON.parse(effectivePrepPrices)
         const values = Object.values(obj).filter(v => v > 0)
         if (values.length > 0) parsedPrice = Math.min(...values)
       } catch {

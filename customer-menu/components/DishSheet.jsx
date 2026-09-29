@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { UtensilsCrossed, Share2, Check } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
-import { DietaryTags } from './DishCard';
+import { DietaryTags, parsePortions, parsePreparationPrices } from './DishCard';
 
 function DetailCard({ label, children, warning = false }) {
   if (!children) return null;
@@ -30,27 +30,6 @@ function DetailCard({ label, children, warning = false }) {
   );
 }
 
-function parsePortions(item) {
-  if (!item?.portionPrices) return null;
-  try {
-    const raw = typeof item.portionPrices === 'string' ? JSON.parse(item.portionPrices) : item.portionPrices;
-    if (raw && typeof raw === 'object') {
-      const list = [];
-      if (raw.quarter !== undefined && raw.quarter !== null && Number(raw.quarter) > 0) {
-        list.push({ key: 'quarter', name: 'Quarter', short: '1/4', price: Number(raw.quarter) });
-      }
-      if (raw.half !== undefined && raw.half !== null && Number(raw.half) > 0) {
-        list.push({ key: 'half', name: 'Half', short: '1/2', price: Number(raw.half) });
-      }
-      if (raw.full !== undefined && raw.full !== null && Number(raw.full) > 0) {
-        list.push({ key: 'full', name: 'Full', short: 'Full', price: Number(raw.full) });
-      }
-      if (list.length > 0) return list;
-    }
-  } catch {}
-  return null;
-}
-
 export default function DishSheet({
   item,
   initialAngle = 'front',
@@ -58,14 +37,25 @@ export default function DishSheet({
   resolveImageUrl,
 }) {
   const portions = parsePortions(item);
+  const prepPrices = parsePreparationPrices(item);
   const [activeAngle, setActiveAngle] = useState(initialAngle || 'front');
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState('dry');
+  const [selectedStyle, setSelectedStyle] = useState(() => {
+    return prepPrices && prepPrices.length > 0 ? prepPrices[0].key : 'dry';
+  });
   const [selectedPortionKey, setSelectedPortionKey] = useState(() => {
     return portions && portions.length > 0 ? portions[0].key : null;
   });
+
+  useEffect(() => {
+    if (prepPrices && prepPrices.length > 0) {
+      setSelectedStyle(prepPrices[0].key);
+    } else {
+      setSelectedStyle('dry');
+    }
+  }, [item?.id, item?._id, item?.preparationPrices, prepPrices]);
 
   useEffect(() => {
     if (portions && portions.length > 0) {
@@ -73,7 +63,7 @@ export default function DishSheet({
     } else {
       setSelectedPortionKey(null);
     }
-  }, [item?.id, item?._id, item?.portionPrices]);
+  }, [item?.id, item?._id, item?.portionPrices, portions]);
 
   useEffect(() => {
     setActiveAngle(initialAngle || 'front');
@@ -114,7 +104,16 @@ export default function DishSheet({
   else if (item.spicyLevel === 'hot' || item.spicyLevel === 'high') spiceLevel = 4;
 
   const activePortion = portions?.find((p) => p.key === selectedPortionKey) || portions?.[0] || null;
-  const priceNum = activePortion ? activePortion.price : (Number(item.price) || 0);
+  const activePrep = prepPrices?.find((p) => p.key === selectedStyle) || prepPrices?.[0] || null;
+
+  let priceNum = 0;
+  if (activePortion) {
+    priceNum = activePortion.price;
+  } else if (activePrep) {
+    priceNum = activePrep.price;
+  } else {
+    priceNum = Number(item.price) || 0;
+  }
   const priceDisplay = `₹${priceNum.toFixed(2)}`;
   const categoryName = item.category?.name || item.categoryName || 'House Special';
 
@@ -272,7 +271,7 @@ export default function DishSheet({
                 {Array.isArray(item.allergens) ? item.allergens.join(', ') : item.allergens}
               </DetailCard>
             )}
-            {item.preparationType && (
+            {!prepPrices && item.preparationType && (
               <DetailCard label="Style / Consistency">
                 {item.preparationType === 'dry' && '🍗 Dry (Crispy / Pan Tossed)'}
                 {item.preparationType === 'gravy' && '🍲 Gravy (Rich Curry / Sauce)'}
@@ -282,8 +281,44 @@ export default function DishSheet({
             )}
           </div>
 
-          {/* Preparation Style Selector when both are available */}
-          {item.preparationType === 'both' && (
+          {/* Preparation Style Selector when available */}
+          {prepPrices && prepPrices.length > 0 ? (
+            <div className="my-3 p-3 rounded-xl bg-[rgba(13,18,25,0.7)] border border-[rgba(200,167,93,0.3)] shadow-inner">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-sans font-bold tracking-wider uppercase text-[#d4b15d]">
+                  Select Preparation Style
+                </span>
+                {activePrep && (
+                  <span className="text-[11px] text-slate-300 font-sans">
+                    Selected: <strong className="text-[#f0d68f]">{activePrep.emoji} {activePrep.name}</strong>
+                  </span>
+                )}
+              </div>
+              <div className={`grid gap-2 ${prepPrices.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {prepPrices.map((p) => {
+                  const isSelected = p.key === (activePrep?.key || selectedStyle);
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setSelectedStyle(p.key)}
+                      className={`py-2 px-2 rounded-lg text-center transition flex flex-col items-center justify-center border cursor-pointer ${
+                        isSelected
+                          ? 'bg-[rgba(212,177,93,0.22)] border-[#d4b15d] text-[#faecc8] shadow-[0_0_12px_rgba(212,177,93,0.2)] ring-1 ring-[#d4b15d]/50'
+                          : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">{p.emoji}</span>
+                        <span className="text-xs font-bold">{p.name}</span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-[#f0d68f] mt-0.5">₹{p.price}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : item.preparationType === 'both' ? (
             <div className="my-3 p-3 rounded-xl bg-[rgba(13,18,25,0.7)] border border-[rgba(200,167,93,0.3)] shadow-inner">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-sans font-bold tracking-wider uppercase text-[#d4b15d]">
@@ -320,7 +355,7 @@ export default function DishSheet({
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Portion Pricing Selector (Quarter, Half, Full) */}
           {portions && portions.length > 0 && (
@@ -366,6 +401,8 @@ export default function DishSheet({
               <div className="modal-price-note">
                 {activePortion
                   ? `${activePortion.name} portion (${activePortion.short}) · All taxes included`
+                  : activePrep
+                  ? `${activePrep.emoji} ${activePrep.name} preparation · All taxes included`
                   : 'All taxes included · Prepared fresh to order'}
               </div>
             </div>

@@ -61,11 +61,33 @@ function parsePortionPrices(portionPrices) {
   return null;
 }
 
+function parsePreparationPrices(preparationPrices) {
+  if (!preparationPrices) return null;
+  try {
+    const parsed = typeof preparationPrices === 'string' ? JSON.parse(preparationPrices) : preparationPrices;
+    if (parsed && typeof parsed === 'object') {
+      const list = [];
+      if (parsed.dry !== undefined && parsed.dry !== null && Number(parsed.dry) > 0) {
+        list.push({ label: 'Dry', short: '🍗 Dry', price: Number(parsed.dry) });
+      }
+      if (parsed.gravy !== undefined && parsed.gravy !== null && Number(parsed.gravy) > 0) {
+        list.push({ label: 'Gravy', short: '🍲 Gravy', price: Number(parsed.gravy) });
+      }
+      if (parsed.semiGravy !== undefined && parsed.semiGravy !== null && Number(parsed.semiGravy) > 0) {
+        list.push({ label: 'Semi-Gravy', short: '🥘 Semi', price: Number(parsed.semiGravy) });
+      }
+      if (list.length > 0) return list;
+    }
+  } catch {}
+  return null;
+}
+
 function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
   const [toggling, setToggling] = useState(false);
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const itemId = item.id || item._id;
   const portions = parsePortionPrices(item.portionPrices);
+  const prepList = parsePreparationPrices(item.preparationPrices);
 
   const handleToggle = async () => {
     setToggling(true);
@@ -155,7 +177,25 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
             </h3>
           </div>
 
-          {portions ? (
+          {prepList ? (
+            <div className="space-y-1 mt-0.5 mb-1">
+              <p className="text-slate-900 font-black text-sm sm:text-base">
+                ₹{Math.min(...prepList.map((p) => p.price))}
+                {Math.min(...prepList.map((p) => p.price)) !== Math.max(...prepList.map((p) => p.price)) &&
+                  ` – ₹${Math.max(...prepList.map((p) => p.price))}`}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {prepList.map((p) => (
+                  <span
+                    key={p.label}
+                    className="inline-flex items-center text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80 px-1.5 py-0.5 rounded"
+                  >
+                    {p.short}: ₹{p.price}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : portions ? (
             <div className="space-y-1 mt-0.5 mb-1">
               <p className="text-slate-900 font-black text-sm sm:text-base">
                 ₹{Math.min(...portions.map((p) => p.price))}
@@ -183,22 +223,22 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
                 {item.category.name}
               </span>
             )}
-            {item.preparationType === 'dry' && (
+            {!prepList && item.preparationType === 'dry' && (
               <span className="inline-flex items-center text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded-md">
                 🍗 Dry
               </span>
             )}
-            {item.preparationType === 'gravy' && (
+            {!prepList && item.preparationType === 'gravy' && (
               <span className="inline-flex items-center text-[10px] font-bold bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded-md">
                 🍲 Gravy
               </span>
             )}
-            {item.preparationType === 'semi-gravy' && (
+            {!prepList && item.preparationType === 'semi-gravy' && (
               <span className="inline-flex items-center text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200 px-1.5 py-0.5 rounded-md">
                 🥘 Semi-Gravy
               </span>
             )}
-            {item.preparationType === 'both' && (
+            {!prepList && item.preparationType === 'both' && (
               <span className="inline-flex items-center text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 px-1.5 py-0.5 rounded-md">
                 🔄 Dry &amp; Gravy
               </span>
