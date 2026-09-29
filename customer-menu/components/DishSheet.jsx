@@ -30,16 +30,49 @@ function DetailCard({ label, children, warning = false }) {
   );
 }
 
+function parsePortions(item) {
+  if (!item?.portionPrices) return null;
+  try {
+    const raw = typeof item.portionPrices === 'string' ? JSON.parse(item.portionPrices) : item.portionPrices;
+    if (raw && typeof raw === 'object') {
+      const list = [];
+      if (raw.quarter !== undefined && raw.quarter !== null && Number(raw.quarter) > 0) {
+        list.push({ key: 'quarter', name: 'Quarter', short: '1/4', price: Number(raw.quarter) });
+      }
+      if (raw.half !== undefined && raw.half !== null && Number(raw.half) > 0) {
+        list.push({ key: 'half', name: 'Half', short: '1/2', price: Number(raw.half) });
+      }
+      if (raw.full !== undefined && raw.full !== null && Number(raw.full) > 0) {
+        list.push({ key: 'full', name: 'Full', short: 'Full', price: Number(raw.full) });
+      }
+      if (list.length > 0) return list;
+    }
+  } catch {}
+  return null;
+}
+
 export default function DishSheet({
   item,
   initialAngle = 'front',
   onClose,
   resolveImageUrl,
 }) {
+  const portions = parsePortions(item);
   const [activeAngle, setActiveAngle] = useState(initialAngle || 'front');
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedPortionKey, setSelectedPortionKey] = useState(() => {
+    return portions && portions.length > 0 ? portions[0].key : null;
+  });
+
+  useEffect(() => {
+    if (portions && portions.length > 0) {
+      setSelectedPortionKey(portions[0].key);
+    } else {
+      setSelectedPortionKey(null);
+    }
+  }, [item?.id, item?._id, item?.portionPrices]);
 
   useEffect(() => {
     setActiveAngle(initialAngle || 'front');
@@ -79,7 +112,8 @@ export default function DishSheet({
   else if (item.spicyLevel === 'medium') spiceLevel = 2;
   else if (item.spicyLevel === 'hot' || item.spicyLevel === 'high') spiceLevel = 4;
 
-  const priceNum = Number(item.price) || 0;
+  const activePortion = portions?.find((p) => p.key === selectedPortionKey) || portions?.[0] || null;
+  const priceNum = activePortion ? activePortion.price : (Number(item.price) || 0);
   const priceDisplay = `₹${priceNum.toFixed(2)}`;
   const categoryName = item.category?.name || item.categoryName || 'House Special';
 
@@ -239,12 +273,51 @@ export default function DishSheet({
             )}
           </div>
 
+          {/* Portion Pricing Selector (Quarter, Half, Full) */}
+          {portions && portions.length > 0 && (
+            <div className="my-3.5 p-3 rounded-xl bg-[rgba(13,18,25,0.7)] border border-[rgba(200,167,93,0.3)] shadow-inner">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-sans font-bold tracking-wider uppercase text-[#d4b15d]">
+                  Select Portion Size
+                </span>
+                {activePortion && (
+                  <span className="text-[11px] text-slate-300 font-sans">
+                    Selected: <strong className="text-[#f0d68f]">{activePortion.name}</strong>
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {portions.map((p) => {
+                  const isSelected = p.key === (activePortion?.key || selectedPortionKey);
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setSelectedPortionKey(p.key)}
+                      className={`py-2 px-1.5 rounded-lg text-center transition flex flex-col items-center justify-center border cursor-pointer ${
+                        isSelected
+                          ? 'bg-[rgba(212,177,93,0.22)] border-[#d4b15d] text-[#faecc8] shadow-[0_0_12px_rgba(212,177,93,0.2)] ring-1 ring-[#d4b15d]/50'
+                          : 'bg-[rgba(255,255,255,0.03)] border-white/10 text-slate-300 hover:border-white/25 hover:bg-white/5'
+                      }`}
+                    >
+                      <span className="text-[11px] font-bold tracking-tight">{p.name}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">({p.short})</span>
+                      <span className="text-xs font-mono font-bold text-[#f0d68f] mt-0.5">₹{p.price}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Price & Share */}
           <div className="price-row">
             <div>
               <div className="modal-price">{priceDisplay}</div>
               <div className="modal-price-note">
-                All taxes included · Prepared fresh to order
+                {activePortion
+                  ? `${activePortion.name} portion (${activePortion.short}) · All taxes included`
+                  : 'All taxes included · Prepared fresh to order'}
               </div>
             </div>
 

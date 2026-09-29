@@ -80,6 +80,7 @@ model FoodItem {
   category     Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   name         String
   price        Decimal          @db.Decimal(10, 2)
+  portionPrices String?         @map("portion_prices")
   imageUrl        String?          @map("image_url")
   topViewImageUrl String?          @map("top_view_image_url")
   isVeg           Boolean          @default(false) @map("is_veg")

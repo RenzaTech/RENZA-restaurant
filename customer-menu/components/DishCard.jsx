@@ -93,8 +93,38 @@ const DishCard = forwardRef(function DishCard(
     </div>
   );
 
-  const priceNum = Number(item.price) || 0;
-  const priceDisplay = `₹${priceNum.toFixed(0)}`;
+function parsePortions(item) {
+  if (!item?.portionPrices) return null;
+  try {
+    const raw = typeof item.portionPrices === 'string' ? JSON.parse(item.portionPrices) : item.portionPrices;
+    if (raw && typeof raw === 'object') {
+      const list = [];
+      if (raw.quarter !== undefined && raw.quarter !== null && Number(raw.quarter) > 0) {
+        list.push({ key: 'quarter', name: 'Quarter', short: '1/4', price: Number(raw.quarter) });
+      }
+      if (raw.half !== undefined && raw.half !== null && Number(raw.half) > 0) {
+        list.push({ key: 'half', name: 'Half', short: '1/2', price: Number(raw.half) });
+      }
+      if (raw.full !== undefined && raw.full !== null && Number(raw.full) > 0) {
+        list.push({ key: 'full', name: 'Full', short: 'Full', price: Number(raw.full) });
+      }
+      if (list.length > 0) return list;
+    }
+  } catch {}
+  return null;
+}
+
+  const portions = parsePortions(item);
+  let priceDisplay = '';
+  if (portions && portions.length > 0) {
+    const prices = portions.map((p) => p.price);
+    const minP = Math.min(...prices);
+    const maxP = Math.max(...prices);
+    priceDisplay = minP === maxP ? `₹${minP.toFixed(0)}` : `₹${minP.toFixed(0)} – ₹${maxP.toFixed(0)}`;
+  } else {
+    const priceNum = Number(item.price) || 0;
+    priceDisplay = `₹${priceNum.toFixed(0)}`;
+  }
 
   const handleCardClick = (e) => {
     if (isUnavailable) return;
@@ -184,6 +214,19 @@ const DishCard = forwardRef(function DishCard(
       <div className="dish-info">
         <h3 className="dish-name">{item.name}</h3>
         <div className="dish-price">{priceDisplay}</div>
+
+        {portions && portions.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {portions.map((p) => (
+              <span
+                key={p.key}
+                className="inline-flex items-center text-[10px] font-sans font-semibold tracking-wider px-1.5 py-0.5 rounded bg-[rgba(212,177,93,0.12)] text-[#e8c879] border border-[rgba(212,177,93,0.25)]"
+              >
+                {p.short}: ₹{p.price}
+              </span>
+            ))}
+          </div>
+        )}
 
         {item.description && (
           <p className="line-clamp-2 text-xs leading-relaxed text-slate-400 mb-2">

@@ -319,6 +319,7 @@ const createFood = async (req, res) => {
   const {
     name,
     price,
+    portionPrices,
     categoryId,
     description,
     ingredients,
@@ -338,9 +339,43 @@ const createFood = async (req, res) => {
   } = req.body
 
   if (!name || !name.trim()) return res.status(400).json({ error: 'Food item name is required' })
-  if (price === undefined || price === '') return res.status(400).json({ error: 'Price is required' })
 
-  const parsedPrice = parseFloat(price)
+  // Clean and parse portionPrices if provided
+  let cleanPortionPrices = null
+  if (req.body.portionPrices) {
+    try {
+      const parsed = typeof req.body.portionPrices === 'string'
+        ? JSON.parse(req.body.portionPrices)
+        : req.body.portionPrices
+      if (parsed && typeof parsed === 'object') {
+        const obj = {}
+        if (parsed.quarter !== undefined && parsed.quarter !== '' && !isNaN(parseFloat(parsed.quarter)) && parseFloat(parsed.quarter) > 0) {
+          obj.quarter = parseFloat(parsed.quarter)
+        }
+        if (parsed.half !== undefined && parsed.half !== '' && !isNaN(parseFloat(parsed.half)) && parseFloat(parsed.half) > 0) {
+          obj.half = parseFloat(parsed.half)
+        }
+        if (parsed.full !== undefined && parsed.full !== '' && !isNaN(parseFloat(parsed.full)) && parseFloat(parsed.full) > 0) {
+          obj.full = parseFloat(parsed.full)
+        }
+        if (Object.keys(obj).length > 0) {
+          cleanPortionPrices = JSON.stringify(obj)
+        }
+      }
+    } catch {
+      cleanPortionPrices = null
+    }
+  }
+
+  let parsedPrice = parseFloat(price)
+  if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    if (cleanPortionPrices) {
+      const obj = JSON.parse(cleanPortionPrices)
+      const values = Object.values(obj).filter(v => v > 0)
+      if (values.length > 0) parsedPrice = Math.min(...values)
+    }
+  }
+
   if (isNaN(parsedPrice) || parsedPrice < 0) {
     return res.status(400).json({ error: 'Price must be a valid non-negative number' })
   }
@@ -402,6 +437,7 @@ const createFood = async (req, res) => {
       categoryId: resolvedCategoryId,
       name: name.trim(),
       price: parsedPrice,
+      portionPrices: cleanPortionPrices,
       imageUrl,
       topViewImageUrl,
       description: description?.trim() || null,
@@ -439,6 +475,7 @@ const updateFood = async (req, res) => {
   const {
     name,
     price,
+    portionPrices,
     categoryId,
     description,
     ingredients,
@@ -460,12 +497,55 @@ const updateFood = async (req, res) => {
   const updateData = {}
 
   if (name !== undefined && name.trim()) updateData.name = name.trim()
-  if (price !== undefined && price !== '') {
-    const parsedPrice = parseFloat(price)
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
-      return res.status(400).json({ error: 'Price must be a valid non-negative number' })
+
+  // Clean and parse portionPrices if provided
+  if (req.body.portionPrices !== undefined) {
+    let cleanPortionPrices = null
+    if (req.body.portionPrices) {
+      try {
+        const parsed = typeof req.body.portionPrices === 'string'
+          ? JSON.parse(req.body.portionPrices)
+          : req.body.portionPrices
+        if (parsed && typeof parsed === 'object') {
+          const obj = {}
+          if (parsed.quarter !== undefined && parsed.quarter !== '' && !isNaN(parseFloat(parsed.quarter)) && parseFloat(parsed.quarter) > 0) {
+            obj.quarter = parseFloat(parsed.quarter)
+          }
+          if (parsed.half !== undefined && parsed.half !== '' && !isNaN(parseFloat(parsed.half)) && parseFloat(parsed.half) > 0) {
+            obj.half = parseFloat(parsed.half)
+          }
+          if (parsed.full !== undefined && parsed.full !== '' && !isNaN(parseFloat(parsed.full)) && parseFloat(parsed.full) > 0) {
+            obj.full = parseFloat(parsed.full)
+          }
+          if (Object.keys(obj).length > 0) {
+            cleanPortionPrices = JSON.stringify(obj)
+          }
+        }
+      } catch {
+        cleanPortionPrices = null
+      }
     }
+    updateData.portionPrices = cleanPortionPrices
+  }
+
+  let parsedPrice = price !== undefined && price !== '' ? parseFloat(price) : NaN
+  if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    const effectivePortionPrices = updateData.portionPrices !== undefined ? updateData.portionPrices : existing.portionPrices
+    if (effectivePortionPrices) {
+      try {
+        const obj = JSON.parse(effectivePortionPrices)
+        const values = Object.values(obj).filter(v => v > 0)
+        if (values.length > 0) parsedPrice = Math.min(...values)
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (!isNaN(parsedPrice) && parsedPrice >= 0) {
     updateData.price = parsedPrice
+  } else if (price !== undefined && price !== '') {
+    return res.status(400).json({ error: 'Price must be a valid non-negative number' })
   }
 
   if (categoryId !== undefined) {

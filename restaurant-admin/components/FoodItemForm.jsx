@@ -23,6 +23,7 @@ import { Select, SelectOption } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/ImageUploader';
+import toast from 'react-hot-toast';
 
 const SPICY_LEVELS = [
   { value: 0, label: 'Zero Spice', icon: '—' },
@@ -36,6 +37,21 @@ const TAGS_LIST = [
   { name: 'Vegan', emoji: '🥗', color: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
   { name: 'Gluten-Free', emoji: '🌾', color: 'border-amber-200 bg-amber-50 text-amber-800' },
 ];
+
+const parseInitialPortions = (portionPrices) => {
+  if (!portionPrices) return { quarter: '', half: '', full: '' };
+  try {
+    const p = typeof portionPrices === 'string' ? JSON.parse(portionPrices) : portionPrices;
+    if (p && typeof p === 'object') {
+      return {
+        quarter: p.quarter !== undefined && p.quarter !== null ? String(p.quarter) : '',
+        half: p.half !== undefined && p.half !== null ? String(p.half) : '',
+        full: p.full !== undefined && p.full !== null ? String(p.full) : '',
+      };
+    }
+  } catch {}
+  return { quarter: '', half: '', full: '' };
+};
 
 export default function FoodItemForm({
   initialData = {},
@@ -58,6 +74,13 @@ export default function FoodItemForm({
   const [activeAngleTab, setActiveAngleTab] = useState('front');
   const [showMore, setShowMore] = useState(false);
 
+  const initialPortions = parseInitialPortions(initialData.portionPrices);
+  const hasInitialPortions = Boolean(
+    initialPortions.quarter || initialPortions.half || initialPortions.full
+  );
+  const [pricingMode, setPricingMode] = useState(hasInitialPortions ? 'portions' : 'single');
+  const [portions, setPortions] = useState(initialPortions);
+
   useEffect(() => {
     if (initialData.imageUrl) {
       setLivePreviewUrl(initialData.imageUrl);
@@ -65,7 +88,14 @@ export default function FoodItemForm({
     if (initialData.topViewImageUrl) {
       setLiveTopPreviewUrl(initialData.topViewImageUrl);
     }
-  }, [initialData.imageUrl, initialData.topViewImageUrl]);
+    if (initialData.portionPrices) {
+      const parsed = parseInitialPortions(initialData.portionPrices);
+      if (parsed.quarter || parsed.half || parsed.full) {
+        setPortions(parsed);
+        setPricingMode('portions');
+      }
+    }
+  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices]);
 
   const initialTags = Array.isArray(initialData.tags)
     ? initialData.tags
@@ -110,6 +140,37 @@ export default function FoodItemForm({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (imageError || topViewImageError) return;
+
+    let basePrice = form.price;
+    let cleanPortionPrices = '';
+
+    if (pricingMode === 'portions') {
+      const qVal = parseFloat(portions.quarter);
+      const hVal = parseFloat(portions.half);
+      const fVal = parseFloat(portions.full);
+      const validPortionValues = [qVal, hVal, fVal].filter((v) => !isNaN(v) && v > 0);
+
+      if (validPortionValues.length === 0) {
+        toast.error('Please enter at least one portion price (Quarter, Half, or Full)');
+        return;
+      }
+
+      const pObj = {};
+      if (!isNaN(qVal) && qVal > 0) pObj.quarter = qVal;
+      if (!isNaN(hVal) && hVal > 0) pObj.half = hVal;
+      if (!isNaN(fVal) && fVal > 0) pObj.full = fVal;
+
+      basePrice = String(Math.min(...validPortionValues));
+      cleanPortionPrices = JSON.stringify(pObj);
+    } else {
+      if (!form.price || isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0) {
+        toast.error('Please enter a valid price');
+        return;
+      }
+      basePrice = form.price;
+      cleanPortionPrices = '';
+    }
+
     const formData = new FormData();
     Object.entries(form).forEach(([key, value]) => {
       if (key === 'tags') {
@@ -120,10 +181,14 @@ export default function FoodItemForm({
         } else {
           formData.append('categoryId', '');
         }
+      } else if (key === 'price') {
+        formData.append('price', basePrice);
       } else {
         formData.append(key, value);
       }
     });
+
+    formData.append('portionPrices', cleanPortionPrices);
 
     // Explicitly append boolean dietary flags
     const isVeg = form.foodType === 'veg';
@@ -177,43 +242,20 @@ export default function FoodItemForm({
               </div>
             </div>
 
-            {/* Dish Name */}
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Dish Name <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="e.g. Hyderabadi Dum Biryani"
-                value={form.name}
-                onChange={set('name')}
-                required
-                className="rounded-xl border-slate-200 text-xs sm:text-sm h-11 focus:ring-orange-500/20 focus:border-orange-500"
-              />
-            </div>
-
-            {/* Price & Category */}
+            {/* Dish Name & Category */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="price" className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Price (INR) <span className="text-rose-500">*</span>
+                <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Dish Name <span className="text-rose-500">*</span>
                 </Label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
-                    ₹
-                  </span>
-                  <Input
-                    id="price"
-                    type="number"
-                    placeholder="249"
-                    value={form.price}
-                    onChange={set('price')}
-                    required
-                    min="0"
-                    step="0.01"
-                    className="pl-8 rounded-xl border-slate-200 text-xs sm:text-sm h-11 focus:ring-orange-500/20 focus:border-orange-500 font-mono font-bold"
-                  />
-                </div>
+                <Input
+                  id="name"
+                  placeholder="e.g. Hyderabadi Dum Biryani"
+                  value={form.name}
+                  onChange={set('name')}
+                  required
+                  className="rounded-xl border-slate-200 text-xs sm:text-sm h-11 focus:ring-orange-500/20 focus:border-orange-500"
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -237,6 +279,152 @@ export default function FoodItemForm({
                   })}
                 </Select>
               </div>
+            </div>
+
+            {/* Pricing Structure */}
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Pricing Structure <span className="text-rose-500">*</span>
+                </Label>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {pricingMode === 'portions'
+                    ? 'Quarter, Half & Full portion pricing'
+                    : 'Standard single price'}
+                </span>
+              </div>
+
+              {/* Pricing Mode Toggle Buttons */}
+              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setPricingMode('single')}
+                  className={cn(
+                    'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+                    pricingMode === 'single'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  )}
+                >
+                  <span>Single Fixed Price</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPricingMode('portions')}
+                  className={cn(
+                    'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+                    pricingMode === 'portions'
+                      ? 'bg-white text-orange-600 shadow-xs ring-1 ring-orange-500/20'
+                      : 'text-slate-500 hover:text-slate-800'
+                  )}
+                >
+                  <span>Portion Sizes (1/4, 1/2, Full)</span>
+                </button>
+              </div>
+
+              {/* Fixed Price Input */}
+              {pricingMode === 'single' ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor="price" className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Price (INR) <span className="text-rose-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
+                      ₹
+                    </span>
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="249"
+                      value={form.price}
+                      onChange={set('price')}
+                      required={pricingMode === 'single'}
+                      min="0"
+                      step="0.01"
+                      className="pl-8 rounded-xl border-slate-200 text-xs sm:text-sm h-11 focus:ring-orange-500/20 focus:border-orange-500 font-mono font-bold"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Portion Sizes Inputs */
+                <div className="space-y-3 p-4 bg-orange-50/60 rounded-2xl border border-orange-200/80">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-orange-950">
+                      Portion Sizes (for Meals, Rice, Biryani, Curries, etc.)
+                    </p>
+                    <span className="text-[10px] text-orange-700 font-medium">
+                      Enter prices in INR
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Quarter */}
+                    <div className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold text-slate-800">Quarter (1/4)</Label>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Small</span>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                          ₹
+                        </span>
+                        <Input
+                          type="number"
+                          placeholder="e.g. 70"
+                          value={portions.quarter}
+                          onChange={(e) => setPortions((p) => ({ ...p, quarter: e.target.value }))}
+                          min="0"
+                          step="0.01"
+                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Half */}
+                    <div className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold text-slate-800">Half (1/2)</Label>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Medium</span>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                          ₹
+                        </span>
+                        <Input
+                          type="number"
+                          placeholder="e.g. 120"
+                          value={portions.half}
+                          onChange={(e) => setPortions((p) => ({ ...p, half: e.target.value }))}
+                          min="0"
+                          step="0.01"
+                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Full */}
+                    <div className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold text-slate-800">Full (1/1)</Label>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Regular</span>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                          ₹
+                        </span>
+                        <Input
+                          type="number"
+                          placeholder="e.g. 200"
+                          value={portions.full}
+                          onChange={(e) => setPortions((p) => ({ ...p, full: e.target.value }))}
+                          min="0"
+                          step="0.01"
+                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Dietary Classification */}
@@ -775,12 +963,61 @@ export default function FoodItemForm({
 
                   {/* Price */}
                   <div className="pt-1">
-                    <span className="text-sm font-black text-slate-900 font-mono">
-                      ₹
-                      {Number(form.price) > 0
-                        ? Number(form.price).toFixed(2)
-                        : '0.00'}
-                    </span>
+                    {pricingMode === 'portions' && (portions.quarter || portions.half || portions.full) ? (
+                      <div>
+                        {(() => {
+                          const validVals = [
+                            parseFloat(portions.quarter),
+                            parseFloat(portions.half),
+                            parseFloat(portions.full),
+                          ].filter((v) => !isNaN(v) && v > 0);
+
+                          if (validVals.length === 0) {
+                            return (
+                              <span className="text-sm font-black text-slate-400 font-mono">
+                                ₹0.00
+                              </span>
+                            );
+                          }
+
+                          const minP = Math.min(...validVals);
+                          const maxP = Math.max(...validVals);
+
+                          return (
+                            <>
+                              <span className="text-sm font-black text-slate-900 font-mono">
+                                ₹{minP.toFixed(0)}
+                                {minP !== maxP && ` – ₹${maxP.toFixed(0)}`}
+                              </span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {parseFloat(portions.quarter) > 0 && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">
+                                    1/4: ₹{parseFloat(portions.quarter)}
+                                  </span>
+                                )}
+                                {parseFloat(portions.half) > 0 && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">
+                                    1/2: ₹{parseFloat(portions.half)}
+                                  </span>
+                                )}
+                                {parseFloat(portions.full) > 0 && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">
+                                    Full: ₹{parseFloat(portions.full)}
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      <span className="text-sm font-black text-slate-900 font-mono">
+                        ₹
+                        {Number(form.price) > 0
+                          ? Number(form.price).toFixed(2)
+                          : '0.00'}
+                      </span>
+                    )}
                   </div>
                 </div>
 

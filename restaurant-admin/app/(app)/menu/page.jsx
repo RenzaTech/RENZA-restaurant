@@ -40,10 +40,32 @@ function FoodItemSkeleton() {
   );
 }
 
+function parsePortionPrices(portionPrices) {
+  if (!portionPrices) return null;
+  try {
+    const parsed = typeof portionPrices === 'string' ? JSON.parse(portionPrices) : portionPrices;
+    if (parsed && typeof parsed === 'object') {
+      const list = [];
+      if (parsed.quarter !== undefined && parsed.quarter !== null && Number(parsed.quarter) > 0) {
+        list.push({ label: 'Quarter', short: '1/4', price: Number(parsed.quarter) });
+      }
+      if (parsed.half !== undefined && parsed.half !== null && Number(parsed.half) > 0) {
+        list.push({ label: 'Half', short: '1/2', price: Number(parsed.half) });
+      }
+      if (parsed.full !== undefined && parsed.full !== null && Number(parsed.full) > 0) {
+        list.push({ label: 'Full', short: 'Full', price: Number(parsed.full) });
+      }
+      if (list.length > 0) return list;
+    }
+  } catch {}
+  return null;
+}
+
 function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
   const [toggling, setToggling] = useState(false);
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const itemId = item.id || item._id;
+  const portions = parsePortionPrices(item.portionPrices);
 
   const handleToggle = async () => {
     setToggling(true);
@@ -133,7 +155,27 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
             </h3>
           </div>
 
-          <p className="text-slate-900 font-black text-sm sm:text-base">₹{item.price}</p>
+          {portions ? (
+            <div className="space-y-1 mt-0.5 mb-1">
+              <p className="text-slate-900 font-black text-sm sm:text-base">
+                ₹{Math.min(...portions.map((p) => p.price))}
+                {Math.min(...portions.map((p) => p.price)) !== Math.max(...portions.map((p) => p.price)) &&
+                  ` – ₹${Math.max(...portions.map((p) => p.price))}`}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {portions.map((p) => (
+                  <span
+                    key={p.label}
+                    className="inline-flex items-center text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200/80 px-1.5 py-0.5 rounded"
+                  >
+                    {p.short}: ₹{p.price}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-slate-900 font-black text-sm sm:text-base">₹{item.price}</p>
+          )}
 
           {item.category?.name && (
             <span className="inline-block text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md mt-1 truncate max-w-full">
