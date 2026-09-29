@@ -182,7 +182,7 @@ export default function FoodItemForm({
     let basePrice = form.price;
     let cleanPortionPrices = '';
     let cleanPrepPrices = '';
-    let resolvedPrepType = form.preparationType;
+    let resolvedPrepType = '';
 
     if (pricingMode === 'portions') {
       const qVal = parseFloat(portions.quarter);
@@ -203,6 +203,7 @@ export default function FoodItemForm({
       basePrice = String(Math.min(...validPortionValues));
       cleanPortionPrices = JSON.stringify(pObj);
       cleanPrepPrices = '';
+      resolvedPrepType = '';
     } else if (pricingMode === 'dryGravy') {
       const dryVal = parseFloat(prepPrices.dry);
       const gravyVal = parseFloat(prepPrices.gravy);
@@ -222,9 +223,7 @@ export default function FoodItemForm({
       basePrice = String(Math.min(...validPrepValues));
       cleanPrepPrices = JSON.stringify(pObj);
       cleanPortionPrices = '';
-      if (!resolvedPrepType || resolvedPrepType === '') {
-        resolvedPrepType = 'both';
-      }
+      resolvedPrepType = 'both';
     } else {
       if (!form.price || isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0) {
         toast.error('Please enter a valid price');
@@ -233,6 +232,7 @@ export default function FoodItemForm({
       basePrice = form.price;
       cleanPortionPrices = '';
       cleanPrepPrices = '';
+      resolvedPrepType = '';
     }
 
     const formData = new FormData();
@@ -391,12 +391,7 @@ export default function FoodItemForm({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setPricingMode('dryGravy');
-                    if (!form.preparationType) {
-                      setDirect('preparationType', 'both');
-                    }
-                  }}
+                  onClick={() => setPricingMode('dryGravy')}
                   className={cn(
                     'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
                     pricingMode === 'dryGravy'
@@ -639,59 +634,6 @@ export default function FoodItemForm({
               </div>
             </div>
 
-            {/* Dish Style / Preparation: Dry vs Gravy */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Dish Style / Consistency
-                </Label>
-                <span className="text-[10px] text-slate-400 font-medium">
-                  Dry, Gravy, Semi-Gravy, etc.
-                </span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { value: '', label: 'Standard / N/A', icon: '🍽️', activeClass: 'border-slate-800 bg-slate-100 text-slate-900 shadow-xs' },
-                  { value: 'dry', label: 'Dry', icon: '🍗', activeClass: 'border-amber-500 bg-amber-50 text-amber-900 ring-2 ring-amber-500/20 shadow-xs' },
-                  { value: 'gravy', label: 'Gravy', icon: '🍲', activeClass: 'border-orange-500 bg-orange-50 text-orange-900 ring-2 ring-orange-500/20 shadow-xs' },
-                  { value: 'semi-gravy', label: 'Semi-Gravy', icon: '🥘', activeClass: 'border-teal-500 bg-teal-50 text-teal-900 ring-2 ring-teal-500/20 shadow-xs' },
-                ].map(({ value, label, icon, activeClass }) => {
-                  const isSelected = (form.preparationType || '') === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setDirect('preparationType', value)}
-                      className={cn(
-                        'py-2 px-2.5 rounded-xl border-2 font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
-                        isSelected
-                          ? activeClass
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
-                      )}
-                    >
-                      <span className="text-base leading-none">{icon}</span>
-                      <span className="truncate">{label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="pt-0.5">
-                <button
-                  type="button"
-                  onClick={() => setDirect('preparationType', form.preparationType === 'both' ? '' : 'both')}
-                  className={cn(
-                    'w-full py-2 px-3 rounded-xl border-2 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer',
-                    form.preparationType === 'both'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-900 ring-2 ring-indigo-500/20 shadow-xs'
-                      : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50/50'
-                  )}
-                >
-                  <span>🔄</span>
-                  <span>Both Dry &amp; Gravy Available</span>
-                  <span className="text-[10px] font-normal text-slate-400 opacity-80">(Diner can choose when ordering)</span>
-                </button>
-              </div>
-            </div>
 
             {/* Description */}
             <div className="space-y-1.5">
@@ -1176,22 +1118,7 @@ export default function FoodItemForm({
                         🌾 Gluten-Free
                       </span>
                     )}
-                    {form.preparationType === 'dry' && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                        🍗 Dry
-                      </span>
-                    )}
-                    {form.preparationType === 'gravy' && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-orange-50 text-orange-900 border border-orange-200">
-                        🍲 Gravy
-                      </span>
-                    )}
-                    {form.preparationType === 'semi-gravy' && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-teal-50 text-teal-900 border border-teal-200">
-                        🥘 Semi-Gravy
-                      </span>
-                    )}
-                    {form.preparationType === 'both' && (
+                    {pricingMode === 'dryGravy' && (
                       <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-indigo-50 text-indigo-900 border border-indigo-200">
                         🔄 Dry &amp; Gravy
                       </span>
