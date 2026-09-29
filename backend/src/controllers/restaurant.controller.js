@@ -428,6 +428,15 @@ const createFood = async (req, res) => {
     }
   }
 
+  const rawPrep = req.body.preparationType || req.body.dishStyle || req.body.dryGravy
+  let resolvedPreparationType = null
+  if (rawPrep && typeof rawPrep === 'string') {
+    const p = rawPrep.trim().toLowerCase()
+    if (['dry', 'gravy', 'semi-gravy', 'both'].includes(p)) {
+      resolvedPreparationType = p
+    }
+  }
+
   const imageUrl = req.file ? await uploadImage(req.file, 'renza/dishes') : null
   const topViewImageUrl = req.topViewFile ? await uploadImage(req.topViewFile, 'renza/dishes') : null
 
@@ -438,6 +447,7 @@ const createFood = async (req, res) => {
       name: name.trim(),
       price: parsedPrice,
       portionPrices: cleanPortionPrices,
+      preparationType: resolvedPreparationType,
       imageUrl,
       topViewImageUrl,
       description: description?.trim() || null,
@@ -526,6 +536,20 @@ const updateFood = async (req, res) => {
       }
     }
     updateData.portionPrices = cleanPortionPrices
+  }
+
+  if (req.body.preparationType !== undefined || req.body.dishStyle !== undefined || req.body.dryGravy !== undefined) {
+    const rawPrep = req.body.preparationType ?? req.body.dishStyle ?? req.body.dryGravy
+    if (!rawPrep || rawPrep === '' || rawPrep === 'null' || rawPrep === 'none') {
+      updateData.preparationType = null
+    } else {
+      const p = String(rawPrep).trim().toLowerCase()
+      if (['dry', 'gravy', 'semi-gravy', 'both'].includes(p)) {
+        updateData.preparationType = p
+      } else {
+        updateData.preparationType = null
+      }
+    }
   }
 
   let parsedPrice = price !== undefined && price !== '' ? parseFloat(price) : NaN

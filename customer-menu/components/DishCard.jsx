@@ -37,6 +37,17 @@ export function DietaryTags({ item }) {
   if (item.isVegan) tags.push({ emoji: '🥗', label: 'Vegan' });
   if (item.isGlutenFree) tags.push({ emoji: '🌾', label: 'Gluten-Free' });
 
+  const prep = (item.preparationType || item.dishStyle || '').toLowerCase();
+  if (prep === 'dry') {
+    tags.push({ emoji: '🍗', label: 'Dry' });
+  } else if (prep === 'gravy') {
+    tags.push({ emoji: '🍲', label: 'Gravy' });
+  } else if (prep === 'semi-gravy') {
+    tags.push({ emoji: '🥘', label: 'Semi-Gravy' });
+  } else if (prep === 'both') {
+    tags.push({ emoji: '🔄', label: 'Dry & Gravy' });
+  }
+
   if (tags.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-1.5 pt-0.5">

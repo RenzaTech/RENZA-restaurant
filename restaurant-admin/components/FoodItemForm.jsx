@@ -95,7 +95,10 @@ export default function FoodItemForm({
         setPricingMode('portions');
       }
     }
-  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices]);
+    if (initialData.preparationType || initialData.dishStyle) {
+      setForm((f) => ({ ...f, preparationType: initialData.preparationType || initialData.dishStyle || '' }));
+    }
+  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices, initialData.preparationType, initialData.dishStyle]);
 
   const initialTags = Array.isArray(initialData.tags)
     ? initialData.tags
@@ -112,6 +115,7 @@ export default function FoodItemForm({
     name: initialData.name || '',
     price: initialData.price || '',
     foodType: initialFoodType,
+    preparationType: initialData.preparationType || initialData.dishStyle || '',
     description: initialData.description || '',
     categoryId: initialCategoryId,
     ingredients: initialData.ingredients || '',
@@ -467,6 +471,60 @@ export default function FoodItemForm({
                     <span className="text-sm">{emoji}</span>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Dish Style / Preparation: Dry vs Gravy */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Dish Style / Consistency
+                </Label>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Dry, Gravy, Semi-Gravy, etc.
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { value: '', label: 'Standard / N/A', icon: '🍽️', activeClass: 'border-slate-800 bg-slate-100 text-slate-900 shadow-xs' },
+                  { value: 'dry', label: 'Dry', icon: '🍗', activeClass: 'border-amber-500 bg-amber-50 text-amber-900 ring-2 ring-amber-500/20 shadow-xs' },
+                  { value: 'gravy', label: 'Gravy', icon: '🍲', activeClass: 'border-orange-500 bg-orange-50 text-orange-900 ring-2 ring-orange-500/20 shadow-xs' },
+                  { value: 'semi-gravy', label: 'Semi-Gravy', icon: '🥘', activeClass: 'border-teal-500 bg-teal-50 text-teal-900 ring-2 ring-teal-500/20 shadow-xs' },
+                ].map(({ value, label, icon, activeClass }) => {
+                  const isSelected = (form.preparationType || '') === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setDirect('preparationType', value)}
+                      className={cn(
+                        'py-2 px-2.5 rounded-xl border-2 font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
+                        isSelected
+                          ? activeClass
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
+                      )}
+                    >
+                      <span className="text-base leading-none">{icon}</span>
+                      <span className="truncate">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setDirect('preparationType', form.preparationType === 'both' ? '' : 'both')}
+                  className={cn(
+                    'w-full py-2 px-3 rounded-xl border-2 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer',
+                    form.preparationType === 'both'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-900 ring-2 ring-indigo-500/20 shadow-xs'
+                      : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50/50'
+                  )}
+                >
+                  <span>🔄</span>
+                  <span>Both Dry &amp; Gravy Available</span>
+                  <span className="text-[10px] font-normal text-slate-400 opacity-80">(Diner can choose when ordering)</span>
+                </button>
               </div>
             </div>
 
@@ -951,6 +1009,26 @@ export default function FoodItemForm({
                     {form.tags.includes('Gluten-Free') && (
                       <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
                         🌾 Gluten-Free
+                      </span>
+                    )}
+                    {form.preparationType === 'dry' && (
+                      <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                        🍗 Dry
+                      </span>
+                    )}
+                    {form.preparationType === 'gravy' && (
+                      <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-orange-50 text-orange-900 border border-orange-200">
+                        🍲 Gravy
+                      </span>
+                    )}
+                    {form.preparationType === 'semi-gravy' && (
+                      <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-teal-50 text-teal-900 border border-teal-200">
+                        🥘 Semi-Gravy
+                      </span>
+                    )}
+                    {form.preparationType === 'both' && (
+                      <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 text-[9px] font-bold bg-indigo-50 text-indigo-900 border border-indigo-200">
+                        🔄 Dry &amp; Gravy
                       </span>
                     )}
                   </div>

@@ -62,6 +62,7 @@ export default function DishSheet({
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState('dry');
   const [selectedPortionKey, setSelectedPortionKey] = useState(() => {
     return portions && portions.length > 0 ? portions[0].key : null;
   });
@@ -271,7 +272,55 @@ export default function DishSheet({
                 {Array.isArray(item.allergens) ? item.allergens.join(', ') : item.allergens}
               </DetailCard>
             )}
+            {item.preparationType && (
+              <DetailCard label="Style / Consistency">
+                {item.preparationType === 'dry' && '🍗 Dry (Crispy / Pan Tossed)'}
+                {item.preparationType === 'gravy' && '🍲 Gravy (Rich Curry / Sauce)'}
+                {item.preparationType === 'semi-gravy' && '🥘 Semi-Gravy (Thick Masala)'}
+                {item.preparationType === 'both' && '🔄 Available in Both Dry & Gravy'}
+              </DetailCard>
+            )}
           </div>
+
+          {/* Preparation Style Selector when both are available */}
+          {item.preparationType === 'both' && (
+            <div className="my-3 p-3 rounded-xl bg-[rgba(13,18,25,0.7)] border border-[rgba(200,167,93,0.3)] shadow-inner">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-sans font-bold tracking-wider uppercase text-[#d4b15d]">
+                  Select Preparation Style
+                </span>
+                <span className="text-[11px] text-slate-300 font-sans">
+                  Preference: <strong className="text-[#f0d68f]">{selectedStyle === 'dry' ? '🍗 Dry' : '🍲 Gravy'}</strong>
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedStyle('dry')}
+                  className={`py-2 px-3 rounded-lg text-center font-bold text-xs transition flex items-center justify-center gap-2 border cursor-pointer ${
+                    selectedStyle === 'dry'
+                      ? 'bg-[rgba(212,177,93,0.22)] border-[#d4b15d] text-[#faecc8] shadow-[0_0_12px_rgba(212,177,93,0.2)] ring-1 ring-[#d4b15d]/50'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
+                  }`}
+                >
+                  <span className="text-sm">🍗</span>
+                  <span>Dry</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStyle('gravy')}
+                  className={`py-2 px-3 rounded-lg text-center font-bold text-xs transition flex items-center justify-center gap-2 border cursor-pointer ${
+                    selectedStyle === 'gravy'
+                      ? 'bg-[rgba(212,177,93,0.22)] border-[#d4b15d] text-[#faecc8] shadow-[0_0_12px_rgba(212,177,93,0.2)] ring-1 ring-[#d4b15d]/50'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
+                  }`}
+                >
+                  <span className="text-sm">🍲</span>
+                  <span>Gravy</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Portion Pricing Selector (Quarter, Half, Full) */}
           {portions && portions.length > 0 && (

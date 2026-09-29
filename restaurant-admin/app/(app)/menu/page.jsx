@@ -177,11 +177,33 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
             <p className="text-slate-900 font-black text-sm sm:text-base">₹{item.price}</p>
           )}
 
-          {item.category?.name && (
-            <span className="inline-block text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md mt-1 truncate max-w-full">
-              {item.category.name}
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+            {item.category?.name && (
+              <span className="inline-block text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md truncate max-w-full">
+                {item.category.name}
+              </span>
+            )}
+            {item.preparationType === 'dry' && (
+              <span className="inline-flex items-center text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded-md">
+                🍗 Dry
+              </span>
+            )}
+            {item.preparationType === 'gravy' && (
+              <span className="inline-flex items-center text-[10px] font-bold bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded-md">
+                🍲 Gravy
+              </span>
+            )}
+            {item.preparationType === 'semi-gravy' && (
+              <span className="inline-flex items-center text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200 px-1.5 py-0.5 rounded-md">
+                🥘 Semi-Gravy
+              </span>
+            )}
+            {item.preparationType === 'both' && (
+              <span className="inline-flex items-center text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 px-1.5 py-0.5 rounded-md">
+                🔄 Dry &amp; Gravy
+              </span>
+            )}
+          </div>
 
           {item.description && (
             <p className="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">
