@@ -61,6 +61,8 @@ export default function MenuClient({ params }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedAngle, setSelectedAngle] = useState('front');
+  const [selectedPortionOption, setSelectedPortionOption] = useState(null);
+  const [selectedPrepOption, setSelectedPrepOption] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [activeFilters, setActiveFilters] = useState([]);
@@ -226,10 +228,12 @@ export default function MenuClient({ params }) {
     }
   };
 
-  const handleItemSelect = (item, triggerElement, angle = 'front') => {
+  const handleItemSelect = (item, triggerElement, angle = 'front', options = {}) => {
     triggerCardRef.current = triggerElement;
     setSelectedItem(item);
     setSelectedAngle(angle || 'front');
+    setSelectedPortionOption(options?.portionKey || null);
+    setSelectedPrepOption(options?.prepKey || null);
     const url = new URL(window.location.href);
     url.searchParams.set('dish', item.id || item._id);
     if (angle && angle !== 'front') {
@@ -243,6 +247,8 @@ export default function MenuClient({ params }) {
   const handleSheetClose = useCallback(() => {
     setSelectedItem(null);
     setSelectedAngle('front');
+    setSelectedPortionOption(null);
+    setSelectedPrepOption(null);
     const url = new URL(window.location.href);
     url.searchParams.delete('dish');
     url.searchParams.delete('angle');
@@ -444,6 +450,8 @@ export default function MenuClient({ params }) {
         <DishSheet
           item={selectedItem}
           initialAngle={selectedAngle}
+          initialPortion={selectedPortionOption}
+          initialPrep={selectedPrepOption}
           onClose={handleSheetClose}
           resolveImageUrl={resolveImageUrl}
         />

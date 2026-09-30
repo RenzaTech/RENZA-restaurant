@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { UtensilsCrossed, Share2, Check } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
 import { DietaryTags, parsePortions, parsePreparationPrices } from './DishCard';
@@ -33,37 +33,50 @@ function DetailCard({ label, children, warning = false }) {
 export default function DishSheet({
   item,
   initialAngle = 'front',
+  initialPortion = null,
+  initialPrep = null,
   onClose,
   resolveImageUrl,
 }) {
-  const portions = parsePortions(item);
-  const prepPrices = parsePreparationPrices(item);
+  const itemId = item?.id || item?._id || '';
+  const portionPricesStr = typeof item?.portionPrices === 'string' ? item.portionPrices : JSON.stringify(item?.portionPrices || null);
+  const prepPricesStr = typeof item?.preparationPrices === 'string' ? item.preparationPrices : JSON.stringify(item?.preparationPrices || null);
+  const prepType = item?.preparationType || '';
+
+  const portions = useMemo(() => parsePortions(item), [portionPricesStr]);
+  const prepPrices = useMemo(() => parsePreparationPrices(item), [prepPricesStr]);
   const [activeAngle, setActiveAngle] = useState(initialAngle || 'front');
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState(() => {
-    return prepPrices && prepPrices.length > 0 ? prepPrices[0].key : 'dry';
+    if (initialPrep) return initialPrep;
+    return prepPrices && prepPrices.length > 0 ? prepPrices[0].key : (prepType === 'gravy' ? 'gravy' : 'dry');
   });
   const [selectedPortionKey, setSelectedPortionKey] = useState(() => {
+    if (initialPortion) return initialPortion;
     return portions && portions.length > 0 ? portions[0].key : null;
   });
 
   useEffect(() => {
-    if (prepPrices && prepPrices.length > 0) {
+    if (initialPrep) {
+      setSelectedStyle(initialPrep);
+    } else if (prepPrices && prepPrices.length > 0) {
       setSelectedStyle(prepPrices[0].key);
     } else {
-      setSelectedStyle('dry');
+      setSelectedStyle(prepType === 'gravy' ? 'gravy' : 'dry');
     }
-  }, [item?.id, item?._id, item?.preparationPrices, prepPrices]);
+  }, [itemId, initialPrep, prepPrices, prepType]);
 
   useEffect(() => {
-    if (portions && portions.length > 0) {
+    if (initialPortion) {
+      setSelectedPortionKey(initialPortion);
+    } else if (portions && portions.length > 0) {
       setSelectedPortionKey(portions[0].key);
     } else {
       setSelectedPortionKey(null);
     }
-  }, [item?.id, item?._id, item?.portionPrices, portions]);
+  }, [itemId, initialPortion, portions]);
 
   useEffect(() => {
     setActiveAngle(initialAngle || 'front');
@@ -152,14 +165,21 @@ export default function DishSheet({
         aria-modal="true"
         aria-labelledby="dishModalTitle"
       >
-        <button
-          type="button"
-          className="modal-close"
-          onClick={onClose}
-          aria-label="Close modal"
-        >
-          &times;
-        </button>
+        {/* Top-Right Corner Controls: Veg/Non-Veg indicator cleanly aligned with close button */}
+        <div className="modal-top-actions">
+          <div
+            className={`type-dot ${isVeg ? 'veg' : 'nonveg'}`}
+            title={isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
+          />
+          <button
+            type="button"
+            className="modal-close"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            &times;
+          </button>
+        </div>
 
         {/* Hero Photo Wrap */}
         <div className="modal-hero-wrap">
@@ -217,7 +237,6 @@ export default function DishSheet({
         <div className="modal-body">
           <div className="modal-top-row">
             <span className="modal-cat-badge">{categoryName}</span>
-            <div className={`type-dot ${isVeg ? 'veg' : 'nonveg'} !relative !top-0 !right-0`} />
           </div>
 
           <h2 id="dishModalTitle" className="modal-name">
@@ -249,29 +268,39 @@ export default function DishSheet({
 
           {/* Deep Detail Cards (Ingredients, Allergens, Calories, Portion, Prep time) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-3">
-            {item.portionSize && (
+            {Boolean(item.portionSize) && (
               <DetailCard label="Portion Size">{item.portionSize}</DetailCard>
             )}
-            {item.prepTime && (
+            {Boolean(item.prepTime) && (
               <DetailCard label="Prep Time">{item.prepTime}</DetailCard>
             )}
-            {item.calories && (
+            {Boolean(item.calories && Number(item.calories) > 0) && (
               <DetailCard label="Calories">{item.calories} kcal</DetailCard>
             )}
-            {item.spices && (
+            {Boolean(item.spices) && (
               <DetailCard label="Key Spices">{item.spices}</DetailCard>
             )}
-            {item.ingredients && (
+            {Boolean(
+              item.ingredients &&
+                (Array.isArray(item.ingredients)
+                  ? item.ingredients.length > 0
+                  : String(item.ingredients).trim())
+            ) && (
               <DetailCard label="Ingredients">
                 {Array.isArray(item.ingredients) ? item.ingredients.join(', ') : item.ingredients}
               </DetailCard>
             )}
-            {item.allergens && (
+            {Boolean(
+              item.allergens &&
+                (Array.isArray(item.allergens)
+                  ? item.allergens.length > 0
+                  : String(item.allergens).trim())
+            ) && (
               <DetailCard label="Allergen Notice" warning>
                 {Array.isArray(item.allergens) ? item.allergens.join(', ') : item.allergens}
               </DetailCard>
             )}
-            {!prepPrices && item.preparationType && (
+            {!prepPrices && Boolean(item.preparationType) && (
               <DetailCard label="Style / Consistency">
                 {item.preparationType === 'dry' && '🍗 Dry (Crispy / Pan Tossed)'}
                 {item.preparationType === 'gravy' && '🍲 Gravy (Rich Curry / Sauce)'}
@@ -296,7 +325,7 @@ export default function DishSheet({
               </div>
               <div className={`grid gap-2 ${prepPrices.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {prepPrices.map((p) => {
-                  const isSelected = p.key === (activePrep?.key || selectedStyle);
+                  const isSelected = p.key === (selectedStyle || prepPrices[0]?.key);
                   return (
                     <button
                       key={p.key}
@@ -372,7 +401,7 @@ export default function DishSheet({
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {portions.map((p) => {
-                  const isSelected = p.key === (activePortion?.key || selectedPortionKey);
+                  const isSelected = p.key === (selectedPortionKey || portions[0]?.key);
                   return (
                     <button
                       key={p.key}

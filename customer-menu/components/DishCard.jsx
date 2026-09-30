@@ -151,8 +151,18 @@ const DishCard = forwardRef(function DishCard(
 
   const prepPrices = parsePreparationPrices(item);
   const portions = parsePortions(item);
+  const [selectedPortionKey, setSelectedPortionKey] = useState(null);
+  const [selectedPrepKey, setSelectedPrepKey] = useState(null);
+
+  const activePortion = portions?.find((p) => p.key === selectedPortionKey) || null;
+  const activePrep = prepPrices?.find((p) => p.key === selectedPrepKey) || null;
+
   let priceDisplay = '';
-  if (prepPrices && prepPrices.length > 0) {
+  if (activePortion) {
+    priceDisplay = `₹${activePortion.price.toFixed(0)}`;
+  } else if (activePrep) {
+    priceDisplay = `₹${activePrep.price.toFixed(0)}`;
+  } else if (prepPrices && prepPrices.length > 0) {
     const prices = prepPrices.map((p) => p.price);
     const minP = Math.min(...prices);
     const maxP = Math.max(...prices);
@@ -167,9 +177,12 @@ const DishCard = forwardRef(function DishCard(
     priceDisplay = `₹${priceNum.toFixed(0)}`;
   }
 
-  const handleCardClick = (e) => {
+  const handleCardClick = (e, options = {}) => {
     if (isUnavailable) return;
-    onSelect(item, ref?.current || e.currentTarget, activeAngle);
+    onSelect(item, ref?.current || e.currentTarget, activeAngle, {
+      portionKey: options.portionKey !== undefined ? options.portionKey : selectedPortionKey,
+      prepKey: options.prepKey !== undefined ? options.prepKey : selectedPrepKey,
+    });
   };
 
   return (
@@ -257,29 +270,57 @@ const DishCard = forwardRef(function DishCard(
         <div className="dish-price">{priceDisplay}</div>
 
         {prepPrices && prepPrices.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {prepPrices.map((p) => (
-              <span
-                key={p.key}
-                className="inline-flex items-center gap-1 text-[10px] font-sans font-semibold tracking-wider px-1.5 py-0.5 rounded bg-[rgba(212,177,93,0.12)] text-[#e8c879] border border-[rgba(212,177,93,0.25)]"
-              >
-                <span>{p.emoji}</span>
-                <span>{p.name}: ₹{p.price}</span>
-              </span>
-            ))}
+          <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
+            {prepPrices.map((p) => {
+              const isSelected = selectedPrepKey === p.key;
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const nextKey = isSelected ? null : p.key;
+                    setSelectedPrepKey(nextKey);
+                  }}
+                  className={`inline-flex items-center gap-1 text-[10px] font-sans tracking-wider px-2 py-0.5 rounded transition cursor-pointer border ${
+                    isSelected
+                      ? 'bg-[rgba(212,177,93,0.32)] border-[#d4b15d] text-[#faecc8] font-bold shadow-[0_0_8px_rgba(212,177,93,0.3)] ring-1 ring-[#d4b15d]/40'
+                      : 'bg-[rgba(212,177,93,0.12)] text-[#e8c879] border-[rgba(212,177,93,0.25)] hover:border-[#d4b15d]/60 hover:bg-[rgba(212,177,93,0.2)]'
+                  }`}
+                  title={`Select ${p.name} (₹${p.price})`}
+                >
+                  <span>{p.emoji}</span>
+                  <span>{p.name}: ₹{p.price}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
         {portions && portions.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {portions.map((p) => (
-              <span
-                key={p.key}
-                className="inline-flex items-center text-[10px] font-sans font-semibold tracking-wider px-1.5 py-0.5 rounded bg-[rgba(212,177,93,0.12)] text-[#e8c879] border border-[rgba(212,177,93,0.25)]"
-              >
-                {p.short}: ₹{p.price}
-              </span>
-            ))}
+          <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
+            {portions.map((p) => {
+              const isSelected = selectedPortionKey === p.key;
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const nextKey = isSelected ? null : p.key;
+                    setSelectedPortionKey(nextKey);
+                  }}
+                  className={`inline-flex items-center text-[10px] font-sans tracking-wider px-2 py-0.5 rounded transition cursor-pointer border ${
+                    isSelected
+                      ? 'bg-[rgba(212,177,93,0.32)] border-[#d4b15d] text-[#faecc8] font-bold shadow-[0_0_8px_rgba(212,177,93,0.3)] ring-1 ring-[#d4b15d]/40'
+                      : 'bg-[rgba(212,177,93,0.12)] text-[#e8c879] border-[rgba(212,177,93,0.25)] hover:border-[#d4b15d]/60 hover:bg-[rgba(212,177,93,0.2)]'
+                  }`}
+                  title={`Select ${p.name} (₹${p.price})`}
+                >
+                  {p.short}: ₹{p.price}
+                </button>
+              );
+            })}
           </div>
         )}
 

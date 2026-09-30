@@ -703,6 +703,16 @@ body {
   }
 }
 
+.modal-top-actions {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 520;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .modal-close {
   position: absolute;
   top: 14px;
@@ -724,6 +734,19 @@ body {
 }
 .modal-close:hover {
   transform: scale(1.1);
+}
+
+.modal-top-actions .modal-close {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
+.modal-top-actions .type-dot {
+  position: relative;
+  top: auto;
+  right: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .modal-hero-wrap {
