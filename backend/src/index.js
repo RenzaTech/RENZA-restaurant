@@ -31,17 +31,29 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3001')
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl) or matching origins or wildcard or any vercel.app domain
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true)
+
+      // Allow configured origins, wildcard, or vercel deployments
       if (
-        !origin ||
         allowedOrigins.includes('*') ||
         allowedOrigins.includes(origin) ||
         origin.endsWith('.vercel.app')
       ) {
-        callback(null, true)
-      } else {
-        callback(new Error(`CORS: Origin ${origin} not allowed`))
+        return callback(null, true)
       }
+
+      // Allow localhost, 127.0.0.1 on any port
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true)
+      }
+
+      // Allow private LAN IPv4 addresses (192.168.x.x, 10.x.x.x, 172.16-31.x.x) on any port for mobile/tablet testing
+      if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin)) {
+        return callback(null, true)
+      }
+
+      callback(new Error(`CORS: Origin ${origin} not allowed`))
     },
     credentials: true,
   })

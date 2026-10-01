@@ -28,11 +28,39 @@ const getMenu = async (req, res) => {
         },
       },
     })
+
+    // If exact slug match not found, check for prefix match or stripped suffix
+    if (!restaurant) {
+      restaurant = await prisma.restaurant.findFirst({
+        where: {
+          OR: [
+            { slug: { startsWith: `${slug}-` } },
+            { slug: slug.replace(/-[a-z0-9]{4}$/, '') },
+          ],
+        },
+        include: {
+          categories: {
+            orderBy: { sortOrder: 'asc' },
+          },
+          foodItems: {
+            include: {
+              category: { select: { id: true, name: true } },
+            },
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+          },
+        },
+      })
+    }
   } catch (dbErr) {
     console.warn('[Menu] Database offline or unreachable. Loading fallback json:', dbErr.message)
-    const fallbackFile = path.join(__dirname, '..', '..', 'data', `${slug}-menu.json`)
-    const defaultFile = path.join(__dirname, '..', '..', 'data', 'anbude-cafe-menu.json')
-    const targetFile = fs.existsSync(fallbackFile) ? fallbackFile : (fs.existsSync(defaultFile) ? defaultFile : null)
+    const candidates = [
+      path.join(__dirname, '..', '..', 'data', `${slug}-menu.json`),
+      path.join(__dirname, '..', '..', 'data', 'anbude-cafe-menu.json'),
+      path.join(__dirname, '..', '..', '..', 'data', `${slug}-menu.json`),
+      path.join(__dirname, '..', '..', '..', 'data', 'anbude-cafe-menu.json'),
+      path.join(__dirname, '..', '..', '..', 'customer-menu', 'data', 'anbude-cafe-menu.json'),
+    ]
+    const targetFile = candidates.find((f) => fs.existsSync(f))
     if (targetFile) {
       const fallbackData = JSON.parse(fs.readFileSync(targetFile, 'utf8'))
       return res.json(fallbackData)
@@ -41,6 +69,16 @@ const getMenu = async (req, res) => {
   }
 
   if (!restaurant) {
+    // If not found in DB, check if local fallback json exists for this slug or default
+    const candidates = [
+      path.join(__dirname, '..', '..', 'data', `${slug}-menu.json`),
+      path.join(__dirname, '..', '..', '..', 'data', `${slug}-menu.json`),
+    ]
+    const targetFile = candidates.find((f) => fs.existsSync(f))
+    if (targetFile) {
+      const fallbackData = JSON.parse(fs.readFileSync(targetFile, 'utf8'))
+      return res.json(fallbackData)
+    }
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 

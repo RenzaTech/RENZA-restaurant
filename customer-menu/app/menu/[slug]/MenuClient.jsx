@@ -13,18 +13,31 @@ import EmptyState from '../../../components/EmptyState';
 import RateUsModal from '../../../components/RateUsModal';
 import { SkeletonPage } from '../../../components/Skeletons';
 import SplashScreen from '../../../components/SplashScreen';
+import fallbackMenuData from '../../../data/anbude-cafe-menu.json';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+function getApiUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  if (typeof window === 'undefined') return envUrl;
+  const { hostname, protocol } = window.location;
+  if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    if (envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+      return `${protocol}//${hostname}:5000`;
+    }
+  }
+  return envUrl;
+}
+
 const FILTER_IDS = ['veg', 'non-veg', 'vegan', 'jain', 'gluten-free', 'available'];
 
 function resolveImageUrl(url) {
   if (!url) return null;
+  const apiUrl = getApiUrl();
   let resolved = url;
   if (typeof resolved === 'string' && (resolved.includes('localhost:5000') || resolved.includes('127.0.0.1:5000'))) {
-    resolved = resolved.replace(/https?:\/\/(localhost|127\.0\.0\.1):5000/, API_URL);
+    resolved = resolved.replace(/https?:\/\/(localhost|127\.0\.0\.1):5000/, apiUrl);
   }
   if (resolved.startsWith('http://') || resolved.startsWith('https://')) return resolved;
-  if (resolved.startsWith('/')) return `${API_URL}${resolved}`;
+  if (resolved.startsWith('/')) return `${apiUrl}${resolved}`;
   return resolved;
 }
 
@@ -111,12 +124,34 @@ export default function MenuClient({ params }) {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  const applyMenuData = useCallback((data) => {
+    setRestaurant(data.restaurant || data);
+    let items = data.foodItems || data.items || data.menuItems || [];
+    if (items.length === 0 && data.categories && Array.isArray(data.categories)) {
+      items = data.categories.flatMap((cat) =>
+        (cat.items || cat.foodItems || []).map((item) => ({
+          ...item,
+          categoryId: cat.id || cat._id,
+          categoryName: item.categoryName || cat.name,
+        }))
+      );
+    }
+    const groups = groupItemsByCategory(items, data.categories || []);
+    setCategoryGroups(groups);
+    setState('ready');
+  }, []);
+
   // Fetch menu
   const fetchMenu = useCallback(async () => {
     setState('loading');
+    const apiUrl = getApiUrl();
     try {
-      const res = await fetch(`${API_URL}/api/menu/${slug}`);
+      const res = await fetch(`${apiUrl}/api/menu/${slug}`);
       if (res.status === 404) {
+        if ((slug === 'anbude-cafe' || !slug) && fallbackMenuData) {
+          applyMenuData(fallbackMenuData);
+          return;
+        }
         setState('notfound');
         return;
       }
@@ -125,6 +160,10 @@ export default function MenuClient({ params }) {
         return;
       }
       if (!res.ok) {
+        if ((slug === 'anbude-cafe' || !slug) && fallbackMenuData) {
+          applyMenuData(fallbackMenuData);
+          return;
+        }
         setState('error');
         return;
       }
@@ -135,45 +174,16 @@ export default function MenuClient({ params }) {
         return;
       }
 
-      setRestaurant(data.restaurant || data);
-
-      let items = data.foodItems || data.items || data.menuItems || [];
-      if (items.length === 0 && data.categories && Array.isArray(data.categories)) {
-        items = data.categories.flatMap((cat) =>
-          (cat.items || cat.foodItems || []).map((item) => ({
-            ...item,
-            categoryId: cat.id || cat._id,
-            categoryName: item.categoryName || cat.name,
-          }))
-        );
-      }
-
-      const groups = groupItemsByCategory(items, data.categories || []);
-      setCategoryGroups(groups);
-      setState('ready');
+      applyMenuData(data);
     } catch (err) {
-      try {
-        const fallback = await import('../../../data/anbude-cafe-menu.json');
-        const data = fallback.default || fallback;
-        setRestaurant(data.restaurant || data);
-        let items = data.foodItems || data.items || data.menuItems || [];
-        if (items.length === 0 && data.categories && Array.isArray(data.categories)) {
-          items = data.categories.flatMap((cat) =>
-            (cat.items || cat.foodItems || []).map((item) => ({
-              ...item,
-              categoryId: cat.id || cat._id,
-              categoryName: item.categoryName || cat.name,
-            }))
-          );
-        }
-        const groups = groupItemsByCategory(items, data.categories || []);
-        setCategoryGroups(groups);
-        setState('ready');
-      } catch (fallbackErr) {
+      console.warn('[MenuClient] Error fetching menu from backend:', err?.message);
+      if ((slug === 'anbude-cafe' || !slug) && fallbackMenuData) {
+        applyMenuData(fallbackMenuData);
+      } else {
         setState('error');
       }
     }
-  }, [slug]);
+  }, [slug, applyMenuData]);
 
   useEffect(() => {
     fetchMenu();
