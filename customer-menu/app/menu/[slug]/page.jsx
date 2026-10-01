@@ -4,9 +4,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 function resolveImageUrl(url) {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/')) return `${API_URL}${url}`;
-  return url;
+  let resolved = url;
+  if (typeof resolved === 'string' && (resolved.includes('localhost:5000') || resolved.includes('127.0.0.1:5000'))) {
+    resolved = resolved.replace(/https?:\/\/(localhost|127\.0\.0\.1):5000/, API_URL);
+  }
+  if (resolved.startsWith('http://') || resolved.startsWith('https://')) return resolved;
+  if (resolved.startsWith('/')) return `${API_URL}${resolved}`;
+  return resolved;
 }
 
 export async function generateMetadata({ params }) {

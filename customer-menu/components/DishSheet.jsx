@@ -80,6 +80,8 @@ export default function DishSheet({
 
   useEffect(() => {
     setActiveAngle(initialAngle || 'front');
+    setFrontFailed(false);
+    setTopFailed(false);
   }, [item?.id, item?.name, initialAngle]);
 
   useEffect(() => {
@@ -98,16 +100,26 @@ export default function DishSheet({
     ? resolveImageUrl(item.topViewImageUrl || item.top_view_image_url)
     : (item.topViewImageUrl || item.top_view_image_url);
 
-  const hasFrontView = Boolean(frontImageUrl && !frontFailed);
-  const hasTopView = Boolean(topViewImageUrl && !topFailed);
+  const hasFrontView = Boolean(frontImageUrl);
+  const hasTopView = Boolean(topViewImageUrl);
   const hasBothViews = hasFrontView && hasTopView;
 
-  const currentImageUrl =
-    activeAngle === 'top'
-      ? hasTopView ? topViewImageUrl : frontImageUrl
-      : hasFrontView ? frontImageUrl : topViewImageUrl;
+  let currentImageUrl = null;
+  if (activeAngle === 'top') {
+    if (hasTopView && !topFailed) {
+      currentImageUrl = topViewImageUrl;
+    } else if (hasFrontView && !frontFailed) {
+      currentImageUrl = frontImageUrl;
+    }
+  } else {
+    if (hasFrontView && !frontFailed) {
+      currentImageUrl = frontImageUrl;
+    } else if (hasTopView && !topFailed) {
+      currentImageUrl = topViewImageUrl;
+    }
+  }
 
-  const hasAnyImage = Boolean(currentImageUrl && (activeAngle === 'top' ? !topFailed : !frontFailed));
+  const hasAnyImage = Boolean(currentImageUrl);
 
   let spiceLevel = 0;
   if (typeof item.spicyLevel === 'number') {
@@ -185,6 +197,7 @@ export default function DishSheet({
         <div className="modal-hero-wrap">
           {hasAnyImage ? (
             <Image
+              key={currentImageUrl}
               src={currentImageUrl}
               alt={item.name}
               fill
@@ -206,10 +219,19 @@ export default function DishSheet({
 
           {/* Dual Angle Switcher on Photo */}
           {hasBothViews && (
-            <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 rounded bg-black/85 p-1 border border-white/20 text-[10px]">
+            <div
+              className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 rounded bg-black/85 p-1 border border-white/20 text-[10px]"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
-                onClick={() => setActiveAngle('front')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFrontFailed(false);
+                  setActiveAngle('front');
+                }}
                 className={`px-2 py-0.5 rounded font-bold uppercase transition ${
                   activeAngle === 'front'
                     ? 'bg-amber-400 text-slate-950'
@@ -220,7 +242,11 @@ export default function DishSheet({
               </button>
               <button
                 type="button"
-                onClick={() => setActiveAngle('top')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTopFailed(false);
+                  setActiveAngle('top');
+                }}
                 className={`px-2 py-0.5 rounded font-bold uppercase transition ${
                   activeAngle === 'top'
                     ? 'bg-amber-400 text-slate-950'

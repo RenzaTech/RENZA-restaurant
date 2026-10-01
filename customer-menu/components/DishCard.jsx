@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useState, useEffect } from 'react';
 import { UtensilsCrossed } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
 
@@ -116,6 +116,11 @@ const DishCard = forwardRef(function DishCard(
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
 
+  useEffect(() => {
+    setFrontFailed(false);
+    setTopFailed(false);
+  }, [item?.id, item?.name, frontImageUrl, topViewImageUrl]);
+
   const isUnavailable = !item.isAvailable;
   const isVeg = item.isVeg !== false && item.foodType !== 'non-veg';
   const frontImageUrl = resolveImageUrl ? resolveImageUrl(item.imageUrl) : item.imageUrl;
@@ -123,16 +128,26 @@ const DishCard = forwardRef(function DishCard(
     ? resolveImageUrl(item.topViewImageUrl || item.top_view_image_url)
     : (item.topViewImageUrl || item.top_view_image_url);
 
-  const hasFrontView = Boolean(frontImageUrl && !frontFailed);
-  const hasTopView = Boolean(topViewImageUrl && !topFailed);
+  const hasFrontView = Boolean(frontImageUrl);
+  const hasTopView = Boolean(topViewImageUrl);
   const hasBothViews = hasFrontView && hasTopView;
 
-  const currentImageUrl =
-    activeAngle === 'top'
-      ? hasTopView ? topViewImageUrl : frontImageUrl
-      : hasFrontView ? frontImageUrl : topViewImageUrl;
+  let currentImageUrl = null;
+  if (activeAngle === 'top') {
+    if (hasTopView && !topFailed) {
+      currentImageUrl = topViewImageUrl;
+    } else if (hasFrontView && !frontFailed) {
+      currentImageUrl = frontImageUrl;
+    }
+  } else {
+    if (hasFrontView && !frontFailed) {
+      currentImageUrl = frontImageUrl;
+    } else if (hasTopView && !topFailed) {
+      currentImageUrl = topViewImageUrl;
+    }
+  }
 
-  const hasAnyImage = Boolean(currentImageUrl && (activeAngle === 'top' ? !topFailed : !frontFailed));
+  const hasAnyImage = Boolean(currentImageUrl);
   const initials =
     item.name
       ?.split(/\s+/)
@@ -238,10 +253,16 @@ const DishCard = forwardRef(function DishCard(
           <div
             className="absolute bottom-2 left-2 z-10 flex items-center gap-1 rounded bg-black/85 p-0.5 border border-white/20 text-[9px]"
             onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
           >
             <button
               type="button"
-              onClick={() => setActiveAngle('front')}
+              onClick={(e) => {
+                e.stopPropagation();
+                setFrontFailed(false);
+                setActiveAngle('front');
+              }}
               className={`px-1.5 py-0.5 rounded font-bold uppercase transition ${
                 activeAngle === 'front'
                   ? 'bg-amber-400 text-slate-950'
@@ -252,7 +273,11 @@ const DishCard = forwardRef(function DishCard(
             </button>
             <button
               type="button"
-              onClick={() => setActiveAngle('top')}
+              onClick={(e) => {
+                e.stopPropagation();
+                setTopFailed(false);
+                setActiveAngle('top');
+              }}
               className={`px-1.5 py-0.5 rounded font-bold uppercase transition ${
                 activeAngle === 'top'
                   ? 'bg-amber-400 text-slate-950'
