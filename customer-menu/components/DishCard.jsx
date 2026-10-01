@@ -116,17 +116,17 @@ const DishCard = forwardRef(function DishCard(
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
 
-  useEffect(() => {
-    setFrontFailed(false);
-    setTopFailed(false);
-  }, [item?.id, item?.name, frontImageUrl, topViewImageUrl]);
-
   const isUnavailable = !item.isAvailable;
   const isVeg = item.isVeg !== false && item.foodType !== 'non-veg';
   const frontImageUrl = resolveImageUrl ? resolveImageUrl(item.imageUrl) : item.imageUrl;
   const topViewImageUrl = resolveImageUrl
     ? resolveImageUrl(item.topViewImageUrl || item.top_view_image_url)
     : (item.topViewImageUrl || item.top_view_image_url);
+
+  useEffect(() => {
+    setFrontFailed(false);
+    setTopFailed(false);
+  }, [item?.id, item?.name, frontImageUrl, topViewImageUrl]);
 
   const hasFrontView = Boolean(frontImageUrl);
   const hasTopView = Boolean(topViewImageUrl);
