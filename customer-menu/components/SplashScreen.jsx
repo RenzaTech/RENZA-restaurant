@@ -178,7 +178,7 @@ export default function SplashScreen({
       {/* ── Bottom Branding & Hint ── */}
       <div className="relative z-10 w-full max-w-md px-6 pb-8 text-center flex flex-col items-center gap-1">
         <p className="text-[10px] tracking-[0.3em] uppercase text-white/30 font-medium">
-          POWERED BY SCANZAA
+          POWERED BY RENZA
         </p>
       </div>
 

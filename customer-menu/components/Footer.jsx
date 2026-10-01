@@ -19,7 +19,7 @@ export default function Footer({ restaurant }) {
     <footer className="renza-footer">
       <div>© {currentYear} {restaurant?.name || 'Restaurant Dining'}</div>
       <div className="renza-footer-branding">
-        Powered by Renza QR Platform
+        Powered by Renza
       </div>
       {renzaFeedbackUrl && (
         <div className="renza-footer-feedback">

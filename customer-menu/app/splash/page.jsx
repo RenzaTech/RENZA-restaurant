@@ -60,7 +60,7 @@ export default function SplashPage() {
             Anbu&apos;de Cafe
           </h1>
           <p className="text-xs text-white/50 tracking-wider">
-            Powered by SCANZAA • Scan Discover Dine
+            Powered by RENZA • Scan Discover Dine
           </p>
         </div>
 
