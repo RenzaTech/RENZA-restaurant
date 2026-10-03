@@ -6,9 +6,9 @@ const prisma = require('./lib/prisma')
 async function main() {
   console.log('?? Initializing Super Admin...\n')
 
-  const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'admin@renza.com').trim().toLowerCase()
-  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'AdminPassword2026!'
-  const superAdminName = process.env.SUPER_ADMIN_NAME || 'Super Admin'
+  const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || 'admin@scanzaa.gmail.com').trim().toLowerCase()
+  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'AdminScanzaa2026!@#'
+  const superAdminName = process.env.SUPER_ADMIN_NAME || 'Scanzaa Admin'
 
   const passwordHash = await bcrypt.hash(superAdminPassword, 12)
 

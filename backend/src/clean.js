@@ -47,9 +47,9 @@ async function cleanDatabase() {
     }
 
     // 7. Initialize fresh Super Admin from environment variables
-    const adminEmail = (process.env.SUPER_ADMIN_EMAIL || 'admin@renza.com').trim().toLowerCase()
-    const adminPassword = process.env.SUPER_ADMIN_PASSWORD || 'AdminPassword2026!'
-    const adminName = process.env.SUPER_ADMIN_NAME || 'Super Admin'
+    const adminEmail = (process.env.SUPER_ADMIN_EMAIL || 'admin@scanzaa.gmail.com').trim().toLowerCase()
+    const adminPassword = process.env.SUPER_ADMIN_PASSWORD || 'AdminScanzaa2026!@#'
+    const adminName = process.env.SUPER_ADMIN_NAME || 'Scanzaa Admin'
 
     // Remove any previous superadmin users to ensure clean slate
     await prisma.user.deleteMany({

@@ -120,9 +120,9 @@ function Sidebar({ onClose, user }) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-white truncate">
-              {user?.name === 'Renza Admin' ? 'Scanzaa Admin' : (user?.name || 'Scanzaa Admin')}
+              {user?.name || 'Scanzaa Admin'}
             </p>
-            <p className="text-[11px] text-slate-400 truncate">{user?.email || 'renzaa.technical@gmail.com'}</p>
+            <p className="text-[11px] text-slate-400 truncate">{user?.email || 'admin@scanzaa.gmail.com'}</p>
           </div>
         </div>
         <button

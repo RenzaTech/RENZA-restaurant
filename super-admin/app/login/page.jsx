@@ -220,7 +220,7 @@ export default function LoginPage() {
                     setEmail(e.target.value)
                     if (errorMessage) setErrorMessage('')
                   }}
-                  placeholder="admin@renza.com"
+                  placeholder="admin@scanzaa.gmail.com"
                   autoComplete="email"
                   required
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/25 transition-all shadow-inner"

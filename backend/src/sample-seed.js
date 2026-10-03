@@ -9,8 +9,8 @@ async function main() {
   console.log('🌱 Seeding database...\n')
 
   // ── 1. Superadmin ──────────────────────────────────────────────────────────
-  const superAdminEmail = 'admin@renza.com'
-  const superAdminPassword = 'renza2024'
+  const superAdminEmail = 'admin@scanzaa.gmail.com'
+  const superAdminPassword = 'AdminScanzaa2026!@#'
 
   const existingSuperAdmin = await prisma.user.findUnique({ where: { email: superAdminEmail } })
   let superAdmin
