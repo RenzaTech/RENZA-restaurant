@@ -290,7 +290,7 @@ export default function EmployeesPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Territories</p>
-            <p className="text-xl font-black text-slate-900 mt-0.5">{territories.length || 1}</p>
+            <p className="text-xl font-black text-slate-900 mt-0.5">{territories.length}</p>
           </div>
         </div>
 
