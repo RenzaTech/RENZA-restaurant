@@ -7,7 +7,7 @@ import {
   Download, Ellipsis, ExternalLink, Eye, EyeOff, Filter, ForkKnife, LayoutDashboard,
   LogOut, Menu, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck,
   ShoppingBag, SlidersHorizontal, Star, Store, UtensilsCrossed, Wallet, X,
-  TrendingUp, ChevronUp, Leaf, Flame, Timer, ImagePlus, Printer, RotateCcw, Trash2,
+  TrendingUp, ChevronUp, Leaf, Flame, Timer, ImagePlus, RotateCcw, Trash2,
   Pencil, Copy, ScanLine, BarChart3, CircleCheck, CircleX, CheckCircle2, Upload,
   BellRing, Lock, Mail, Sparkles, UserCheck, Briefcase, MapPin, Phone, FileText,
   Award, Target
@@ -74,7 +74,7 @@ const sectionPermission: Record<Section, string> = {
   onboard: 'restaurants.write',
 };
 
-function Logo({ compact = false, isSales = false }: { compact?: boolean; isSales?: boolean }) {
+function Logo({ compact = false }: { compact?: boolean; isSales?: boolean }) {
   if (compact) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -92,14 +92,14 @@ function Logo({ compact = false, isSales = false }: { compact?: boolean; isSales
             fontWeight: 800,
             padding: '2px 8px',
             borderRadius: 6,
-            background: isSales ? 'rgba(56,189,248,0.15)' : 'rgba(11,184,174,0.15)',
-            color: isSales ? '#38bdf8' : '#0bb8ae',
-            border: isSales ? '1px solid rgba(56,189,248,0.3)' : '1px solid rgba(11,184,174,0.3)',
+            background: 'rgba(56,189,248,0.15)',
+            color: '#38bdf8',
+            border: '1px solid rgba(56,189,248,0.3)',
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
           }}
         >
-          {isSales ? 'SALES' : 'SUPER ADMIN'}
+          SALES
         </span>
       </div>
       <p style={{ margin: 0, fontSize: 12, color: '#94a3b8', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -2371,7 +2371,6 @@ function QrModal({
   restaurantId: string; tableId: string; restaurant: string; table: string; token: string; status: string; close: () => void; notice: (m: string) => void;
 }) {
   const [data, setData] = useState('');
-  const [svg, setSvg] = useState('');
   const [currentToken, setCurrentToken] = useState(token);
   const [busy, setBusy] = useState(false);
   const customerBase = getCustomerMenuBaseUrl();
@@ -2383,33 +2382,18 @@ function QrModal({
 
   useEffect(() => {
     if (!url) return;
-    void Promise.all([
-      QRCode.toDataURL(url, { width: 300, margin: 2, color: { dark: '#0b1730', light: '#ffffff' } }).then(setData),
-      QRCode.toString(url, { type: 'svg', width: 300, margin: 2, color: { dark: '#0b1730', light: '#ffffff' } }).then(setSvg),
-    ]).catch(() => notice('Could not create this table QR'));
+    QRCode.toDataURL(url, { width: 320, margin: 2, color: { dark: '#0b1730', light: '#ffffff' } })
+      .then(setData)
+      .catch(() => notice('Could not create this table QR'));
   }, [url, notice]);
 
-  const download = (format: 'png' | 'svg') => {
-    const content = format === 'png' ? data : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-    if (!content) return;
-    const a = document.createElement('a');
-    a.href = content;
-    a.download = `scanzaa-${restaurant.replace(/\W+/g, '-')}-${table.replace(/\W+/g, '-')}.${format}`;
-    a.click();
-    notice(`QR downloaded as ${format.toUpperCase()}`);
-  };
-
-  const print = () => {
+  const download = () => {
     if (!data) return;
-    const w = window.open('', '_blank', 'width=520,height=640');
-    if (!w) {
-      notice('Allow pop-ups to print this QR');
-      return;
-    }
-    w.document.write(
-      `<html><head><title>Scanzaa · ${table}</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:40px;color:#102238}.card{border:1px solid #e6e9ed;border-radius:18px;padding:30px;display:inline-block}img{width:260px}.brand{font-weight:700;letter-spacing:3px;color:#0bb8ae}</style></head><body><div class="card"><div class="brand">SCANZAA · POWERED BY RENZA</div><h2>${restaurant}</h2><p style="font-size:18px;font-weight:700">${table}</p><img src="${data}"/><p>Scan to explore our live digital menu</p></div><script>window.print()</script></body></html>`
-    );
-    w.document.close();
+    const a = document.createElement('a');
+    a.href = data;
+    a.download = `scanzaa-${restaurant.replace(/\W+/g, '-')}-${table.replace(/\W+/g, '-')}.png`;
+    a.click();
+    notice('QR downloaded as PNG');
   };
 
   async function regenerate() {
@@ -2428,28 +2412,38 @@ function QrModal({
   return (
     <Modal title="QR Studio" subtitle={`High-resolution dining QR code for ${restaurant}.`} close={close}>
       <div className="qr-studio">
-        <div className="qr-brandline"><Logo /></div>
+        <div className="qr-brandline" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/scanzaa-icon.png" alt="Scanzaa" style={{ width: 22, height: 22, objectFit: 'contain' }} />
+            <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '0.03em', color: '#0f172a' }}>
+              SCANZ<span style={{ color: '#0bb8ae' }}>AA</span>
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>powered by</span>
+            <strong style={{ color: '#0f172a', fontWeight: 700 }}>Renza</strong>
+          </p>
+        </div>
         <div className="qr-code-wrap">
           {data ? <img src={data} alt={`QR code for ${restaurant}, ${table}`} /> : <span>Creating QR…</span>}
         </div>
-        <strong style={{ fontSize: 20 }}>{restaurant}</strong>
-        <span style={{ fontSize: 16 }}>{table}</span>
-        <span className={`status ${status === 'ACTIVE' ? 'status-active' : 'status-suspended'}`}><i />{status}</span>
-        <p style={{ fontSize: 14 }}>Scan with any mobile camera to launch the instant digital menu.</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+          <strong style={{ fontSize: 18, color: '#0f172a', fontWeight: 800 }}>{restaurant}</strong>
+          <span style={{ color: '#94a3b8' }}>•</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: '#334155' }}>{table}</span>
+          <span className={`status ${status === 'ACTIVE' ? 'status-active' : 'status-suspended'}`} style={{ marginLeft: 4 }}>
+            <i />{status}
+          </span>
+        </div>
+        <p style={{ fontSize: 13, color: '#64748b', margin: '8px 0 6px' }}>Scan with any mobile camera to launch the instant digital menu.</p>
         <div className="qr-dest" style={{ fontSize: 13 }}><QrCode size={16} />{url}</div>
       </div>
       <div className="modal-actions qr-actions">
         <button className="button secondary" disabled={busy} onClick={() => void regenerate()}>
           <RotateCcw size={16} />{busy ? 'Regenerating…' : 'Regenerate'}
         </button>
-        <button className="button secondary" disabled={!data} onClick={print}>
-          <Printer size={16} /> Print Standee
-        </button>
-        <Button kind="secondary" disabled={!svg} onClick={() => download('svg')} icon={<Download size={16} />}>
-          SVG
-        </Button>
-        <Button disabled={!data} onClick={() => download('png')} icon={<Download size={16} />}>
-          PNG
+        <Button disabled={!data} onClick={download} icon={<Download size={16} />}>
+          Download PNG
         </Button>
       </div>
     </Modal>

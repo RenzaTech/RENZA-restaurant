@@ -1937,24 +1937,41 @@ textarea:focus-visible {
 
 .qr-studio {
   text-align: center;
-  padding: 28px 24px;
+  padding: 16px 24px 8px;
 }
 
 .qr-code-wrap {
-  width: 280px;
-  height: 280px;
-  margin: 0 auto 20px;
+  width: 240px;
+  height: 240px;
+  margin: 0 auto 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 18px;
+  border-radius: 16px;
   display: grid;
   place-items: center;
   background: #ffffff;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .qr-code-wrap img {
-  width: 250px;
-  height: 250px;
+  width: 210px;
+  height: 210px;
+  object-fit: contain;
+}
+
+.qr-dest {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #475569;
+  font-family: monospace;
+  font-size: 12px;
+  word-break: break-all;
+  margin-top: 4px;
 }
 
 .qr-actions {
@@ -1962,7 +1979,7 @@ textarea:focus-visible {
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 20px;
+  padding: 14px 24px;
 }
 
 /* ==========================================================================
