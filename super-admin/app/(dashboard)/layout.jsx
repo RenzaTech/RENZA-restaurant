@@ -151,9 +151,14 @@ export default function DashboardLayout({ children }) {
       return
     }
 
-    // Verify session validity with backend. If email/password changed, 401 triggers clean logout
+    // Verify session validity with backend. If email/password changed or role is not superadmin, trigger clean logout
     api.get('/api/auth/me')
       .then((res) => {
+        if (res.data?.role !== 'superadmin') {
+          clearToken()
+          router.replace('/login')
+          return
+        }
         setAdminUser(res.data)
       })
       .catch(() => {

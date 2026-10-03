@@ -34,11 +34,14 @@ app.use(
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true)
 
-      // Allow configured origins, wildcard, or vercel deployments
+      // Allow configured origins, wildcard, vercel deployments, or scanzaa domain
       if (
         allowedOrigins.includes('*') ||
         allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app')
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.scanzaa.in') ||
+        origin === 'https://scanzaa.in' ||
+        origin === 'http://scanzaa.in'
       ) {
         return callback(null, true)
       }

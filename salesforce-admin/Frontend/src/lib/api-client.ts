@@ -4,10 +4,13 @@
  */
 
 export const getApiUrl = (): string => {
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) {
+  if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
   }
-  return process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') || 'http://localhost:5000';
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000';
+  }
+  return 'https://renza-restaurant.vercel.app';
 };
 
 const TOKEN_KEY = 'sales_auth_token';

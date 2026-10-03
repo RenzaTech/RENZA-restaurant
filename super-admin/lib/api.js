@@ -1,8 +1,18 @@
 import axios from 'axios'
 import { getToken, clearToken } from './auth'
 
+function getBaseUrl() {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '')
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000'
+  }
+  return 'https://renza-restaurant.vercel.app'
+}
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,11 +30,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response interceptor: handle 401 unauthorized
+// Response interceptor: handle 401 unauthorized & 403 forbidden
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       clearToken()
       // Do not redirect if already on login page or if the request is login itself
       const isLoginRequest = error.config?.url?.includes('/api/auth/login')
