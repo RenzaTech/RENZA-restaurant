@@ -114,8 +114,8 @@ const listRestaurants = async (_req, res) => {
         superAdminFeedbackUrl: r.superAdminFeedbackUrl,
         overrideFeedbackUrl: r.overrideFeedbackUrl,
         createdAt: r.createdAt,
-        salesExecutiveName: r.salesExecutiveName || 'Field Operations',
-        salesExecutiveCode: r.salesExecutiveCode || 'EMP-1042',
+        salesExecutiveName: r.salesExecutiveName || '—',
+        salesExecutiveCode: r.salesExecutiveCode || '—',
         salesExecutiveEmail: r.salesExecutiveEmail || '—',
         salesExecutivePhone: r.salesExecutivePhone || '',
         salesNotes: r.salesNotes || '',
@@ -212,9 +212,9 @@ const createRestaurant = async (req, res) => {
         superAdminFeedbackUrl: cleanSuperAdminFeedbackUrl,
         overrideFeedbackUrl: overrideFeedbackUrl === true || overrideFeedbackUrl === 'true',
         createdById: req.user ? req.user.id : null,
-        salesExecutiveName: req.user?.name || req.body.salesExecutiveName || 'Field Operations',
+        salesExecutiveName: req.user?.name || req.body.salesExecutiveName || null,
         salesExecutiveEmail: req.user?.email || req.body.salesExecutiveEmail || null,
-        salesExecutiveCode: req.user?.employeeId || req.body.salesExecutiveCode || 'EMP-1042',
+        salesExecutiveCode: req.user?.employeeId || req.body.salesExecutiveCode || null,
         salesExecutivePhone: req.user?.phone || req.body.salesExecutivePhone || null,
         salesNotes: salesNotes || req.body.salesNotes || null,
         leadSource: leadSource || req.body.leadSource || 'Field Visit',
@@ -682,6 +682,211 @@ const getTableQR = async (req, res) => {
   })
 }
 
+// ─── Employee / Sales Executive Management ────────────────────────────────────
+
+/**
+ * GET /api/admin/employees
+ * List all sales executives with onboarded restaurant counts
+ */
+const listEmployees = async (_req, res) => {
+  const employees = await prisma.user.findMany({
+    where: { role: 'sales_executive' },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      employeeId: true,
+      department: true,
+      territory: true,
+      phone: true,
+      createdAt: true,
+      _count: {
+        select: {
+          createdRestaurants: true,
+        },
+      },
+      createdRestaurants: {
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          status: true,
+          createdAt: true,
+        },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  })
+
+  const results = employees.map((e) => ({
+    id: e.id,
+    name: e.name,
+    email: e.email,
+    employeeId: e.employeeId || '—',
+    department: e.department || 'Sales',
+    territory: e.territory || 'Unassigned',
+    phone: e.phone || '',
+    onboardedCount: e._count?.createdRestaurants || 0,
+    recentRestaurants: e.createdRestaurants || [],
+    createdAt: e.createdAt,
+  }))
+
+  return res.json(results)
+}
+
+/**
+ * POST /api/admin/employees
+ * Super Admin creates a new Sales Executive account
+ */
+const createEmployee = async (req, res) => {
+  const { name, email, password, employeeId, territory, department, phone } = req.body
+
+  if (!name || !name.trim() || !email || !email.trim() || !password || !password.trim()) {
+    return res.status(400).json({ error: 'Name, email, and password are required' })
+  }
+
+  if (password.trim().length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' })
+  }
+
+  const emailLower = email.toLowerCase().trim()
+  const existingUser = await prisma.user.findUnique({
+    where: { email: emailLower },
+  })
+  if (existingUser) {
+    return res.status(409).json({ error: 'A user with this email address already exists' })
+  }
+
+  // Generate unique employee ID if not provided
+  let finalEmployeeId = employeeId?.trim()
+  if (!finalEmployeeId) {
+    const count = await prisma.user.count({ where: { role: 'sales_executive' } })
+    finalEmployeeId = `EMP-${1000 + count + 1}`
+  } else {
+    const existingId = await prisma.user.findUnique({
+      where: { employeeId: finalEmployeeId },
+    })
+    if (existingId) {
+      return res.status(409).json({ error: `Employee ID "${finalEmployeeId}" is already taken` })
+    }
+  }
+
+  const passwordHash = await bcrypt.hash(password.trim(), 12)
+
+  const newEmployee = await prisma.user.create({
+    data: {
+      name: name.trim(),
+      email: emailLower,
+      passwordHash,
+      role: 'sales_executive',
+      employeeId: finalEmployeeId,
+      department: department?.trim() || 'Sales',
+      territory: territory?.trim() || 'Unassigned',
+      phone: phone?.trim() || null,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      employeeId: true,
+      department: true,
+      territory: true,
+      phone: true,
+      createdAt: true,
+    },
+  })
+
+  return res.status(201).json({
+    success: true,
+    employee: newEmployee,
+    message: `Sales Executive ${newEmployee.name} (${newEmployee.employeeId}) created successfully`,
+  })
+}
+
+/**
+ * PUT /api/admin/employees/:id
+ * Super Admin updates employee credentials, territory, or resets password
+ */
+const updateEmployee = async (req, res) => {
+  const { id } = req.params
+  const { name, email, password, employeeId, territory, department, phone } = req.body
+
+  const employee = await prisma.user.findUnique({ where: { id } })
+  if (!employee || employee.role !== 'sales_executive') {
+    return res.status(404).json({ error: 'Sales Executive not found' })
+  }
+
+  const updateData = {}
+  if (name && name.trim()) updateData.name = name.trim()
+  if (territory !== undefined) updateData.territory = territory?.trim() || 'Unassigned'
+  if (department !== undefined) updateData.department = department?.trim() || 'Sales'
+  if (phone !== undefined) updateData.phone = phone?.trim() || null
+
+  if (email && email.toLowerCase().trim() !== employee.email) {
+    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } })
+    if (existing && existing.id !== id) {
+      return res.status(409).json({ error: 'Email is already used by another account' })
+    }
+    updateData.email = email.toLowerCase().trim()
+  }
+
+  if (employeeId && employeeId.trim() !== employee.employeeId) {
+    const existing = await prisma.user.findUnique({ where: { employeeId: employeeId.trim() } })
+    if (existing && existing.id !== id) {
+      return res.status(409).json({ error: 'Employee ID is already in use' })
+    }
+    updateData.employeeId = employeeId.trim()
+  }
+
+  if (password && password.trim()) {
+    if (password.trim().length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' })
+    }
+    updateData.passwordHash = await bcrypt.hash(password.trim(), 12)
+  }
+
+  const updated = await prisma.user.update({
+    where: { id },
+    data: updateData,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      employeeId: true,
+      department: true,
+      territory: true,
+      phone: true,
+      createdAt: true,
+    },
+  })
+
+  return res.json({
+    success: true,
+    employee: updated,
+    message: 'Employee credentials updated successfully',
+  })
+}
+
+/**
+ * DELETE /api/admin/employees/:id
+ * Super Admin deletes/revokes a sales executive account
+ */
+const deleteEmployee = async (req, res) => {
+  const { id } = req.params
+  const employee = await prisma.user.findUnique({ where: { id } })
+  if (!employee || employee.role !== 'sales_executive') {
+    return res.status(404).json({ error: 'Sales Executive not found' })
+  }
+
+  await prisma.user.delete({ where: { id } })
+  return res.json({
+    success: true,
+    message: `Sales Executive "${employee.name}" deleted successfully`,
+  })
+}
+
 module.exports = {
   listRestaurants,
   createRestaurant,
@@ -694,4 +899,8 @@ module.exports = {
   deleteRestaurant,
   listRestaurantTables,
   getTableQR,
+  listEmployees,
+  createEmployee,
+  updateEmployee,
+  deleteEmployee,
 }

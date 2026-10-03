@@ -19,5 +19,11 @@ router.get('/restaurants/:id/analytics', authenticate, requireSuperAdmin, adminC
 router.patch('/restaurants/:id/qr-url', authenticate, requireSuperAdmin, adminController.updateQRUrl)
 router.delete('/restaurants/:id', authenticate, requireSuperAdmin, adminController.deleteRestaurant)
 
+// ─── Super Admin Exclusive Employee Management Routes ─────────────────────────
+router.get('/employees', authenticate, requireSuperAdmin, adminController.listEmployees)
+router.post('/employees', authenticate, requireSuperAdmin, adminController.createEmployee)
+router.put('/employees/:id', authenticate, requireSuperAdmin, adminController.updateEmployee)
+router.delete('/employees/:id', authenticate, requireSuperAdmin, adminController.deleteEmployee)
+
 module.exports = router
 

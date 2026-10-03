@@ -16,6 +16,7 @@ import {
   Shield,
   Activity,
   ExternalLink,
+  UserCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,11 @@ const navItems = [
     href: '/restaurants',
     label: 'Restaurants & QRs',
     icon: Building2,
+  },
+  {
+    href: '/employees',
+    label: 'Sales Executives',
+    icon: UserCheck,
   },
   {
     href: '/reports',
@@ -169,6 +175,7 @@ export default function DashboardLayout({ children }) {
   }
 
   const getPageTitle = () => {
+    if (pathname.startsWith('/employees')) return 'Sales Executives & Field Team'
     if (pathname.startsWith('/reports')) return 'Restaurant Reports & Excel Exports'
     if (pathname.startsWith('/restaurants/new')) return 'Monitoring & Governance'
     if (pathname.includes('/edit')) return 'Edit Restaurant Profile'

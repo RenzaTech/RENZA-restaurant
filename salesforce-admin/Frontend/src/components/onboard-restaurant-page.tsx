@@ -258,7 +258,7 @@ export function OnboardRestaurantPage({
                     borderRadius: 6,
                   }}
                 >
-                  {currentAccess?.employeeId || 'EMP-DIR'}
+                  {currentAccess?.employeeId || '—'}
                 </span>
               </div>
               <span style={{ fontSize: 11, color: '#0d9488', fontWeight: 600 }}>
@@ -847,7 +847,7 @@ export function OnboardRestaurantPage({
                   fontFamily: 'monospace',
                 }}
               >
-                EMP ID: {currentAccess?.employeeId || 'EMP-DIR'}
+                EMP ID: {currentAccess?.employeeId || '—'}
               </span>
               <span
                 style={{
