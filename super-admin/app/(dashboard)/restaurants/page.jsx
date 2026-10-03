@@ -19,6 +19,8 @@ import {
   Filter,
   Trash2,
   FileSpreadsheet,
+  ShieldCheck,
+  UserCheck,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
@@ -52,7 +54,7 @@ function StatusBadge({ status }) {
 function TableRowSkeleton() {
   return (
     <tr>
-      {[...Array(8)].map((_, i) => (
+      {[...Array(9)].map((_, i) => (
         <td key={i} className="px-6 py-4">
           <div className="h-4 bg-slate-100 rounded-lg animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
         </td>
@@ -190,7 +192,9 @@ export default function RestaurantsPage() {
     const matchesSearch =
       r.name?.toLowerCase().includes(search.toLowerCase()) ||
       adminEmail.includes(search.toLowerCase()) ||
-      (r.cuisineType || r.cuisine_type || '').toLowerCase().includes(search.toLowerCase())
+      (r.cuisineType || r.cuisine_type || '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.salesExecutiveName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (r.salesExecutiveCode || '').toLowerCase().includes(search.toLowerCase())
 
     const matchesStatus =
       statusFilter === 'all' ? true : r.status === statusFilter
@@ -273,13 +277,13 @@ export default function RestaurantsPage() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <Link
-            href="/restaurants/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-orange-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Onboard Restaurant</span>
-          </Link>
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 text-teal-300 border border-slate-700/80 text-xs font-bold shadow-xs">
+            <ShieldCheck className="w-4 h-4 text-teal-400 flex-shrink-0" />
+            <div className="flex flex-col text-left">
+              <span className="text-[11px] text-white">Monitoring Mode</span>
+              <span className="text-[9px] font-normal text-slate-400">Sales Executive Onboarding Only</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -291,7 +295,7 @@ export default function RestaurantsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by restaurant name, cuisine, or admin email..."
+            placeholder="Search by restaurant, cuisine, executive name, employee ID, or admin email..."
             className="w-full pl-10 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-xs"
           />
         </div>
@@ -326,10 +330,11 @@ export default function RestaurantsPage() {
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-100">
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Restaurant Name</th>
+                <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Onboarded By</th>
+                <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Employee ID</th>
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Admin Email</th>
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
                 <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Dishes</th>
-                <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Today Scans</th>
                 <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Total Scans</th>
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Created</th>
                 <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
@@ -340,23 +345,18 @@ export default function RestaurantsPage() {
                 [...Array(6)].map((_, i) => <TableRowSkeleton key={i} />)
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 px-4">
+                  <td colSpan={9} className="text-center py-16 px-4">
                     <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p className="text-slate-800 font-bold text-base">
                       {search ? 'No restaurants match your search' : 'No restaurants registered yet'}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {search ? 'Try clearing or searching for something else' : 'Start onboarding partner restaurants today'}
+                    <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                      {search ? 'Try clearing or searching for something else' : 'Restaurants are added and onboarded exclusively by Sales Executives via the Sales Executive Portal.'}
                     </p>
-                    {!search && (
-                      <Link
-                        href="/restaurants/new"
-                        className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition-all shadow-sm"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Onboard Restaurant
-                      </Link>
-                    )}
+                    <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-teal-50 border border-teal-200/80 text-teal-800 text-xs font-semibold">
+                      <ShieldCheck className="w-4 h-4 text-teal-600" />
+                      <span>Onboarding is managed via Sales Executive Portal (localhost:3000)</span>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -379,6 +379,22 @@ export default function RestaurantsPage() {
                           </div>
                         </Link>
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-700 border border-teal-200/80 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            <UserCheck className="w-3.5 h-3.5 text-teal-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">{r.salesExecutiveName || 'Field Operations'}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{r.salesExecutiveTerritory || 'Field Sales'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60 shadow-2xs">
+                          {r.salesExecutiveCode || 'EMP-DIR'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-slate-600 text-xs font-medium">
                         {r.adminEmail || r.admin_email || r.adminUsers?.[0]?.email || '—'}
                       </td>
@@ -387,9 +403,6 @@ export default function RestaurantsPage() {
                       </td>
                       <td className="px-6 py-4 text-right text-slate-800 font-bold text-xs">
                         {formatNumber(r.foodItemsCount ?? r.food_items_count ?? r.foodItemCount ?? r._count?.foodItems ?? 0)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-slate-700 text-xs font-semibold">
-                        {formatNumber(r.todayScans ?? r.today_scans ?? r.analytics?.today?.qrScans ?? 0)}
                       </td>
                       <td className="px-6 py-4 text-right text-slate-700 text-xs font-semibold">
                         {formatNumber(r.totalScans ?? r.total_scans ?? r.analytics?.allTime?.qrScans ?? 0)}

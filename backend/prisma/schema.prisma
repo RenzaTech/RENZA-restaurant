@@ -10,6 +10,7 @@ datasource db {
 enum UserRole {
   superadmin
   restaurant_admin
+  sales_executive
 }
 
 enum RestaurantStatus {
@@ -25,40 +26,71 @@ enum EventType {
 }
 
 model User {
-  id           String      @id @default(cuid())
-  email        String      @unique
-  passwordHash String      @map("password_hash")
-  name         String
-  role         UserRole    @default(restaurant_admin)
-  restaurantId String?     @map("restaurant_id")
-  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
-  createdAt    DateTime    @default(now()) @map("created_at")
+  id                 String       @id @default(cuid())
+  email              String       @unique
+  passwordHash       String       @map("password_hash")
+  name               String
+  role               UserRole     @default(restaurant_admin)
+  restaurantId       String?      @map("restaurant_id")
+  restaurant         Restaurant?  @relation(fields: [restaurantId], references: [id])
+  employeeId         String?      @unique @map("employee_id")
+  department         String?      @default("Sales")
+  territory          String?
+  phone              String?
+  createdRestaurants Restaurant[] @relation("SalesAttribution")
+  createdAt          DateTime     @default(now()) @map("created_at")
 
   @@map("users")
 }
 
 model Restaurant {
-  id            String           @id @default(cuid())
-  name          String
-  slug          String           @unique
-  description   String?
-  cuisineType   String?          @map("cuisine_type")
-  logoUrl       String?          @map("logo_url")
-  address       String?
-  phone         String?
-  status        RestaurantStatus @default(setup)
-  customMenuUrl String?          @map("custom_menu_url")
-  googleReviewUrl String?        @map("google_review_url")
-  feedbackUrl           String?  @map("feedback_url")
-  superAdminFeedbackUrl String?  @map("super_admin_feedback_url")
-  overrideFeedbackUrl   Boolean  @default(false) @map("override_feedback_url")
-  adminUsers    User[]
-  categories    Category[]
-  foodItems     FoodItem[]
-  analytics     AnalyticsEvent[]
-  createdAt     DateTime         @default(now()) @map("created_at")
+  id                    String           @id @default(cuid())
+  name                  String
+  slug                  String           @unique
+  description           String?
+  cuisineType           String?          @map("cuisine_type")
+  logoUrl               String?          @map("logo_url")
+  address               String?
+  city                  String?
+  phone                 String?
+  status                RestaurantStatus @default(setup)
+  customMenuUrl         String?          @map("custom_menu_url")
+  googleReviewUrl       String?          @map("google_review_url")
+  feedbackUrl           String?          @map("feedback_url")
+  superAdminFeedbackUrl String?          @map("super_admin_feedback_url")
+  overrideFeedbackUrl   Boolean          @default(false) @map("override_feedback_url")
+
+  // Sales Executive Attribution
+  createdById           String?          @map("created_by_id")
+  createdBy             User?            @relation("SalesAttribution", fields: [createdById], references: [id])
+  salesExecutiveName    String?          @map("sales_executive_name")
+  salesExecutiveEmail   String?          @map("sales_executive_email")
+  salesExecutiveCode    String?          @map("sales_executive_code")
+  salesExecutivePhone   String?          @map("sales_executive_phone")
+  salesNotes            String?          @map("sales_notes")
+  leadSource            String?          @default("Field Visit") @map("lead_source")
+  onboardingSource      String?          @default("SALES_EXECUTIVE") @map("onboarding_source")
+  initialTableCount     Int              @default(5) @map("initial_table_count")
+
+  adminUsers            User[]
+  categories            Category[]
+  foodItems             FoodItem[]
+  tables                DiningTable[]
+  analytics             AnalyticsEvent[]
+  createdAt             DateTime         @default(now()) @map("created_at")
 
   @@map("restaurants")
+}
+
+model DiningTable {
+  id           String     @id @default(cuid())
+  restaurantId String     @map("restaurant_id")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  label        String
+  qrToken      String?    @unique @map("qr_token")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@map("dining_tables")
 }
 
 model Category {

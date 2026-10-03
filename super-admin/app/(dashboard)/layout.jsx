@@ -170,7 +170,7 @@ export default function DashboardLayout({ children }) {
 
   const getPageTitle = () => {
     if (pathname.startsWith('/reports')) return 'Restaurant Reports & Excel Exports'
-    if (pathname.startsWith('/restaurants/new')) return 'Onboard New Restaurant'
+    if (pathname.startsWith('/restaurants/new')) return 'Monitoring & Governance'
     if (pathname.includes('/edit')) return 'Edit Restaurant Profile'
     if (pathname.startsWith('/restaurants/')) return 'Restaurant & QR Analytics'
     if (pathname.startsWith('/restaurants')) return 'Partner Restaurants'

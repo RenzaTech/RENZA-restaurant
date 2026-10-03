@@ -33,6 +33,8 @@ import {
   FileSpreadsheet,
   MessageSquareText,
   Wrench,
+  UserCheck,
+  ShieldCheck,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatDate, formatNumber } from '@/lib/utils'
@@ -606,11 +608,60 @@ export default function RestaurantDetailPage() {
       {/* ── TAB 1: OVERVIEW & QR STUDIO ── */}
       {tab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Restaurant Details Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
-            <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100">
-              Restaurant Profile & Admin
-            </h2>
+          <div className="space-y-6">
+            {/* Sales Executive Attribution & Field Record Card */}
+            <div className="bg-white rounded-2xl border border-teal-200/90 p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-teal-100/80">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 border border-teal-200 flex items-center justify-center">
+                    <UserCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900 leading-none">
+                      Sales Executive Attribution
+                    </h2>
+                    <p className="text-[11px] text-teal-600 font-semibold mt-0.5">
+                      Field Onboarding & Verification Record
+                    </p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md font-mono text-xs font-black bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs">
+                  ID: {restaurant.salesExecutiveCode || 'EMP-DIR'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Onboarded By</p>
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">{restaurant.salesExecutiveName || 'Field Operations'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Employee Unique ID</p>
+                  <p className="text-xs font-mono font-bold text-blue-700 mt-0.5">{restaurant.salesExecutiveCode || 'EMP-DIR'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Executive Email</p>
+                  <p className="text-xs font-semibold text-slate-800 mt-0.5 truncate">{restaurant.salesExecutiveEmail || '—'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Territory / Source</p>
+                  <p className="text-xs font-semibold text-slate-800 mt-0.5">{restaurant.salesExecutiveTerritory || restaurant.leadSource || 'Field Visit'}</p>
+                </div>
+              </div>
+
+              {restaurant.salesNotes && (
+                <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/60">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Field Onboarding Notes</p>
+                  <p className="text-xs text-amber-900 mt-1 leading-relaxed">{restaurant.salesNotes}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Restaurant Details Card */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
+              <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100">
+                Restaurant Profile & Admin
+              </h2>
 
             <div className="space-y-4">
               {[
@@ -639,8 +690,9 @@ export default function RestaurantDetailPage() {
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Table QR Code Studio */}
+        {/* Table QR Code Studio */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">

@@ -34,12 +34,22 @@ const login = async (req, res) => {
     id: user.id,
     email: user.email,
     role: user.role,
+    employeeId: user.employeeId || null,
+    department: user.department || 'Sales',
+    territory: user.territory || null,
     restaurantId: user.restaurantId,
     name: user.name,
     pwh: user.passwordHash ? user.passwordHash.slice(-10) : undefined,
   }
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' })
+
+  const permissions =
+    user.role === 'sales_executive'
+      ? ['restaurants.read', 'restaurants.write']
+      : user.role === 'superadmin'
+      ? ['superadmin', 'restaurants.read']
+      : ['restaurant_admin']
 
   return res.json({
     token,
@@ -48,6 +58,10 @@ const login = async (req, res) => {
       email: user.email,
       name: user.name,
       role: user.role,
+      employeeId: user.employeeId || null,
+      department: user.department || 'Sales',
+      territory: user.territory || null,
+      permissions,
       restaurantId: user.restaurantId,
       restaurant: user.restaurant,
     },
@@ -72,11 +86,22 @@ const me = async (req, res) => {
     return res.status(404).json({ error: 'User not found' })
   }
 
+  const permissions =
+    user.role === 'sales_executive'
+      ? ['restaurants.read', 'restaurants.write']
+      : user.role === 'superadmin'
+      ? ['superadmin', 'restaurants.read']
+      : ['restaurant_admin']
+
   return res.json({
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
+    employeeId: user.employeeId || null,
+    department: user.department || 'Sales',
+    territory: user.territory || null,
+    permissions,
     restaurantId: user.restaurantId,
     restaurant: user.restaurant || null,
   })

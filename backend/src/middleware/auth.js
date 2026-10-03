@@ -25,6 +25,10 @@ const authenticate = async (req, res, next) => {
         restaurantId: true,
         name: true,
         passwordHash: true,
+        employeeId: true,
+        department: true,
+        territory: true,
+        phone: true,
       },
     })
 
@@ -59,6 +63,10 @@ const authenticate = async (req, res, next) => {
       role: user.role,
       restaurantId: user.restaurantId,
       name: user.name,
+      employeeId: user.employeeId,
+      department: user.department,
+      territory: user.territory,
+      phone: user.phone,
     }
     next()
   } catch (err) {
@@ -86,4 +94,24 @@ const requireRestaurantAdmin = (req, res, next) => {
   next()
 }
 
-module.exports = { authenticate, requireSuperAdmin, requireRestaurantAdmin }
+/**
+ * Middleware: Require sales_executive role
+ */
+const requireSalesExecutive = (req, res, next) => {
+  if (!req.user || req.user.role !== 'sales_executive') {
+    return res.status(403).json({ error: 'Sales executive access required' })
+  }
+  next()
+}
+
+/**
+ * Middleware: Require sales_executive OR superadmin role
+ */
+const requireSalesOrSuperAdmin = (req, res, next) => {
+  if (!req.user || (req.user.role !== 'sales_executive' && req.user.role !== 'superadmin')) {
+    return res.status(403).json({ error: 'Sales Executive or Super Admin access required' })
+  }
+  next()
+}
+
+module.exports = { authenticate, requireSuperAdmin, requireRestaurantAdmin, requireSalesExecutive, requireSalesOrSuperAdmin }

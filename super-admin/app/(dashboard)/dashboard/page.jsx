@@ -14,8 +14,9 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
-  ExternalLink,
   Trash2,
+  ShieldCheck,
+  UserCheck,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
@@ -193,13 +194,10 @@ export default function DashboardPage() {
               Refresh
             </button>
 
-            <Link
-              href="/restaurants/new"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-600 hover:from-orange-600 hover:to-teal-700 text-white text-xs font-bold transition-all shadow-md shadow-orange-500/20"
-            >
-              <Plus className="w-4 h-4" />
-              Onboard Restaurant
-            </Link>
+            <div className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800/90 border border-slate-700 text-teal-300 text-xs font-bold shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-teal-400" />
+              <span>Monitoring Mode Active</span>
+            </div>
           </div>
         </div>
 
@@ -278,12 +276,10 @@ export default function DashboardPage() {
             <p className="text-xs text-slate-400 mt-1 max-w-sm">
               Get started by creating your first restaurant tenant and generating their table QR code.
             </p>
-            <Link
-              href="/restaurants/new"
-              className="mt-4 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
-            >
-              + Onboard First Restaurant
-            </Link>
+            <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-teal-50 border border-teal-200/80 text-teal-800 text-xs font-semibold">
+              <ShieldCheck className="w-4 h-4 text-teal-600" />
+              <span>Restaurants are onboarded exclusively via the Sales Executive Portal</span>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -291,6 +287,8 @@ export default function DashboardPage() {
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100">
                   <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Restaurant</th>
+                  <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Onboarded By</th>
+                  <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Employee ID</th>
                   <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Admin Account</th>
                   <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
                   <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Dishes</th>
@@ -318,6 +316,22 @@ export default function DashboardPage() {
                             </p>
                           </div>
                         </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-700 border border-teal-200/80 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            <UserCheck className="w-3.5 h-3.5 text-teal-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">{r.salesExecutiveName || 'Field Operations'}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{r.salesExecutiveTerritory || 'Field Sales'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60 shadow-2xs">
+                          {r.salesExecutiveCode || 'EMP-DIR'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-slate-600 text-xs font-medium">
                         {r.adminEmail || r.admin_email || r.adminUsers?.[0]?.email || '—'}

@@ -108,11 +108,20 @@ const listRestaurants = async (_req, res) => {
         logoUrl: r.logoUrl,
         address: r.address,
         phone: r.phone,
+        city: r.city || '',
         status: r.status,
         feedbackUrl: r.feedbackUrl,
         superAdminFeedbackUrl: r.superAdminFeedbackUrl,
         overrideFeedbackUrl: r.overrideFeedbackUrl,
         createdAt: r.createdAt,
+        salesExecutiveName: r.salesExecutiveName || 'Field Operations',
+        salesExecutiveCode: r.salesExecutiveCode || 'EMP-1042',
+        salesExecutiveEmail: r.salesExecutiveEmail || '—',
+        salesExecutivePhone: r.salesExecutivePhone || '',
+        salesNotes: r.salesNotes || '',
+        leadSource: r.leadSource || 'Field Visit',
+        onboardingSource: r.onboardingSource || 'SALES_EXECUTIVE',
+        tableCount: r.initialTableCount || 5,
         adminUsers: r.adminUsers,
         adminEmail: r.adminUsers?.[0]?.email || null,
         adminName: r.adminUsers?.[0]?.name || null,
@@ -146,7 +155,7 @@ const listRestaurants = async (_req, res) => {
  * Create a new restaurant with its admin user
  */
 const createRestaurant = async (req, res) => {
-  const { name, description, cuisineType, address, phone, feedbackUrl, superAdminFeedbackUrl, overrideFeedbackUrl } = req.body
+  const { name, description, cuisineType, address, city, phone, feedbackUrl, superAdminFeedbackUrl, overrideFeedbackUrl, initialTableCount, salesNotes, leadSource } = req.body
   const adminName = (req.body.adminName || req.body.admin?.name || '').trim()
   const adminEmail = (req.body.adminEmail || req.body.admin?.email || '').trim()
   const adminPassword = req.body.adminPassword || req.body.admin?.password || ''
@@ -186,7 +195,9 @@ const createRestaurant = async (req, res) => {
   let cleanSuperAdminFeedbackUrl = superAdminFeedbackUrl?.trim() || null
   if (cleanSuperAdminFeedbackUrl && !/^https?:\/\//i.test(cleanSuperAdminFeedbackUrl)) cleanSuperAdminFeedbackUrl = `https://${cleanSuperAdminFeedbackUrl}`
 
-  // Create restaurant and admin in a transaction
+  const tableNum = Number(initialTableCount) || 5
+
+  // Create restaurant, dining tables, and admin in a transaction
   const result = await prisma.$transaction(async (tx) => {
     const restaurant = await tx.restaurant.create({
       data: {
@@ -195,10 +206,20 @@ const createRestaurant = async (req, res) => {
         description: description?.trim() || null,
         cuisineType: cuisineType?.trim() || null,
         address: address?.trim() || null,
+        city: city?.trim() || null,
         phone: phone?.trim() || null,
         feedbackUrl: cleanFeedbackUrl,
         superAdminFeedbackUrl: cleanSuperAdminFeedbackUrl,
         overrideFeedbackUrl: overrideFeedbackUrl === true || overrideFeedbackUrl === 'true',
+        createdById: req.user ? req.user.id : null,
+        salesExecutiveName: req.user?.name || req.body.salesExecutiveName || 'Field Operations',
+        salesExecutiveEmail: req.user?.email || req.body.salesExecutiveEmail || null,
+        salesExecutiveCode: req.user?.employeeId || req.body.salesExecutiveCode || 'EMP-1042',
+        salesExecutivePhone: req.user?.phone || req.body.salesExecutivePhone || null,
+        salesNotes: salesNotes || req.body.salesNotes || null,
+        leadSource: leadSource || req.body.leadSource || 'Field Visit',
+        onboardingSource: 'SALES_EXECUTIVE',
+        initialTableCount: tableNum,
       },
     })
 
@@ -212,6 +233,18 @@ const createRestaurant = async (req, res) => {
       },
     })
 
+    // Provision initial dining tables with QR tokens
+    for (let i = 1; i <= tableNum; i++) {
+      const label = `Table ${String(i).padStart(2, '0')}`
+      await tx.diningTable.create({
+        data: {
+          restaurantId: restaurant.id,
+          label,
+          qrToken: `${slug}-t${i}`,
+        },
+      })
+    }
+
     return { restaurant, adminUser }
   })
 
@@ -219,6 +252,8 @@ const createRestaurant = async (req, res) => {
     success: true,
     id: result.restaurant.id,
     restaurant: result.restaurant,
+    salesExecutiveName: result.restaurant.salesExecutiveName,
+    salesExecutiveCode: result.restaurant.salesExecutiveCode,
     adminUser: {
       id: result.adminUser.id,
       email: result.adminUser.email,
@@ -594,6 +629,59 @@ const deleteRestaurant = async (req, res) => {
   return res.json({ message: `Restaurant "${restaurant.name}" deleted successfully` })
 }
 
+/**
+ * GET /api/admin/restaurants/:id/tables
+ */
+const listRestaurantTables = async (req, res) => {
+  const tables = await prisma.diningTable.findMany({
+    where: { restaurantId: req.params.id },
+    orderBy: { label: 'asc' },
+  })
+  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const result = tables.map((t) => ({
+    id: t.id,
+    label: t.label,
+    qrCode: {
+      token: t.qrToken || t.id,
+      status: 'ACTIVE',
+      url: `${baseCustomerUrl}/menu/${t.qrToken || t.id}`,
+    },
+  }))
+  return res.json(result)
+}
+
+/**
+ * GET or POST /api/admin/restaurants/:id/tables/:tableId/qr
+ */
+const getTableQR = async (req, res) => {
+  const table = await prisma.diningTable.findUnique({
+    where: { id: req.params.tableId },
+    include: { restaurant: true },
+  })
+  if (!table) {
+    return res.status(404).json({ error: 'Table not found' })
+  }
+  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const url = `${baseCustomerUrl}/menu/${table.qrToken || table.id}`
+  const qrDataUrl = await QRCode.toDataURL(url, {
+    errorCorrectionLevel: 'H',
+    margin: 2,
+    width: 500,
+    color: { dark: '#000000', light: '#FFFFFF' },
+  })
+  return res.json({
+    qrCode: {
+      token: table.qrToken || table.id,
+      status: 'ACTIVE',
+      dataUrl: qrDataUrl,
+      url,
+    },
+    url,
+    table: { id: table.id, label: table.label, qrToken: table.qrToken },
+    restaurant: { id: table.restaurant.id, name: table.restaurant.name, slug: table.restaurant.slug },
+  })
+}
+
 module.exports = {
   listRestaurants,
   createRestaurant,
@@ -604,4 +692,6 @@ module.exports = {
   getQRCode,
   updateQRUrl,
   deleteRestaurant,
+  listRestaurantTables,
+  getTableQR,
 }
