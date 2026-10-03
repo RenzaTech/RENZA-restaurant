@@ -544,7 +544,7 @@ const getQRCode = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
   const menuUrl = req.query.url || restaurant.customMenuUrl || defaultUrl
 
@@ -585,7 +585,7 @@ const updateQRUrl = async (req, res) => {
     data: { customMenuUrl: customMenuUrl ? customMenuUrl.trim() : null },
   })
 
-  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const defaultUrl = `${baseCustomerUrl}/menu/${updated.slug}`
   const menuUrl = updated.customMenuUrl || defaultUrl
 
@@ -637,7 +637,7 @@ const listRestaurantTables = async (req, res) => {
     where: { restaurantId: req.params.id },
     orderBy: { label: 'asc' },
   })
-  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const result = tables.map((t) => ({
     id: t.id,
     label: t.label,
@@ -661,7 +661,7 @@ const getTableQR = async (req, res) => {
   if (!table) {
     return res.status(404).json({ error: 'Table not found' })
   }
-  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const url = `${baseCustomerUrl}/menu/${table.qrToken || table.id}`
   const qrDataUrl = await QRCode.toDataURL(url, {
     errorCorrectionLevel: 'H',

@@ -807,7 +807,7 @@ const getMyQRCode = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  const baseCustomerUrl = process.env.CUSTOMER_URL || 'http://localhost:3003'
+  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
   const menuUrl = req.query.url || restaurant.customMenuUrl || defaultUrl
 

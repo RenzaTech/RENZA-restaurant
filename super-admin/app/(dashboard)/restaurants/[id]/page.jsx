@@ -447,7 +447,7 @@ export default function RestaurantDetailPage() {
   const menuUrl =
     qrData?.menuUrl ||
     qrData?.menu_url ||
-    `${process.env.NEXT_PUBLIC_CUSTOMER_URL || 'http://localhost:3003'}/menu/${restaurant.slug || id}`
+    `${(process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${restaurant.slug || id}`
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">

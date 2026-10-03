@@ -139,8 +139,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
       qrToken: primaryTable?.qrCode?.token || null,
       menuUrl: primaryTable?.qrCode?.token
-        ? `http://localhost:3000/menu/${primaryTable.qrCode.token}`
-        : `http://localhost:3000/menu/${r.slug}`,
+        ? `${(process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${primaryTable.qrCode.token}`
+        : `${(process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${r.slug}`,
     };
 
     return NextResponse.json({

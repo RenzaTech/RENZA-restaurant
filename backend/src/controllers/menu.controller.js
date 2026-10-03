@@ -29,13 +29,41 @@ const getMenu = async (req, res) => {
       },
     })
 
-    // If exact slug match not found, check for prefix match or stripped suffix
+    // If not found by restaurant slug, check if this is a table QR token or table id
     if (!restaurant) {
+      const tableMatch = await prisma.diningTable.findFirst({
+        where: {
+          OR: [{ qrToken: slug }, { id: slug }],
+        },
+        include: {
+          restaurant: {
+            include: {
+              categories: {
+                orderBy: { sortOrder: 'asc' },
+              },
+              foodItems: {
+                include: {
+                  category: { select: { id: true, name: true } },
+                },
+                orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+              },
+            },
+          },
+        },
+      })
+      if (tableMatch?.restaurant) {
+        restaurant = tableMatch.restaurant
+      }
+    }
+
+    // If exact slug match not found, check for prefix match or stripped suffix (e.g. -t1, -t01)
+    if (!restaurant) {
+      const strippedSlug = slug.replace(/-t\d+$/i, '').replace(/-[a-z0-9]{4}$/, '')
       restaurant = await prisma.restaurant.findFirst({
         where: {
           OR: [
             { slug: { startsWith: `${slug}-` } },
-            { slug: slug.replace(/-[a-z0-9]{4}$/, '') },
+            { slug: strippedSlug },
           ],
         },
         include: {

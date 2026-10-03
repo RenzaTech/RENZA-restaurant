@@ -37,7 +37,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const primaryTable = r.tables.find((t) => t.qrCode?.token) || r.tables[0];
     const token = primaryTable?.qrCode?.token || r.slug;
-    const menuUrl = `http://localhost:3000/menu/${token}`;
+    const customerBase = (process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '');
+    const menuUrl = `${customerBase}/menu/${token}`;
 
     const qrDataUrl = await QRCode.toDataURL(menuUrl, {
       width: 320,

@@ -26,7 +26,7 @@ function formatDate(dateStr) {
  */
 export function exportRestaurantReport(restaurant, analytics = {}) {
   const wb = XLSX.utils.book_new();
-  const customerBaseUrl = process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://renza-restaurant.vercel.app';
+  const customerBaseUrl = (process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '');
   const menuUrl = restaurant.customMenuUrl || `${customerBaseUrl}/menu/${restaurant.slug}`;
   const nowStr = formatDate(new Date());
 

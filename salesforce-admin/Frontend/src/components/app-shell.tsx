@@ -2355,6 +2355,16 @@ function TableManagerModal({
   );
 }
 
+function getCustomerMenuBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_CUSTOMER_URL) {
+    return process.env.NEXT_PUBLIC_CUSTOMER_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:3003';
+  }
+  return 'https://customermenu.scanzaa.in';
+}
+
 function QrModal({
   restaurantId, tableId, restaurant, table, token, status, close, notice
 }: {
@@ -2364,7 +2374,8 @@ function QrModal({
   const [svg, setSvg] = useState('');
   const [currentToken, setCurrentToken] = useState(token);
   const [busy, setBusy] = useState(false);
-  const url = typeof window === 'undefined' ? '' : `${window.location.origin}/menu/${currentToken}`;
+  const customerBase = getCustomerMenuBaseUrl();
+  const url = `${customerBase}/menu/${currentToken}`;
 
   useEffect(() => {
     setCurrentToken(token);
