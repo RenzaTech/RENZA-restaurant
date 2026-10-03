@@ -880,7 +880,15 @@ const deleteEmployee = async (req, res) => {
     return res.status(404).json({ error: 'Sales Executive not found' })
   }
 
-  await prisma.user.delete({ where: { id } })
+  await prisma.$transaction(async (tx) => {
+    // Unlink any restaurants created by this employee so foreign key constraint doesn't fail
+    await tx.restaurant.updateMany({
+      where: { createdById: id },
+      data: { createdById: null },
+    })
+    await tx.user.delete({ where: { id } })
+  })
+
   return res.json({
     success: true,
     message: `Sales Executive "${employee.name}" deleted successfully`,
