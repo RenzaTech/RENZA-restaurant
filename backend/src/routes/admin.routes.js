@@ -9,12 +9,14 @@ router.post('/restaurants', authenticate, requireSalesOrSuperAdmin, adminControl
 router.get('/restaurants/:id', authenticate, requireSalesOrSuperAdmin, adminController.getRestaurant)
 router.get('/restaurants/:id/qr', authenticate, requireSalesOrSuperAdmin, adminController.getQRCode)
 router.get('/restaurants/:id/tables', authenticate, requireSalesOrSuperAdmin, adminController.listRestaurantTables)
+router.post('/restaurants/:id/tables', authenticate, requireSalesOrSuperAdmin, adminController.createRestaurantTable)
 router.get('/restaurants/:id/tables/:tableId/qr', authenticate, requireSalesOrSuperAdmin, adminController.getTableQR)
 router.post('/restaurants/:id/tables/:tableId/qr', authenticate, requireSalesOrSuperAdmin, adminController.getTableQR)
+router.put('/restaurants/:id', authenticate, requireSalesOrSuperAdmin, adminController.updateRestaurant)
 
 // ─── Super Admin Exclusive Governance & Management Routes ────────────────────
-router.put('/restaurants/:id', authenticate, requireSuperAdmin, adminController.updateRestaurant)
-router.patch('/restaurants/:id/status', authenticate, requireSuperAdmin, adminController.toggleStatus)
+
+router.patch('/restaurants/:id/status', authenticate, requireSalesOrSuperAdmin, adminController.toggleStatus)
 router.get('/restaurants/:id/analytics', authenticate, requireSuperAdmin, adminController.getAnalytics)
 router.patch('/restaurants/:id/qr-url', authenticate, requireSuperAdmin, adminController.updateQRUrl)
 router.delete('/restaurants/:id', authenticate, requireSuperAdmin, adminController.deleteRestaurant)

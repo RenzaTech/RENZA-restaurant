@@ -305,15 +305,27 @@ export function AppShell({ children }: { children: ReactNode }) {
     window.setTimeout(() => setToast(''), 3000);
   };
 
-  const isGlobalAdmin = currentAccess?.role === 'SUPER_ADMIN' || currentAccess?.role === 'COMPANY_ADMIN';
-  const isSalesExecutive = currentAccess?.role === 'SALES_EXECUTIVE';
+  const normalizedRole = (currentAccess?.role || '').toLowerCase();
+  const isGlobalAdmin = normalizedRole === 'super_admin' || normalizedRole === 'superadmin' || normalizedRole === 'company_admin';
+  const isSalesExecutive = normalizedRole === 'sales_executive' || (!isGlobalAdmin && Boolean(currentAccess));
+  const isSales = !isGlobalAdmin;
+
+  // Check if a restaurant belongs to the currently logged in sales executive
+  const isMyRestaurant = (r: Restaurant) => {
+    if (isGlobalAdmin) return true;
+    const matchesId = Boolean(currentAccess?.id && r.createdById === currentAccess.id);
+    const matchesCode = Boolean(currentAccess?.employeeId && r.salesExecutiveCode && r.salesExecutiveCode.toLowerCase() === currentAccess.employeeId.toLowerCase());
+    const matchesEmail = Boolean(currentAccess?.email && r.salesExecutiveEmail && r.salesExecutiveEmail.toLowerCase() === currentAccess.email.toLowerCase());
+    const matchesName = Boolean(currentAccess?.name && r.salesExecutiveName && r.salesExecutiveName.toLowerCase() === currentAccess.name.toLowerCase());
+    return matchesId || matchesCode || matchesEmail || matchesName;
+  };
 
   const canAccessSection = (target: Section) => {
     if (isGlobalAdmin) return true;
-    if (isSalesExecutive) {
+    if (isSalesExecutive || isSales) {
       return target === 'overview' || target === 'restaurants' || target === 'settings' || target === 'onboard';
     }
-    return Boolean(currentAccess?.permissions.includes(sectionPermission[target]));
+    return Boolean(currentAccess?.permissions?.includes(sectionPermission[target]));
   };
 
   const visibleNavItems = navItems.filter((item) => canAccessSection(item.id));
@@ -368,13 +380,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     setModal(m);
   };
 
-  // Filtered restaurants for table
+  // Filtered restaurants for table — strictly isolates restaurants for field sales executives
   const filteredRestaurants = useMemo(() => {
     return restaurants.filter((r) => {
+      // If sales executive, strictly filter out restaurants belonging to other employees
+      if (!isGlobalAdmin && !isMyRestaurant(r)) return false;
+
       // Tab filter: 'my' shows restaurants created by this user
-      if (restaurantTab === 'my' && currentAccess?.id) {
-        if (r.createdById && r.createdById !== currentAccess.id) return false;
-      }
+      if (restaurantTab === 'my' && !isMyRestaurant(r)) return false;
+
       // Executive filter for Super Admin
       if (selectedExecutiveFilter !== 'All') {
         if (r.salesExecutiveName !== selectedExecutiveFilter && r.salesExecutiveCode !== selectedExecutiveFilter) {
@@ -391,7 +405,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
       return true;
     });
-  }, [restaurants, restaurantTab, selectedExecutiveFilter, filter, search, currentAccess]);
+  }, [restaurants, restaurantTab, selectedExecutiveFilter, filter, search, currentAccess, isGlobalAdmin]);
 
   const nav = (s: Section) => {
     if (!canAccessSection(s)) {
@@ -413,12 +427,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
     const action = restaurant.status === 'Active' ? 'suspend' : 'activate';
     try {
-      const response = await fetch(`/api/restaurants/${restaurant.id}/${action}`, { method: 'POST' });
-      if (!response.ok) throw new Error();
+      await salesFetch(`/api/admin/restaurants/${restaurant.id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: action === 'suspend' ? 'suspended' : 'active' }),
+      });
       setRestaurants((v) => v.map((r, n) => (n === i ? { ...r, status: action === 'suspend' ? 'Suspended' : 'Active' } : r)));
       notice(`Restaurant marked as ${action === 'suspend' ? 'Suspended' : 'Active'}`);
-    } catch {
-      notice('Could not update restaurant status');
+    } catch (err: any) {
+      notice(err.message || 'Could not update restaurant status');
     }
   };
 
@@ -522,33 +538,35 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(existing?.id ? `/api/restaurants/${existing.id}` : '/api/restaurants', {
-        method: existing?.id ? 'PATCH' : 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        notice(error.error || 'Could not save restaurant');
-        return;
-      }
-      const data = await response.json();
+      const data = await salesFetch(
+        existing?.id ? `/api/admin/restaurants/${existing.id}` : '/api/admin/restaurants',
+        {
+          method: existing?.id ? 'PUT' : 'POST',
+          body: JSON.stringify({
+            ...payload,
+            salesExecutiveName: currentAccess?.name,
+            salesExecutiveEmail: currentAccess?.email,
+            salesExecutiveCode: currentAccess?.employeeId,
+          }),
+        }
+      );
+      const resData = data.restaurant || data;
       const r: Restaurant = {
-        id: data.id,
-        name: data.name,
-        cuisine: Array.isArray(data.cuisine) ? data.cuisine.join(' · ') : (data.cuisine || 'Cuisine to be added'),
-        email: data.email || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        status: data.status === 'ACTIVE' ? 'Active' : 'Suspended',
+        id: resData.id,
+        name: resData.name,
+        cuisine: Array.isArray(resData.cuisine) ? resData.cuisine.join(' · ') : (resData.cuisineType || resData.cuisine || 'Cuisine to be added'),
+        email: form.adminEmail || resData.email || '',
+        phone: resData.phone || form.phone || '',
+        address: resData.address || form.address || '',
+        status: resData.status === 'ACTIVE' || resData.status === 'active' ? 'Active' : 'Suspended',
         dishes: 0,
         today: 0,
         total: 0,
-        tableCount: data._count?.tables || data.tableCount || Number(form.initialTableCount || 0),
-        city: data.city || '—',
-        initial: data.name.split(/\s+/).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase(),
+        tableCount: data.tableCount || resData.initialTableCount || Number(form.initialTableCount || 5),
+        city: resData.city || form.city || '—',
+        initial: (resData.name || 'R').split(/\s+/).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase(),
         color: '#e4f2e9',
-        rating: '—',
+        rating: '5.0',
         createdById: currentAccess?.id,
         salesExecutiveName: currentAccess?.name || '',
         salesExecutiveCode: currentAccess?.employeeId || '',
@@ -560,8 +578,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       setRestaurants((v) => (existing ? v.map((x, i) => (i === editRestaurant ? r : x)) : [r, ...v]));
       if (!restaurantId || editRestaurant === null) {
-        setRestaurantId(data.id);
-        setSelectedRestaurant(data.name);
+        setRestaurantId(r.id || '');
+        setSelectedRestaurant(r.name || '');
       }
       setModal(null);
       notice(
@@ -569,8 +587,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           ? `🎉 Restaurant onboarded successfully with ${r.tableCount} Table QRs!`
           : 'Restaurant details updated'
       );
-    } catch {
-      notice('Could not connect to restaurant service');
+    } catch (err: any) {
+      notice(err.message || 'Could not connect to restaurant service');
     } finally {
       setIsSubmitting(false);
     }
@@ -1446,7 +1464,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* TABLE MANAGER MODAL */}
       {modal === 'table' && (
         <TableManagerModal
-          restaurants={restaurants}
+          restaurants={isGlobalAdmin ? restaurants : restaurants.filter(isMyRestaurant)}
           restaurantId={restaurantId}
           restaurant={selectedRestaurant}
           onRestaurantChange={(id) => {
@@ -1510,12 +1528,24 @@ function Overview({
   notice: (s: string) => void;
   openOnboard: () => void;
 }) {
-  const isSales = currentAccess?.role === 'SALES_EXECUTIVE';
+  const normalizedRole = (currentAccess?.role || '').toLowerCase();
+  const isGlobalAdmin = normalizedRole === 'super_admin' || normalizedRole === 'superadmin' || normalizedRole === 'company_admin';
+  const isSales = !isGlobalAdmin;
+
+  // Filter only restaurants onboarded by this sales executive (or all if super admin)
+  const isMyRestaurant = (r: Restaurant) => {
+    if (isGlobalAdmin) return true;
+    const matchesId = Boolean(currentAccess?.id && r.createdById === currentAccess.id);
+    const matchesCode = Boolean(currentAccess?.employeeId && r.salesExecutiveCode && r.salesExecutiveCode.toLowerCase() === currentAccess.employeeId.toLowerCase());
+    const matchesEmail = Boolean(currentAccess?.email && r.salesExecutiveEmail && r.salesExecutiveEmail.toLowerCase() === currentAccess.email.toLowerCase());
+    const matchesName = Boolean(currentAccess?.name && r.salesExecutiveName && r.salesExecutiveName.toLowerCase() === currentAccess.name.toLowerCase());
+    return matchesId || matchesCode || matchesEmail || matchesName;
+  };
 
   // Metrics calculation directly from live data
   const myRestaurants = useMemo(
-    () => restaurants.filter((r) => r.createdById === currentAccess?.id || (currentAccess?.employeeId && r.salesExecutiveCode === currentAccess?.employeeId)),
-    [restaurants, currentAccess]
+    () => restaurants.filter(isMyRestaurant),
+    [restaurants, currentAccess, isGlobalAdmin]
   );
 
   const displayList = isSales ? myRestaurants : restaurants;
@@ -1856,18 +1886,30 @@ function RestaurantsPage({
   notice: (s: string) => void;
   canWrite: boolean;
 }) {
-  const isGlobalAdmin = currentAccess?.role === 'SUPER_ADMIN' || currentAccess?.role === 'COMPANY_ADMIN';
-  const myCount = all.filter((r) => r.createdById === currentAccess?.id || r.salesExecutiveCode === currentAccess?.employeeId).length;
+  const normalizedRole = (currentAccess?.role || '').toLowerCase();
+  const isGlobalAdmin = normalizedRole === 'super_admin' || normalizedRole === 'superadmin' || normalizedRole === 'company_admin';
 
-  // Unique list of sales executives from the dataset
+  const isMyRestaurant = (r: Restaurant) => {
+    if (isGlobalAdmin) return true;
+    const matchesId = Boolean(currentAccess?.id && r.createdById === currentAccess.id);
+    const matchesCode = Boolean(currentAccess?.employeeId && r.salesExecutiveCode && r.salesExecutiveCode.toLowerCase() === currentAccess.employeeId.toLowerCase());
+    const matchesEmail = Boolean(currentAccess?.email && r.salesExecutiveEmail && r.salesExecutiveEmail.toLowerCase() === currentAccess.email.toLowerCase());
+    const matchesName = Boolean(currentAccess?.name && r.salesExecutiveName && r.salesExecutiveName.toLowerCase() === currentAccess.name.toLowerCase());
+    return matchesId || matchesCode || matchesEmail || matchesName;
+  };
+
+  const myRestaurants = all.filter(isMyRestaurant);
+  const myCount = myRestaurants.length;
+
+  // Unique list of sales executives from the dataset (for Super Admin filter)
   const executivesList = Array.from(new Set(all.map((r) => r.salesExecutiveName).filter(Boolean)));
 
   return (
     <>
       <PageHeading
-        eyebrow="FIELD ONBOARDING DIRECTORY"
+        eyebrow={isGlobalAdmin ? 'GLOBAL ONBOARDING DIRECTORY' : 'MY FIELD ONBOARDING DIRECTORY'}
         title="Restaurants & Table QRs"
-        description="Monitor partner restaurants, owner credentials, and employee attribution."
+        description={isGlobalAdmin ? 'Monitor partner restaurants, owner credentials, and employee attribution.' : 'Manage all dining partner restaurants onboarded under your employee credentials.'}
         actions={
           <>
             <button className="button secondary refresh-button" onClick={() => notice('Restaurant list refreshed')}>
@@ -1892,26 +1934,26 @@ function RestaurantsPage({
         <div>
           <span className="strip-icon teal"><Building2 size={20} /></span>
           <div>
-            <strong>{all.length}</strong>
-            <small>Total Partners</small>
+            <strong>{isGlobalAdmin ? all.length : myCount}</strong>
+            <small>{isGlobalAdmin ? 'Total Partners' : 'My Onboarded Restaurants'}</small>
           </div>
         </div>
         <div>
           <span className="strip-icon green"><CircleCheck size={20} /></span>
           <div>
-            <strong>{all.filter((r) => r.status === 'Active').length}</strong>
+            <strong>{(isGlobalAdmin ? all : myRestaurants).filter((r) => r.status === 'Active').length}</strong>
             <small>Active Partners</small>
           </div>
         </div>
         <div>
           <span className="strip-icon amber"><Award size={20} /></span>
           <div>
-            <strong>{myCount}</strong>
-            <small>Onboarded by Me</small>
+            <strong>{(isGlobalAdmin ? all : myRestaurants).reduce((sum, r) => sum + (r.tableCount ?? 0), 0)}</strong>
+            <small>{isGlobalAdmin ? 'Table QRs Total' : 'Table QRs Provisioned'}</small>
           </div>
         </div>
         <div className="strip-right">
-          <span className="live-pill"><i /> SUPER ADMIN SYNCED</span>
+          <span className="live-pill"><i /> {isGlobalAdmin ? 'SUPER ADMIN SYNCED' : 'PERSONAL ATTRIBUTION'}</span>
         </div>
       </div>
 
@@ -1920,30 +1962,32 @@ function RestaurantsPage({
         <div className="directory-title">
           <div>
             <h2>
-              {restaurantTab === 'my' ? 'My Onboarded Restaurants' : 'All Platform Restaurants'}{' '}
+              {isGlobalAdmin ? (restaurantTab === 'my' ? 'My Onboarded Restaurants' : 'All Platform Restaurants') : 'My Onboarded Restaurants'}{' '}
               <span>{restaurants.length}</span>
             </h2>
-            <p>Every restaurant is verified and linked to its onboarding employee.</p>
+            <p>{isGlobalAdmin ? 'Every restaurant is verified and linked to its onboarding employee.' : 'All restaurants registered by your account with active digital menu QR codes.'}</p>
           </div>
 
           <div className="directory-actions">
-            {/* View Tabs */}
-            <div className="sales-tab-bar">
-              <button
-                type="button"
-                className={`sales-tab-btn ${restaurantTab === 'my' ? 'active' : ''}`}
-                onClick={() => setRestaurantTab('my')}
-              >
-                <Briefcase size={16} /> My Onboardings ({myCount})
-              </button>
-              <button
-                type="button"
-                className={`sales-tab-btn ${restaurantTab === 'all' ? 'active' : ''}`}
-                onClick={() => setRestaurantTab('all')}
-              >
-                <Store size={16} /> All Team Onboardings ({all.length})
-              </button>
-            </div>
+            {/* View Tabs - only shown to Super Admin */}
+            {isGlobalAdmin && (
+              <div className="sales-tab-bar">
+                <button
+                  type="button"
+                  className={`sales-tab-btn ${restaurantTab === 'my' ? 'active' : ''}`}
+                  onClick={() => setRestaurantTab('my')}
+                >
+                  <Briefcase size={16} /> My Onboardings ({myCount})
+                </button>
+                <button
+                  type="button"
+                  className={`sales-tab-btn ${restaurantTab === 'all' ? 'active' : ''}`}
+                  onClick={() => setRestaurantTab('all')}
+                >
+                  <Store size={16} /> All Team Onboardings ({all.length})
+                </button>
+              </div>
+            )}
 
             <button className="button secondary" onClick={() => exportCsv('restaurants')}>
               <Download size={16} /> Export
@@ -2248,9 +2292,8 @@ function TableManagerModal({
       return;
     }
     try {
-      const response = await fetch(`/api/restaurants/${restaurantId}/tables`);
-      if (!response.ok) throw new Error('Could not load tables');
-      setTables(await response.json());
+      const data = await salesFetch<ManagedTable[]>(`/api/admin/restaurants/${restaurantId}/tables`);
+      setTables(data || []);
       setError('');
     } catch {
       setError('Could not load tables. Please retry.');
@@ -2275,13 +2318,10 @@ function TableManagerModal({
         const label = `Table ${String(number).padStart(2, '0')}`;
         number++;
         if (labels.has(label.toLowerCase())) continue;
-        const response = await fetch(`/api/restaurants/${restaurantId}/tables`, {
+        const table = await salesFetch<ManagedTable>(`/api/admin/restaurants/${restaurantId}/tables`, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ label }),
         });
-        if (!response.ok) throw new Error('Could not create table and QR');
-        const table = (await response.json()) as ManagedTable;
         labels.add(label.toLowerCase());
         setTables((current) => [...current, table]);
         created++;

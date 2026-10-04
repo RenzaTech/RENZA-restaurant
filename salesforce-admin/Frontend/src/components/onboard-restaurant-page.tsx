@@ -118,6 +118,10 @@ export function OnboardRestaurantPage({
         initialTableCount: Number(form.initialTableCount || 5),
         salesNotes: form.salesNotes.trim() || undefined,
         leadSource: form.leadSource || 'Field Visit',
+        salesExecutiveName: currentAccess?.name,
+        salesExecutiveEmail: currentAccess?.email,
+        salesExecutiveCode: currentAccess?.employeeId,
+        salesExecutivePhone: (currentAccess as any)?.phone || form.phone,
       };
 
       const res = await salesFetch('/api/admin/restaurants', {

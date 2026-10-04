@@ -60,17 +60,39 @@ const monthStart = () => {
 
 /**
  * GET /api/admin/restaurants
- * List all restaurants with admin info, food counts, analytics summary
+ * List restaurants with admin info, food counts, analytics summary.
+ * If requested by a Sales Executive, only their onboarded restaurants are returned.
  */
-const listRestaurants = async (_req, res) => {
+const listRestaurants = async (req, res) => {
+  const where = {}
+
+  // If requester is a sales executive, strictly filter to their onboarded restaurants
+  if (req.user && req.user.role === 'sales_executive') {
+    const userOr = [{ createdById: req.user.id }]
+    if (req.user.employeeId) {
+      userOr.push({ salesExecutiveCode: req.user.employeeId })
+    }
+    if (req.user.email) {
+      userOr.push({ salesExecutiveEmail: req.user.email })
+    }
+    where.OR = userOr
+  } else if (req.query.employeeId) {
+    // If super admin wants to filter by a specific employee
+    where.OR = [
+      { salesExecutiveCode: req.query.employeeId },
+      { createdById: req.query.employeeId },
+    ]
+  }
+
   const restaurants = await prisma.restaurant.findMany({
+    where,
     orderBy: { createdAt: 'desc' },
     include: {
       adminUsers: {
         select: { id: true, name: true, email: true, role: true },
       },
       _count: {
-        select: { foodItems: true, categories: true },
+        select: { foodItems: true, categories: true, tables: true },
       },
     },
   })
@@ -114,6 +136,7 @@ const listRestaurants = async (_req, res) => {
         superAdminFeedbackUrl: r.superAdminFeedbackUrl,
         overrideFeedbackUrl: r.overrideFeedbackUrl,
         createdAt: r.createdAt,
+        createdById: r.createdById,
         salesExecutiveName: r.salesExecutiveName || '—',
         salesExecutiveCode: r.salesExecutiveCode || '—',
         salesExecutiveEmail: r.salesExecutiveEmail || '—',
@@ -121,7 +144,7 @@ const listRestaurants = async (_req, res) => {
         salesNotes: r.salesNotes || '',
         leadSource: r.leadSource || 'Field Visit',
         onboardingSource: r.onboardingSource || 'SALES_EXECUTIVE',
-        tableCount: r.initialTableCount || 5,
+        tableCount: r.initialTableCount || r._count?.tables || 5,
         adminUsers: r.adminUsers,
         adminEmail: r.adminUsers?.[0]?.email || null,
         adminName: r.adminUsers?.[0]?.name || null,
@@ -252,8 +275,11 @@ const createRestaurant = async (req, res) => {
     success: true,
     id: result.restaurant.id,
     restaurant: result.restaurant,
+    createdById: result.restaurant.createdById,
     salesExecutiveName: result.restaurant.salesExecutiveName,
     salesExecutiveCode: result.restaurant.salesExecutiveCode,
+    salesExecutiveEmail: result.restaurant.salesExecutiveEmail,
+    tableCount: tableNum,
     adminUser: {
       id: result.adminUser.id,
       email: result.adminUser.email,
@@ -308,11 +334,22 @@ const getRestaurant = async (req, res) => {
  * PUT /api/admin/restaurants/:id
  */
 const updateRestaurant = async (req, res) => {
-  const { name, description, cuisineType, address, phone, logoUrl, feedbackUrl, superAdminFeedbackUrl, overrideFeedbackUrl, googleReviewUrl } = req.body
+  const { name, description, cuisineType, address, city, phone, logoUrl, feedbackUrl, superAdminFeedbackUrl, overrideFeedbackUrl, googleReviewUrl, salesNotes, leadSource } = req.body
 
   const restaurant = await prisma.restaurant.findUnique({ where: { id: req.params.id } })
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  // If requester is a sales executive, verify ownership
+  if (req.user && req.user.role === 'sales_executive') {
+    const isOwner =
+      restaurant.createdById === req.user.id ||
+      (req.user.employeeId && restaurant.salesExecutiveCode === req.user.employeeId) ||
+      (req.user.email && restaurant.salesExecutiveEmail === req.user.email)
+    if (!isOwner) {
+      return res.status(403).json({ error: 'You can only edit restaurants you onboarded' })
+    }
   }
 
   const updateData = {}
@@ -323,9 +360,12 @@ const updateRestaurant = async (req, res) => {
   if (description !== undefined) updateData.description = description?.trim() || null
   if (cuisineType !== undefined) updateData.cuisineType = cuisineType?.trim() || null
   if (address !== undefined) updateData.address = address?.trim() || null
+  if (city !== undefined) updateData.city = city?.trim() || null
   if (phone !== undefined) updateData.phone = phone?.trim() || null
   if (logoUrl !== undefined) updateData.logoUrl = logoUrl || null
   if (googleReviewUrl !== undefined) updateData.googleReviewUrl = googleReviewUrl?.trim() || null
+  if (salesNotes !== undefined) updateData.salesNotes = salesNotes?.trim() || null
+  if (leadSource !== undefined) updateData.leadSource = leadSource?.trim() || 'Field Visit'
 
   if (feedbackUrl !== undefined) {
     let fb = feedbackUrl?.trim() || null
@@ -357,6 +397,17 @@ const toggleStatus = async (req, res) => {
   const restaurant = await prisma.restaurant.findUnique({ where: { id: req.params.id } })
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  // If requester is a sales executive, verify ownership
+  if (req.user && req.user.role === 'sales_executive') {
+    const isOwner =
+      restaurant.createdById === req.user.id ||
+      (req.user.employeeId && restaurant.salesExecutiveCode === req.user.employeeId) ||
+      (req.user.email && restaurant.salesExecutiveEmail === req.user.email)
+    if (!isOwner) {
+      return res.status(403).json({ error: 'You can only change the status of restaurants you onboarded' })
+    }
   }
 
   let targetStatus = req.body?.status
@@ -651,16 +702,71 @@ const listRestaurantTables = async (req, res) => {
 }
 
 /**
+ * POST /api/admin/restaurants/:id/tables
+ * Create a new dining table and generate its QR token
+ */
+const createRestaurantTable = async (req, res) => {
+  const { id } = req.params
+  const { label } = req.body
+  const restaurant = await prisma.restaurant.findUnique({ where: { id } })
+  if (!restaurant) {
+    return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  // Count existing tables to provide safe default label
+  const currentCount = await prisma.diningTable.count({ where: { restaurantId: id } })
+  const tableLabel = (label || `Table ${String(currentCount + 1).padStart(2, '0')}`).trim()
+  const qrToken = `${restaurant.slug}-t${Math.random().toString(36).slice(2, 7)}`
+
+  const table = await prisma.diningTable.create({
+    data: {
+      restaurantId: id,
+      label: tableLabel,
+      qrToken,
+    },
+  })
+
+  // Update initialTableCount
+  await prisma.restaurant.update({
+    where: { id },
+    data: { initialTableCount: currentCount + 1 },
+  }).catch(() => {})
+
+  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
+  return res.status(201).json({
+    id: table.id,
+    label: table.label,
+    qrCode: {
+      token: table.qrToken,
+      status: 'ACTIVE',
+      url: `${baseCustomerUrl}/menu/${table.qrToken}`,
+      scansTotal: 0,
+    },
+  })
+}
+
+/**
  * GET or POST /api/admin/restaurants/:id/tables/:tableId/qr
  */
 const getTableQR = async (req, res) => {
-  const table = await prisma.diningTable.findUnique({
+  let table = await prisma.diningTable.findUnique({
     where: { id: req.params.tableId },
     include: { restaurant: true },
   })
   if (!table) {
     return res.status(404).json({ error: 'Table not found' })
   }
+
+  // If POST request to regenerate, generate a fresh unique qrToken
+  if (req.method === 'POST') {
+    const newToken = `${table.restaurant.slug}-t${Math.random().toString(36).slice(2, 7)}`
+    table = await prisma.diningTable.update({
+      where: { id: table.id },
+      data: { qrToken: newToken },
+      include: { restaurant: true },
+    })
+  }
+
   const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const url = `${baseCustomerUrl}/menu/${table.qrToken || table.id}`
   const qrDataUrl = await QRCode.toDataURL(url, {
@@ -906,6 +1012,7 @@ module.exports = {
   updateQRUrl,
   deleteRestaurant,
   listRestaurantTables,
+  createRestaurantTable,
   getTableQR,
   listEmployees,
   createEmployee,
