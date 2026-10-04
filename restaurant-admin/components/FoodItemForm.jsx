@@ -48,7 +48,7 @@ const SPECIAL_TAG_PRESETS = [
 ];
 
 const parseInitialPortions = (portionPrices) => {
-  if (!portionPrices) return { quarter: '', half: '', full: '' };
+  if (!portionPrices) return { quarter: '', half: '', full: '', regular: '', special: '' };
   try {
     const p = typeof portionPrices === 'string' ? JSON.parse(portionPrices) : portionPrices;
     if (p && typeof p === 'object') {
@@ -56,10 +56,12 @@ const parseInitialPortions = (portionPrices) => {
         quarter: p.quarter !== undefined && p.quarter !== null ? String(p.quarter) : '',
         half: p.half !== undefined && p.half !== null ? String(p.half) : '',
         full: p.full !== undefined && p.full !== null ? String(p.full) : '',
+        regular: p.regular !== undefined && p.regular !== null ? String(p.regular) : '',
+        special: p.special !== undefined && p.special !== null ? String(p.special) : '',
       };
     }
   } catch {}
-  return { quarter: '', half: '', full: '' };
+  return { quarter: '', half: '', full: '', regular: '', special: '' };
 };
 
 const parseInitialPrepPrices = (preparationPrices) => {
@@ -117,6 +119,27 @@ export default function FoodItemForm({
   const [portions, setPortions] = useState(initialPortions);
   const [prepPrices, setPrepPrices] = useState(initialPrepPrices);
 
+  const rawSpecialTags = typeof initialData.specialTags === 'string' ? initialData.specialTags.trim() : '';
+  const isDietaryTagOnly = ['jain', 'vegan', 'gluten-free', 'jain, vegan', 'vegan, gluten-free'].includes(rawSpecialTags.toLowerCase());
+  const initialIsSpecial = Boolean(rawSpecialTags && !isDietaryTagOnly);
+
+  const initialDishKind = (initialPortions.regular && initialPortions.special)
+    ? 'both'
+    : initialIsSpecial
+    ? 'special'
+    : initialPortions.regular
+    ? 'regular'
+    : 'none';
+
+  const [dishKind, setDishKind] = useState(initialDishKind);
+  const [regularPrice, setRegularPrice] = useState(
+    initialPortions.regular || (initialDishKind === 'regular' ? String(initialData.price || '') : '')
+  );
+  const [specialPrice, setSpecialPrice] = useState(
+    initialPortions.special || (initialDishKind === 'special' ? String(initialData.price || '') : '')
+  );
+  const [specialTag, setSpecialTag] = useState(initialIsSpecial ? rawSpecialTags : "Chef's Special");
+
   useEffect(() => {
     if (initialData.imageUrl) {
       setLivePreviewUrl(initialData.imageUrl);
@@ -129,6 +152,17 @@ export default function FoodItemForm({
       if (parsed.quarter || parsed.half || parsed.full) {
         setPortions(parsed);
         setPricingMode('portions');
+      }
+      if (parsed.regular || parsed.special) {
+        if (parsed.regular) setRegularPrice(parsed.regular);
+        if (parsed.special) setSpecialPrice(parsed.special);
+        if (parsed.regular && parsed.special) {
+          setDishKind('both');
+        } else if (parsed.regular) {
+          setDishKind('regular');
+        } else if (parsed.special) {
+          setDishKind('special');
+        }
       }
     }
     if (initialData.preparationPrices) {
@@ -145,20 +179,14 @@ export default function FoodItemForm({
       const tagStr = String(initialData.specialTags).trim();
       const isDietOnly = ['jain', 'vegan', 'gluten-free', 'jain, vegan', 'vegan, gluten-free'].includes(tagStr.toLowerCase());
       if (tagStr && !isDietOnly) {
-        setDishKind('special');
         setSpecialTag(tagStr);
-      } else {
-        setDishKind('regular');
+        setDishKind((prev) => (prev === 'both' ? 'both' : 'special'));
+        if (!specialPrice && initialData.price) {
+          setSpecialPrice(String(initialData.price));
+        }
       }
     }
-  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle, initialData.specialTags]);
-
-  const rawSpecialTags = typeof initialData.specialTags === 'string' ? initialData.specialTags.trim() : '';
-  const isDietaryTagOnly = ['jain', 'vegan', 'gluten-free', 'jain, vegan', 'vegan, gluten-free'].includes(rawSpecialTags.toLowerCase());
-  const initialIsSpecial = Boolean(rawSpecialTags && !isDietaryTagOnly);
-
-  const [dishKind, setDishKind] = useState(initialIsSpecial ? 'special' : 'regular');
-  const [specialTag, setSpecialTag] = useState(initialIsSpecial ? rawSpecialTags : "Chef's Special");
+  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle, initialData.specialTags, initialData.price]);
 
   const initialTags = Array.isArray(initialData.tags)
     ? initialData.tags
@@ -251,14 +279,50 @@ export default function FoodItemForm({
       cleanPortionPrices = '';
       resolvedPrepType = 'both';
     } else {
-      if (!form.price || isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0) {
-        toast.error('Please enter a valid price');
-        return;
+      if (dishKind === 'both') {
+        const regVal = parseFloat(regularPrice);
+        const specVal = parseFloat(specialPrice);
+        if (isNaN(regVal) || regVal <= 0 || isNaN(specVal) || specVal <= 0) {
+          toast.error('Please enter valid prices for both Regular and Special options');
+          return;
+        }
+        const pObj = {};
+        pObj.regular = regVal;
+        pObj.special = specVal;
+        cleanPortionPrices = JSON.stringify(pObj);
+        basePrice = String(Math.min(regVal, specVal));
+        cleanPrepPrices = '';
+        resolvedPrepType = '';
+      } else if (dishKind === 'regular' && regularPrice) {
+        const regVal = parseFloat(regularPrice);
+        if (isNaN(regVal) || regVal < 0) {
+          toast.error('Please enter a valid regular price');
+          return;
+        }
+        basePrice = String(regVal);
+        cleanPortionPrices = '';
+        cleanPrepPrices = '';
+        resolvedPrepType = '';
+      } else if (dishKind === 'special' && specialPrice) {
+        const specVal = parseFloat(specialPrice);
+        if (isNaN(specVal) || specVal < 0) {
+          toast.error('Please enter a valid special price');
+          return;
+        }
+        basePrice = String(specVal);
+        cleanPortionPrices = '';
+        cleanPrepPrices = '';
+        resolvedPrepType = '';
+      } else {
+        if (!form.price || isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0) {
+          toast.error('Please enter a valid price');
+          return;
+        }
+        basePrice = form.price;
+        cleanPortionPrices = '';
+        cleanPrepPrices = '';
+        resolvedPrepType = '';
       }
-      basePrice = form.price;
-      cleanPortionPrices = '';
-      cleanPrepPrices = '';
-      resolvedPrepType = '';
     }
 
     const formData = new FormData();
@@ -293,7 +357,7 @@ export default function FoodItemForm({
     formData.append('isJain', String(isJain));
     formData.append('isVegan', String(isVegan));
     formData.append('isGlutenFree', String(isGlutenFree));
-    formData.append('specialTags', dishKind === 'special' ? (specialTag.trim() || 'Special') : '');
+    formData.append('specialTags', (dishKind === 'special' || dishKind === 'both') ? (specialTag.trim() || 'Special') : '');
 
     // Primary Front View Image
     if (imageFile) {
@@ -660,61 +724,272 @@ export default function FoodItemForm({
               </div>
             </div>
 
-            {/* Dish Classification: Regular Dish vs Special Dish */}
+            {/* Dish Classification & Pricing: Optional */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Dish Classification <span className="text-rose-500">*</span>
-                </Label>
-                <span className="text-[10px] text-slate-400">Regular or Highlighted Special</span>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Dish Classification &amp; Pricing
+                  </Label>
+                  <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                    Optional
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400">Regular, Special, or Both</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {/* Standard / None */}
                 <button
                   type="button"
-                  onClick={() => setDishKind('regular')}
+                  onClick={() => setDishKind('none')}
                   className={cn(
-                    'h-12 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all duration-150 flex items-center justify-center gap-2.5 px-3 cursor-pointer',
+                    'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
+                    dishKind === 'none'
+                      ? 'border-slate-800 bg-slate-900 text-white shadow-xs'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
+                  )}
+                >
+                  <span className="text-sm">🍽️ Standard</span>
+                  <span className={cn('text-[10px] font-normal leading-tight', dishKind === 'none' ? 'text-slate-300' : 'text-slate-400')}>
+                    Single Price
+                  </span>
+                </button>
+
+                {/* Regular Dish */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = dishKind === 'regular' ? 'none' : 'regular';
+                    setDishKind(next);
+                    if (next === 'regular' && !regularPrice && form.price) {
+                      setRegularPrice(form.price);
+                    }
+                  }}
+                  className={cn(
+                    'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
                     dishKind === 'regular'
-                      ? 'border-teal-500 bg-teal-50/80 text-teal-900 shadow-xs'
+                      ? 'border-teal-500 bg-teal-50 text-teal-900 shadow-xs ring-1 ring-teal-500/20'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
                   )}
                 >
-                  <span className="text-base">🍽️</span>
-                  <div className="text-left">
-                    <div className="leading-tight">Regular Dish</div>
-                    <div className="text-[10px] font-normal text-slate-500">Standard menu offering</div>
-                  </div>
+                  <span className="text-sm">🥗 Regular Dish</span>
+                  <span className={cn('text-[10px] font-normal leading-tight', dishKind === 'regular' ? 'text-teal-700' : 'text-slate-400')}>
+                    Regular Price
+                  </span>
                 </button>
 
+                {/* Special Dish */}
                 <button
                   type="button"
-                  onClick={() => setDishKind('special')}
+                  onClick={() => {
+                    const next = dishKind === 'special' ? 'none' : 'special';
+                    setDishKind(next);
+                    if (next === 'special' && !specialPrice && form.price) {
+                      setSpecialPrice(form.price);
+                    }
+                  }}
                   className={cn(
-                    'h-12 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all duration-150 flex items-center justify-center gap-2.5 px-3 cursor-pointer',
+                    'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
                     dishKind === 'special'
-                      ? 'border-amber-500 bg-amber-50/90 text-amber-950 shadow-xs ring-2 ring-amber-500/20'
+                      ? 'border-amber-500 bg-amber-50 text-amber-950 shadow-xs ring-1 ring-amber-500/20'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
                   )}
                 >
-                  <span className="text-base">⭐</span>
-                  <div className="text-left">
-                    <div className="leading-tight">Special Dish</div>
-                    <div className="text-[10px] font-normal text-amber-700">Specialty / Signature item</div>
-                  </div>
+                  <span className="text-sm">⭐ Special Dish</span>
+                  <span className={cn('text-[10px] font-normal leading-tight', dishKind === 'special' ? 'text-amber-700' : 'text-slate-400')}>
+                    Special Price &amp; Tag
+                  </span>
+                </button>
+
+                {/* Both: Regular & Special */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = dishKind === 'both' ? 'none' : 'both';
+                    setDishKind(next);
+                    if (next === 'both') {
+                      if (!regularPrice && form.price) setRegularPrice(form.price);
+                      if (!specialPrice && form.price) setSpecialPrice(form.price);
+                    }
+                  }}
+                  className={cn(
+                    'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
+                    dishKind === 'both'
+                      ? 'border-orange-500 bg-orange-50 text-orange-950 shadow-xs ring-1 ring-orange-500/20'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
+                  )}
+                >
+                  <span className="text-sm">⚡ Both Options</span>
+                  <span className={cn('text-[10px] font-normal leading-tight', dishKind === 'both' ? 'text-orange-700' : 'text-slate-400')}>
+                    Regular &amp; Special
+                  </span>
                 </button>
               </div>
 
-              {/* Special Badge Options if Special Dish is selected */}
+              {/* Price Box for Regular Dish */}
+              {dishKind === 'regular' && (
+                <div className="p-3.5 sm:p-4 bg-teal-50/70 rounded-2xl border border-teal-200/80 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-teal-950 flex items-center gap-1.5">
+                      🥗 Regular Dish Price
+                    </span>
+                    <span className="text-[10px] text-teal-700 font-medium">Price in INR</span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 180"
+                      value={regularPrice}
+                      onChange={(e) => {
+                        setRegularPrice(e.target.value);
+                        setForm((f) => ({ ...f, price: e.target.value }));
+                      }}
+                      min="0"
+                      step="0.01"
+                      className="pl-7 h-10 text-xs sm:text-sm font-mono font-bold rounded-xl bg-white border-teal-200 focus:border-teal-500 focus:ring-teal-500/20"
+                    />
+                  </div>
+                  <p className="text-[11px] text-teal-800/80">
+                    This price applies to the standard regular serving of this dish.
+                  </p>
+                </div>
+              )}
+
+              {/* Price & Details Box for Special Dish */}
               {dishKind === 'special' && (
                 <div className="p-3.5 sm:p-4 bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white rounded-2xl border border-amber-200/90 space-y-3">
                   <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                      ⭐ Special Dish Price
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-medium">Price in INR</span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 240"
+                      value={specialPrice}
+                      onChange={(e) => {
+                        setSpecialPrice(e.target.value);
+                        setForm((f) => ({ ...f, price: e.target.value }));
+                      }}
+                      min="0"
+                      step="0.01"
+                      className="pl-7 h-10 text-xs sm:text-sm font-mono font-bold rounded-xl bg-white border-amber-200 focus:border-amber-500 focus:ring-amber-500/20"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
                     <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                       Special Badge Label
                     </span>
                     <span className="text-[10px] text-amber-700 font-medium">
                       Shown on customer menu card
+                    </span>
+                  </div>
+
+                  {/* Preset Quick-Picks */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {SPECIAL_TAG_PRESETS.map((preset) => {
+                      const isSelected = specialTag.trim().toLowerCase() === preset.toLowerCase();
+                      return (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setSpecialTag(preset)}
+                          className={cn(
+                            'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border',
+                            isSelected
+                              ? 'bg-amber-500 text-white border-amber-600 shadow-xs ring-1 ring-amber-500/30'
+                              : 'bg-white text-slate-700 border-amber-200 hover:bg-amber-100/60'
+                          )}
+                        >
+                          {preset}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Tag Input */}
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-600">
+                      Or type custom special badge label:
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. Chef's Special, Today's Special, Signature Dish"
+                      value={specialTag}
+                      onChange={(e) => setSpecialTag(e.target.value)}
+                      maxLength={30}
+                      className="h-9 text-xs rounded-xl bg-white border-amber-200 focus:border-amber-500 focus:ring-amber-500/20"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Price & Details Box for Both Options (Regular & Special) */}
+              {dishKind === 'both' && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-orange-50/90 via-amber-50/50 to-white rounded-2xl border border-orange-200/90 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-orange-950 flex items-center gap-1.5">
+                      ⚡ Regular &amp; Special Prices
+                    </span>
+                    <span className="text-[10px] text-orange-700 font-medium">
+                      Both will be clickable options on customer menu
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1 bg-white p-3 rounded-xl border border-orange-200/80 shadow-2xs">
+                      <Label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                        <span>🥗 Regular Price</span>
+                        <span className="text-[10px] text-slate-400 font-normal">INR</span>
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₹</span>
+                        <Input
+                          type="number"
+                          placeholder="e.g. 180"
+                          value={regularPrice}
+                          onChange={(e) => setRegularPrice(e.target.value)}
+                          min="0"
+                          step="0.01"
+                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 bg-white p-3 rounded-xl border border-amber-200/80 shadow-2xs">
+                      <Label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                        <span>⭐ Special Price</span>
+                        <span className="text-[10px] text-slate-400 font-normal">INR</span>
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₹</span>
+                        <Input
+                          type="number"
+                          placeholder="e.g. 240"
+                          value={specialPrice}
+                          onChange={(e) => setSpecialPrice(e.target.value)}
+                          min="0"
+                          step="0.01"
+                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-amber-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      Special Badge Label
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-medium">
+                      Badge for the special option
                     </span>
                   </div>
 
@@ -1196,7 +1471,7 @@ export default function FoodItemForm({
                       </span>
                     )}
 
-                    {dishKind === 'special' && (
+                    {(dishKind === 'special' || dishKind === 'both') && (
                       <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-2xs">
                         ⭐ {specialTag.trim() || 'Special'}
                       </span>
@@ -1356,6 +1631,36 @@ export default function FoodItemForm({
                           );
                         })()}
                       </div>
+                    ) : dishKind === 'both' && (regularPrice || specialPrice) ? (
+                      <div>
+                        {(() => {
+                          const rVal = parseFloat(regularPrice);
+                          const sVal = parseFloat(specialPrice);
+                          const vals = [rVal, sVal].filter((v) => !isNaN(v) && v > 0);
+                          const minP = vals.length > 0 ? Math.min(...vals) : 0;
+                          const maxP = vals.length > 0 ? Math.max(...vals) : 0;
+                          return (
+                            <>
+                              <span className="text-sm font-black text-slate-900 font-mono">
+                                ₹{minP.toFixed(0)}
+                                {minP !== maxP && ` – ₹${maxP.toFixed(0)}`}
+                              </span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {rVal > 0 && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200">
+                                    Regular: ₹{rVal}
+                                  </span>
+                                )}
+                                {sVal > 0 && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                                    Special: ₹{sVal}
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
                     ) : (
                       <span className="text-sm font-black text-slate-900 font-mono">
                         ₹
@@ -1389,7 +1694,7 @@ export default function FoodItemForm({
                               !form.isAvailable && 'grayscale'
                             )}
                           />
-                          {dishKind === 'special' && (
+                          {(dishKind === 'special' || dishKind === 'both') && (
                             <span className="absolute top-1 right-1 z-10 text-[8px] font-black tracking-wide uppercase px-1.5 py-0.5 rounded bg-black/85 text-amber-300 border border-amber-400/50 shadow-xs backdrop-blur-xs">
                               {specialTag.trim() || 'Special'}
                             </span>

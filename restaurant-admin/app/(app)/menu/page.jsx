@@ -55,6 +55,12 @@ function parsePortionPrices(portionPrices) {
       if (parsed.full !== undefined && parsed.full !== null && Number(parsed.full) > 0) {
         list.push({ label: 'Full', short: 'Full', price: Number(parsed.full) });
       }
+      if (parsed.regular !== undefined && parsed.regular !== null && Number(parsed.regular) > 0) {
+        list.push({ label: 'Regular', short: 'Regular', price: Number(parsed.regular) });
+      }
+      if (parsed.special !== undefined && parsed.special !== null && Number(parsed.special) > 0) {
+        list.push({ label: 'Special', short: 'Special', price: Number(parsed.special) });
+      }
       if (list.length > 0) return list;
     }
   } catch {}

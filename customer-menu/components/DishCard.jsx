@@ -76,6 +76,12 @@ export function parsePortions(item) {
       if (raw.full !== undefined && raw.full !== null && Number(raw.full) > 0) {
         list.push({ key: 'full', name: 'Full', short: 'Full', price: Number(raw.full) });
       }
+      if (raw.regular !== undefined && raw.regular !== null && Number(raw.regular) > 0) {
+        list.push({ key: 'regular', name: 'Regular', short: 'Regular', price: Number(raw.regular) });
+      }
+      if (raw.special !== undefined && raw.special !== null && Number(raw.special) > 0) {
+        list.push({ key: 'special', name: 'Special', short: 'Special', price: Number(raw.special) });
+      }
       if (list.length > 0) return list;
     }
   } catch {}

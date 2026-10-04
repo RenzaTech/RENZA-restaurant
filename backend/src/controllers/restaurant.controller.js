@@ -358,6 +358,12 @@ const createFood = async (req, res) => {
         if (parsed.full !== undefined && parsed.full !== '' && !isNaN(parseFloat(parsed.full)) && parseFloat(parsed.full) > 0) {
           obj.full = parseFloat(parsed.full)
         }
+        if (parsed.regular !== undefined && parsed.regular !== '' && !isNaN(parseFloat(parsed.regular)) && parseFloat(parsed.regular) > 0) {
+          obj.regular = parseFloat(parsed.regular)
+        }
+        if (parsed.special !== undefined && parsed.special !== '' && !isNaN(parseFloat(parsed.special)) && parseFloat(parsed.special) > 0) {
+          obj.special = parseFloat(parsed.special)
+        }
         if (Object.keys(obj).length > 0) {
           cleanPortionPrices = JSON.stringify(obj)
         }
@@ -561,6 +567,12 @@ const updateFood = async (req, res) => {
           }
           if (parsed.full !== undefined && parsed.full !== '' && !isNaN(parseFloat(parsed.full)) && parseFloat(parsed.full) > 0) {
             obj.full = parseFloat(parsed.full)
+          }
+          if (parsed.regular !== undefined && parsed.regular !== '' && !isNaN(parseFloat(parsed.regular)) && parseFloat(parsed.regular) > 0) {
+            obj.regular = parseFloat(parsed.regular)
+          }
+          if (parsed.special !== undefined && parsed.special !== '' && !isNaN(parseFloat(parsed.special)) && parseFloat(parsed.special) > 0) {
+            obj.special = parseFloat(parsed.special)
           }
           if (Object.keys(obj).length > 0) {
             cleanPortionPrices = JSON.stringify(obj)
