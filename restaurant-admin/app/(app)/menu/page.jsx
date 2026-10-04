@@ -20,7 +20,7 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-const FILTERS = ['All', 'Available', 'Sold Out'];
+const FILTERS = ['All', 'Available', 'Sold Out', 'Specials'];
 
 function FoodItemSkeleton() {
   return (
@@ -146,6 +146,11 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
                   Top View
                 </span>
               )}
+              {item.specialTags && (
+                <span className="absolute top-1 left-1 z-10 text-[8px] font-black tracking-wide uppercase px-1.5 py-0.5 rounded bg-black/80 text-amber-300 border border-amber-400/40 shadow-xs backdrop-blur-xs">
+                  {item.specialTags}
+                </span>
+              )}
             </>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
@@ -218,6 +223,15 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
           )}
 
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
+            {item.specialTags ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full shadow-2xs">
+                ⭐ {item.specialTags}
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                Regular
+              </span>
+            )}
             {item.category?.name && (
               <span className="inline-block text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md truncate max-w-full">
                 {item.category.name}
@@ -355,7 +369,11 @@ export default function MenuPage() {
           ? true
           : filter === 'Available'
           ? item.isAvailable
-          : !item.isAvailable;
+          : filter === 'Sold Out'
+          ? !item.isAvailable
+          : filter === 'Specials'
+          ? Boolean(item.specialTags && !['jain', 'vegan', 'gluten-free'].includes(item.specialTags.trim().toLowerCase()))
+          : true;
 
       const matchesCategory =
         selectedCategory === 'all'
@@ -416,7 +434,8 @@ export default function MenuPage() {
           <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
             {filteredItems.length !== items.length ? `Showing ${filteredItems.length} of ${items.length} dishes • ` : `Total ${items.length} dishes • `}
             {items.filter((i) => i.isAvailable).length} Available •{' '}
-            {items.filter((i) => !i.isAvailable).length} Sold Out
+            {items.filter((i) => !i.isAvailable).length} Sold Out •{' '}
+            {items.filter((i) => Boolean(i.specialTags && !['jain', 'vegan', 'gluten-free'].includes(i.specialTags.trim().toLowerCase()))).length} Specials
           </p>
         </div>
 

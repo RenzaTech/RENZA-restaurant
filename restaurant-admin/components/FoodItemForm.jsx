@@ -38,6 +38,15 @@ const TAGS_LIST = [
   { name: 'Gluten-Free', emoji: '🌾', color: 'border-amber-200 bg-amber-50 text-amber-800' },
 ];
 
+const SPECIAL_TAG_PRESETS = [
+  "Chef's Special",
+  "Today's Special",
+  "Special",
+  "Bestseller",
+  "Must Try",
+  "House Specialty",
+];
+
 const parseInitialPortions = (portionPrices) => {
   if (!portionPrices) return { quarter: '', half: '', full: '' };
   try {
@@ -132,7 +141,24 @@ export default function FoodItemForm({
     if (initialData.preparationType || initialData.dishStyle) {
       setForm((f) => ({ ...f, preparationType: initialData.preparationType || initialData.dishStyle || '' }));
     }
-  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle]);
+    if (initialData.specialTags !== undefined && initialData.specialTags !== null) {
+      const tagStr = String(initialData.specialTags).trim();
+      const isDietOnly = ['jain', 'vegan', 'gluten-free', 'jain, vegan', 'vegan, gluten-free'].includes(tagStr.toLowerCase());
+      if (tagStr && !isDietOnly) {
+        setDishKind('special');
+        setSpecialTag(tagStr);
+      } else {
+        setDishKind('regular');
+      }
+    }
+  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle, initialData.specialTags]);
+
+  const rawSpecialTags = typeof initialData.specialTags === 'string' ? initialData.specialTags.trim() : '';
+  const isDietaryTagOnly = ['jain', 'vegan', 'gluten-free', 'jain, vegan', 'vegan, gluten-free'].includes(rawSpecialTags.toLowerCase());
+  const initialIsSpecial = Boolean(rawSpecialTags && !isDietaryTagOnly);
+
+  const [dishKind, setDishKind] = useState(initialIsSpecial ? 'special' : 'regular');
+  const [specialTag, setSpecialTag] = useState(initialIsSpecial ? rawSpecialTags : "Chef's Special");
 
   const initialTags = Array.isArray(initialData.tags)
     ? initialData.tags
@@ -267,7 +293,7 @@ export default function FoodItemForm({
     formData.append('isJain', String(isJain));
     formData.append('isVegan', String(isVegan));
     formData.append('isGlutenFree', String(isGlutenFree));
-    formData.append('specialTags', form.tags.join(', '));
+    formData.append('specialTags', dishKind === 'special' ? (specialTag.trim() || 'Special') : '');
 
     // Primary Front View Image
     if (imageFile) {
@@ -634,6 +660,103 @@ export default function FoodItemForm({
               </div>
             </div>
 
+            {/* Dish Classification: Regular Dish vs Special Dish */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Dish Classification <span className="text-rose-500">*</span>
+                </Label>
+                <span className="text-[10px] text-slate-400">Regular or Highlighted Special</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDishKind('regular')}
+                  className={cn(
+                    'h-12 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all duration-150 flex items-center justify-center gap-2.5 px-3 cursor-pointer',
+                    dishKind === 'regular'
+                      ? 'border-teal-500 bg-teal-50/80 text-teal-900 shadow-xs'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
+                  )}
+                >
+                  <span className="text-base">🍽️</span>
+                  <div className="text-left">
+                    <div className="leading-tight">Regular Dish</div>
+                    <div className="text-[10px] font-normal text-slate-500">Standard menu offering</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDishKind('special')}
+                  className={cn(
+                    'h-12 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all duration-150 flex items-center justify-center gap-2.5 px-3 cursor-pointer',
+                    dishKind === 'special'
+                      ? 'border-amber-500 bg-amber-50/90 text-amber-950 shadow-xs ring-2 ring-amber-500/20'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
+                  )}
+                >
+                  <span className="text-base">⭐</span>
+                  <div className="text-left">
+                    <div className="leading-tight">Special Dish</div>
+                    <div className="text-[10px] font-normal text-amber-700">Specialty / Signature item</div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Special Badge Options if Special Dish is selected */}
+              {dishKind === 'special' && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white rounded-2xl border border-amber-200/90 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      Special Badge Label
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-medium">
+                      Shown on customer menu card
+                    </span>
+                  </div>
+
+                  {/* Preset Quick-Picks */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {SPECIAL_TAG_PRESETS.map((preset) => {
+                      const isSelected = specialTag.trim().toLowerCase() === preset.toLowerCase();
+                      return (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setSpecialTag(preset)}
+                          className={cn(
+                            'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border',
+                            isSelected
+                              ? 'bg-amber-500 text-white border-amber-600 shadow-xs ring-1 ring-amber-500/30'
+                              : 'bg-white text-slate-700 border-amber-200 hover:bg-amber-100/60'
+                          )}
+                        >
+                          {preset}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Tag Input */}
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-600">
+                      Or type custom special badge label:
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. Chef's Special, Today's Special, Signature Dish"
+                      value={specialTag}
+                      onChange={(e) => setSpecialTag(e.target.value)}
+                      maxLength={30}
+                      className="h-9 text-xs rounded-xl bg-white border-amber-200 focus:border-amber-500 focus:ring-amber-500/20"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Description */}
             <div className="space-y-1.5">
@@ -1073,6 +1196,12 @@ export default function FoodItemForm({
                       </span>
                     )}
 
+                    {dishKind === 'special' && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-2xs">
+                        ⭐ {specialTag.trim() || 'Special'}
+                      </span>
+                    )}
+
                     {/* Dual photo indicator badge */}
                     {(livePreviewUrl && liveTopPreviewUrl) && (
                       <span className="rounded-full bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.2 text-[9px] font-bold">
@@ -1260,6 +1389,11 @@ export default function FoodItemForm({
                               !form.isAvailable && 'grayscale'
                             )}
                           />
+                          {dishKind === 'special' && (
+                            <span className="absolute top-1 right-1 z-10 text-[8px] font-black tracking-wide uppercase px-1.5 py-0.5 rounded bg-black/85 text-amber-300 border border-amber-400/50 shadow-xs backdrop-blur-xs">
+                              {specialTag.trim() || 'Special'}
+                            </span>
+                          )}
                           <span className="absolute bottom-1 left-1 z-10 text-[8px] font-bold px-1.5 py-0.5 rounded bg-black/70 text-white backdrop-blur-xs">
                             {isTopPhotoShowing ? 'Top View' : 'Front View'}
                           </span>

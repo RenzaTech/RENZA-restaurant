@@ -261,8 +261,13 @@ export default function DishSheet({
 
         {/* Modal Content Body */}
         <div className="modal-body">
-          <div className="modal-top-row">
+          <div className="modal-top-row flex items-center justify-between gap-2">
             <span className="modal-cat-badge">{categoryName}</span>
+            {item.specialTags && (
+              <span className="dish-tag !static text-[10px] font-bold py-0.5 px-2.5 rounded-sm">
+                {item.specialTags}
+              </span>
+            )}
           </div>
 
           <h2 id="dishModalTitle" className="modal-name">

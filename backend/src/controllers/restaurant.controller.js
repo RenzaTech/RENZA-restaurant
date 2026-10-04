@@ -497,7 +497,7 @@ const createFood = async (req, res) => {
       isVegan: resolvedVegan,
       isGlutenFree: resolvedGlutenFree,
       spicyLevel: spicyLevel ? parseInt(spicyLevel) : 0,
-      specialTags: specialTags?.trim() || (parsedTags.length > 0 ? parsedTags.join(', ') : null),
+      specialTags: specialTags !== undefined ? (specialTags?.trim() || null) : (parsedTags.length > 0 ? parsedTags.join(', ') : null),
       isAvailable: isAvailable === undefined ? true : isAvailable === 'true' || isAvailable === true,
       sortOrder: sortOrder ? parseInt(sortOrder) : 0,
     },
