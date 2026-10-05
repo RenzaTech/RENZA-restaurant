@@ -23,6 +23,7 @@ import { Select, SelectOption } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import ImageUploader from '@/components/ImageUploader';
+import PortionPhotoUploader from '@/components/PortionPhotoUploader';
 import toast from 'react-hot-toast';
 
 const SPICY_LEVELS = [
@@ -90,6 +91,21 @@ const parseInitialPrepPrices = (preparationPrices) => {
   return { dry: '', gravy: '', semiGravy: '' };
 };
 
+const parseInitialPortionImages = (portionImages) => {
+  if (!portionImages) return { quarter: null, half: null, full: null };
+  try {
+    const p = typeof portionImages === 'string' ? JSON.parse(portionImages) : portionImages;
+    if (p && typeof p === 'object') {
+      return {
+        quarter: p.quarter || null,
+        half: p.half || null,
+        full: p.full || null,
+      };
+    }
+  } catch {}
+  return { quarter: null, half: null, full: null };
+};
+
 export default function FoodItemForm({
   initialData = {},
   categories = [],
@@ -107,6 +123,40 @@ export default function FoodItemForm({
   const [topViewImageError, setTopViewImageError] = useState(false);
   const [liveTopPreviewUrl, setLiveTopPreviewUrl] = useState(initialData.topViewImageUrl || null);
   const [removeTopViewImage, setRemoveTopViewImage] = useState(false);
+
+  const initialPortionImages = parseInitialPortionImages(initialData.portionImages);
+  const [portionImageFiles, setPortionImageFiles] = useState({
+    quarter: null,
+    half: null,
+    full: null,
+  });
+  const [portionPreviewUrls, setPortionPreviewUrls] = useState({
+    quarter: initialPortionImages.quarter,
+    half: initialPortionImages.half,
+    full: initialPortionImages.full,
+  });
+  const [removePortionImages, setRemovePortionImages] = useState({
+    quarter: false,
+    half: false,
+    full: false,
+  });
+  const [selectedPreviewPortion, setSelectedPreviewPortion] = useState(null);
+
+  const handlePortionImageSelect = (portionKey, file, previewUrl) => {
+    setPortionImageFiles((prev) => ({ ...prev, [portionKey]: file }));
+    setPortionPreviewUrls((prev) => ({ ...prev, [portionKey]: previewUrl }));
+    setRemovePortionImages((prev) => ({ ...prev, [portionKey]: false }));
+    setSelectedPreviewPortion(portionKey);
+  };
+
+  const handlePortionImageRemove = (portionKey) => {
+    setPortionImageFiles((prev) => ({ ...prev, [portionKey]: null }));
+    setPortionPreviewUrls((prev) => ({ ...prev, [portionKey]: null }));
+    setRemovePortionImages((prev) => ({ ...prev, [portionKey]: true }));
+    if (selectedPreviewPortion === portionKey) {
+      setSelectedPreviewPortion(null);
+    }
+  };
 
   const [activeAngleTab, setActiveAngleTab] = useState('front');
   const [showMore, setShowMore] = useState(false);
@@ -171,6 +221,14 @@ export default function FoodItemForm({
     if (initialData.topViewImageUrl) {
       setLiveTopPreviewUrl(initialData.topViewImageUrl);
     }
+    if (initialData.portionImages) {
+      const parsedImgs = parseInitialPortionImages(initialData.portionImages);
+      setPortionPreviewUrls({
+        quarter: parsedImgs.quarter,
+        half: parsedImgs.half,
+        full: parsedImgs.full,
+      });
+    }
     if (initialData.portionPrices) {
       const parsed = parseInitialPortions(initialData.portionPrices);
       if (parsed.quarter || parsed.half || parsed.full) {
@@ -221,7 +279,7 @@ export default function FoodItemForm({
         }
       }
     }
-  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle, initialData.specialTags, initialData.price]);
+  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionImages, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle, initialData.specialTags, initialData.price]);
 
   const initialTags = Array.isArray(initialData.tags)
     ? initialData.tags
@@ -419,6 +477,25 @@ export default function FoodItemForm({
       formData.append('removeTopViewImage', 'true');
     }
 
+    // Optional Portion Quantity Photos (Quarter, Half, Full)
+    if (portionImageFiles.quarter) {
+      formData.append('quarterImage', portionImageFiles.quarter);
+    } else if (removePortionImages.quarter) {
+      formData.append('removeQuarterImage', 'true');
+    }
+
+    if (portionImageFiles.half) {
+      formData.append('halfImage', portionImageFiles.half);
+    } else if (removePortionImages.half) {
+      formData.append('removeHalfImage', 'true');
+    }
+
+    if (portionImageFiles.full) {
+      formData.append('fullImage', portionImageFiles.full);
+    } else if (removePortionImages.full) {
+      formData.append('removeFullImage', 'true');
+    }
+
     onSubmit(formData);
   };
 
@@ -577,78 +654,110 @@ export default function FoodItemForm({
               {pricingMode === 'portions' && (
                 <div className="space-y-3 p-4 bg-orange-50/60 rounded-2xl border border-orange-200/80">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold text-orange-950">
-                      Portion Sizes (for Meals, Rice, Biryani, Curries, etc.)
-                    </p>
+                    <div>
+                      <p className="text-xs font-bold text-orange-950">
+                        Portion Sizes &amp; Serving Photos
+                      </p>
+                      <p className="text-[11px] text-orange-800/80">
+                        Optional photos give customers visual confidence in portion quantity (Quarter, Half, Full)
+                      </p>
+                    </div>
                     <span className="text-[10px] text-orange-700 font-medium">
                       Enter prices in INR
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Quarter */}
-                    <div className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold text-slate-800">Quarter (1/4)</Label>
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Small</span>
+                    <div className="space-y-2 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-bold text-slate-800">Quarter (1/4)</Label>
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Small</span>
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                            ₹
+                          </span>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 70"
+                            value={portions.quarter}
+                            onChange={(e) => setPortions((p) => ({ ...p, quarter: e.target.value }))}
+                            min="0"
+                            step="0.01"
+                            className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                          />
+                        </div>
                       </div>
-                      <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
-                          ₹
-                        </span>
-                        <Input
-                          type="number"
-                          placeholder="e.g. 70"
-                          value={portions.quarter}
-                          onChange={(e) => setPortions((p) => ({ ...p, quarter: e.target.value }))}
-                          min="0"
-                          step="0.01"
-                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
-                        />
-                      </div>
+                      <PortionPhotoUploader
+                        portionKey="quarter"
+                        label="Quarter Serving Photo"
+                        previewUrl={portionPreviewUrls.quarter}
+                        onFileSelected={(file, blob) => handlePortionImageSelect('quarter', file, blob)}
+                        onRemove={() => handlePortionImageRemove('quarter')}
+                      />
                     </div>
 
                     {/* Half */}
-                    <div className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold text-slate-800">Half (1/2)</Label>
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Medium</span>
+                    <div className="space-y-2 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-bold text-slate-800">Half (1/2)</Label>
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Medium</span>
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                            ₹
+                          </span>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 120"
+                            value={portions.half}
+                            onChange={(e) => setPortions((p) => ({ ...p, half: e.target.value }))}
+                            min="0"
+                            step="0.01"
+                            className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                          />
+                        </div>
                       </div>
-                      <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
-                          ₹
-                        </span>
-                        <Input
-                          type="number"
-                          placeholder="e.g. 120"
-                          value={portions.half}
-                          onChange={(e) => setPortions((p) => ({ ...p, half: e.target.value }))}
-                          min="0"
-                          step="0.01"
-                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
-                        />
-                      </div>
+                      <PortionPhotoUploader
+                        portionKey="half"
+                        label="Half Serving Photo"
+                        previewUrl={portionPreviewUrls.half}
+                        onFileSelected={(file, blob) => handlePortionImageSelect('half', file, blob)}
+                        onRemove={() => handlePortionImageRemove('half')}
+                      />
                     </div>
 
                     {/* Full */}
-                    <div className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold text-slate-800">Full (1/1)</Label>
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Regular</span>
+                    <div className="space-y-2 bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-bold text-slate-800">Full (1/1)</Label>
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Regular</span>
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                            ₹
+                          </span>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 200"
+                            value={portions.full}
+                            onChange={(e) => setPortions((p) => ({ ...p, full: e.target.value }))}
+                            min="0"
+                            step="0.01"
+                            className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
+                          />
+                        </div>
                       </div>
-                      <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
-                          ₹
-                        </span>
-                        <Input
-                          type="number"
-                          placeholder="e.g. 200"
-                          value={portions.full}
-                          onChange={(e) => setPortions((p) => ({ ...p, full: e.target.value }))}
-                          min="0"
-                          step="0.01"
-                          className="pl-6 h-9 text-xs font-mono font-bold rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500/20"
-                        />
-                      </div>
+                      <PortionPhotoUploader
+                        portionKey="full"
+                        label="Full Serving Photo"
+                        previewUrl={portionPreviewUrls.full}
+                        onFileSelected={(file, blob) => handlePortionImageSelect('full', file, blob)}
+                        onRemove={() => handlePortionImageRemove('full')}
+                      />
                     </div>
                   </div>
                 </div>
@@ -1770,19 +1879,52 @@ export default function FoodItemForm({
                               </span>
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {parseFloat(portions.quarter) > 0 && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">
-                                    1/4: ₹{parseFloat(portions.quarter)}
-                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedPreviewPortion((curr) => curr === 'quarter' ? null : 'quarter')}
+                                    className={cn(
+                                      "text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all cursor-pointer flex items-center gap-1",
+                                      selectedPreviewPortion === 'quarter'
+                                        ? "bg-orange-600 text-white border-orange-600 shadow-2xs"
+                                        : "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+                                    )}
+                                    title={portionPreviewUrls.quarter ? "Click to preview Quarter serving photo" : "Quarter portion"}
+                                  >
+                                    <span>1/4: ₹{parseFloat(portions.quarter)}</span>
+                                    {portionPreviewUrls.quarter && <Camera className="w-2.5 h-2.5 opacity-80" />}
+                                  </button>
                                 )}
                                 {parseFloat(portions.half) > 0 && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">
-                                    1/2: ₹{parseFloat(portions.half)}
-                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedPreviewPortion((curr) => curr === 'half' ? null : 'half')}
+                                    className={cn(
+                                      "text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all cursor-pointer flex items-center gap-1",
+                                      selectedPreviewPortion === 'half'
+                                        ? "bg-orange-600 text-white border-orange-600 shadow-2xs"
+                                        : "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+                                    )}
+                                    title={portionPreviewUrls.half ? "Click to preview Half serving photo" : "Half portion"}
+                                  >
+                                    <span>1/2: ₹{parseFloat(portions.half)}</span>
+                                    {portionPreviewUrls.half && <Camera className="w-2.5 h-2.5 opacity-80" />}
+                                  </button>
                                 )}
                                 {parseFloat(portions.full) > 0 && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">
-                                    Full: ₹{parseFloat(portions.full)}
-                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedPreviewPortion((curr) => curr === 'full' ? null : 'full')}
+                                    className={cn(
+                                      "text-[9px] font-bold px-1.5 py-0.5 rounded border transition-all cursor-pointer flex items-center gap-1",
+                                      selectedPreviewPortion === 'full'
+                                        ? "bg-orange-600 text-white border-orange-600 shadow-2xs"
+                                        : "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+                                    )}
+                                    title={portionPreviewUrls.full ? "Click to preview Full serving photo" : "Full portion"}
+                                  >
+                                    <span>Full: ₹{parseFloat(portions.full)}</span>
+                                    {portionPreviewUrls.full && <Camera className="w-2.5 h-2.5 opacity-80" />}
+                                  </button>
                                 )}
                               </div>
                             </>
@@ -1840,11 +1982,16 @@ export default function FoodItemForm({
 
                 {/* Right Photo Thumbnail with active angle preview */}
                 {(() => {
+                  const selectedPortionPhoto = selectedPreviewPortion && portionPreviewUrls[selectedPreviewPortion]
+                    ? portionPreviewUrls[selectedPreviewPortion]
+                    : null;
                   const currentPreview =
-                    activeAngleTab === 'top'
+                    selectedPortionPhoto ||
+                    (activeAngleTab === 'top'
                       ? (liveTopPreviewUrl || livePreviewUrl)
-                      : (livePreviewUrl || liveTopPreviewUrl);
-                  const isTopPhotoShowing = currentPreview === liveTopPreviewUrl && Boolean(liveTopPreviewUrl);
+                      : (livePreviewUrl || liveTopPreviewUrl));
+                  const isTopPhotoShowing = !selectedPortionPhoto && currentPreview === liveTopPreviewUrl && Boolean(liveTopPreviewUrl);
+                  const isPortionPhotoShowing = Boolean(selectedPortionPhoto);
 
                   return (
                     <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs">
@@ -1871,7 +2018,9 @@ export default function FoodItemForm({
                             </span>
                           )}
                           <span className="absolute bottom-1 left-1 z-10 text-[8px] font-bold px-1.5 py-0.5 rounded bg-black/70 text-white backdrop-blur-xs">
-                            {isTopPhotoShowing ? 'Top View' : 'Front View'}
+                            {isPortionPhotoShowing
+                              ? `${selectedPreviewPortion === 'quarter' ? '1/4' : selectedPreviewPortion === 'half' ? '1/2' : 'Full'} Serving`
+                              : isTopPhotoShowing ? 'Top View' : 'Front View'}
                           </span>
                         </>
                       ) : (

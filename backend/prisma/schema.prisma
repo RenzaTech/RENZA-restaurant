@@ -114,6 +114,7 @@ model FoodItem {
   name         String
   price        Decimal          @db.Decimal(10, 2)
   portionPrices     String?          @map("portion_prices")
+  portionImages     String?          @map("portion_images")
   preparationType   String?          @map("preparation_type")
   preparationPrices String?          @map("preparation_prices")
   imageUrl          String?          @map("image_url")

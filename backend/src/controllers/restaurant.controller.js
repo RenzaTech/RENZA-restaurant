@@ -487,6 +487,19 @@ const createFood = async (req, res) => {
   const imageUrl = req.file ? await uploadImage(req.file, 'renza/dishes') : null
   const topViewImageUrl = req.topViewFile ? await uploadImage(req.topViewFile, 'renza/dishes') : null
 
+  // Optional portion images (Quarter, Half, Full)
+  const portionImagesObj = {}
+  if (req.quarterFile) {
+    portionImagesObj.quarter = await uploadImage(req.quarterFile, 'renza/dishes')
+  }
+  if (req.halfFile) {
+    portionImagesObj.half = await uploadImage(req.halfFile, 'renza/dishes')
+  }
+  if (req.fullFile) {
+    portionImagesObj.full = await uploadImage(req.fullFile, 'renza/dishes')
+  }
+  const portionImages = Object.keys(portionImagesObj).length > 0 ? JSON.stringify(portionImagesObj) : null
+
   const food = await prisma.foodItem.create({
     data: {
       restaurantId: req.user.restaurantId,
@@ -494,6 +507,7 @@ const createFood = async (req, res) => {
       name: name.trim(),
       price: parsedPrice,
       portionPrices: cleanPortionPrices,
+      portionImages,
       preparationPrices: cleanPreparationPrices,
       preparationType: resolvedPreparationType,
       imageUrl,
@@ -767,6 +781,66 @@ const updateFood = async (req, res) => {
     updateData.topViewImageUrl = null
   }
 
+  // Handle optional portion images (Quarter, Half, Full)
+  let currentPortionImages = {}
+  if (existing.portionImages) {
+    try {
+      currentPortionImages = typeof existing.portionImages === 'string'
+        ? JSON.parse(existing.portionImages)
+        : (existing.portionImages || {})
+    } catch {
+      currentPortionImages = {}
+    }
+  }
+
+  let portionImagesUpdated = false
+
+  if (req.quarterFile) {
+    if (currentPortionImages.quarter) {
+      await deleteImage(currentPortionImages.quarter)
+    }
+    currentPortionImages.quarter = await uploadImage(req.quarterFile, 'renza/dishes')
+    portionImagesUpdated = true
+  } else if (req.body.removeQuarterImage === 'true') {
+    if (currentPortionImages.quarter) {
+      await deleteImage(currentPortionImages.quarter)
+      delete currentPortionImages.quarter
+      portionImagesUpdated = true
+    }
+  }
+
+  if (req.halfFile) {
+    if (currentPortionImages.half) {
+      await deleteImage(currentPortionImages.half)
+    }
+    currentPortionImages.half = await uploadImage(req.halfFile, 'renza/dishes')
+    portionImagesUpdated = true
+  } else if (req.body.removeHalfImage === 'true') {
+    if (currentPortionImages.half) {
+      await deleteImage(currentPortionImages.half)
+      delete currentPortionImages.half
+      portionImagesUpdated = true
+    }
+  }
+
+  if (req.fullFile) {
+    if (currentPortionImages.full) {
+      await deleteImage(currentPortionImages.full)
+    }
+    currentPortionImages.full = await uploadImage(req.fullFile, 'renza/dishes')
+    portionImagesUpdated = true
+  } else if (req.body.removeFullImage === 'true') {
+    if (currentPortionImages.full) {
+      await deleteImage(currentPortionImages.full)
+      delete currentPortionImages.full
+      portionImagesUpdated = true
+    }
+  }
+
+  if (portionImagesUpdated) {
+    updateData.portionImages = Object.keys(currentPortionImages).length > 0 ? JSON.stringify(currentPortionImages) : null
+  }
+
   const updated = await prisma.foodItem.update({
     where: { id: req.params.id },
     data: updateData,
@@ -791,6 +865,14 @@ const deleteFood = async (req, res) => {
   }
   if (food.topViewImageUrl) {
     await deleteImage(food.topViewImageUrl)
+  }
+  if (food.portionImages) {
+    try {
+      const pImages = typeof food.portionImages === 'string' ? JSON.parse(food.portionImages) : food.portionImages
+      for (const url of Object.values(pImages || {})) {
+        if (url) await deleteImage(url)
+      }
+    } catch {}
   }
 
   await prisma.foodItem.delete({ where: { id: req.params.id } })

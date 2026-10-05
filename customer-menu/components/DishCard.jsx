@@ -66,21 +66,45 @@ export function parsePortions(item) {
   try {
     const raw = typeof item.portionPrices === 'string' ? JSON.parse(item.portionPrices) : item.portionPrices;
     if (raw && typeof raw === 'object') {
+      let portionImages = null;
+      if (item.portionImages) {
+        try {
+          portionImages = typeof item.portionImages === 'string' ? JSON.parse(item.portionImages) : item.portionImages;
+        } catch {}
+      }
       const list = [];
       if (raw.quarter !== undefined && raw.quarter !== null && Number(raw.quarter) > 0) {
-        list.push({ key: 'quarter', name: 'Quarter', short: '1/4', price: Number(raw.quarter) });
+        list.push({
+          key: 'quarter',
+          name: 'Quarter',
+          short: '1/4',
+          price: Number(raw.quarter),
+          imageUrl: portionImages?.quarter || null,
+        });
       }
       if (raw.half !== undefined && raw.half !== null && Number(raw.half) > 0) {
-        list.push({ key: 'half', name: 'Half', short: '1/2', price: Number(raw.half) });
+        list.push({
+          key: 'half',
+          name: 'Half',
+          short: '1/2',
+          price: Number(raw.half),
+          imageUrl: portionImages?.half || null,
+        });
       }
       if (raw.full !== undefined && raw.full !== null && Number(raw.full) > 0) {
-        list.push({ key: 'full', name: 'Full', short: 'Full', price: Number(raw.full) });
+        list.push({
+          key: 'full',
+          name: 'Full',
+          short: 'Full',
+          price: Number(raw.full),
+          imageUrl: portionImages?.full || null,
+        });
       }
       if (raw.regular !== undefined && raw.regular !== null && Number(raw.regular) > 0) {
-        list.push({ key: 'regular', name: 'Regular', short: 'Regular', price: Number(raw.regular) });
+        list.push({ key: 'regular', name: 'Regular', short: 'Regular', price: Number(raw.regular), imageUrl: null });
       }
       if (raw.special !== undefined && raw.special !== null && Number(raw.special) > 0) {
-        list.push({ key: 'special', name: 'Special', short: 'Special', price: Number(raw.special) });
+        list.push({ key: 'special', name: 'Special', short: 'Special', price: Number(raw.special), imageUrl: null });
       }
       if (list.length > 0) return list;
     }
@@ -121,6 +145,7 @@ const DishCard = forwardRef(function DishCard(
   const [activeAngle, setActiveAngle] = useState('front');
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
+  const [portionFailed, setPortionFailed] = useState(false);
 
   const isUnavailable = !item.isAvailable;
   const isVeg = item.isVeg !== false && item.foodType !== 'non-veg';
@@ -129,17 +154,33 @@ const DishCard = forwardRef(function DishCard(
     ? resolveImageUrl(item.topViewImageUrl || item.top_view_image_url)
     : (item.topViewImageUrl || item.top_view_image_url);
 
+  const prepPrices = parsePreparationPrices(item);
+  const portions = parsePortions(item);
+  const [selectedPortionKey, setSelectedPortionKey] = useState(null);
+  const [selectedPrepKey, setSelectedPrepKey] = useState(null);
+
+  const activePortion = portions?.find((p) => p.key === selectedPortionKey) || null;
+  const activePrep = prepPrices?.find((p) => p.key === selectedPrepKey) || null;
+
+  const portionRawUrl = activePortion?.imageUrl || null;
+  const portionImageUrl = portionRawUrl
+    ? (resolveImageUrl ? resolveImageUrl(portionRawUrl) : portionRawUrl)
+    : null;
+
   useEffect(() => {
     setFrontFailed(false);
     setTopFailed(false);
-  }, [item?.id, item?.name, frontImageUrl, topViewImageUrl]);
+    setPortionFailed(false);
+  }, [item?.id, item?.name, frontImageUrl, topViewImageUrl, portionImageUrl]);
 
   const hasFrontView = Boolean(frontImageUrl);
   const hasTopView = Boolean(topViewImageUrl);
   const hasBothViews = hasFrontView && hasTopView;
 
   let currentImageUrl = null;
-  if (activeAngle === 'top') {
+  if (portionImageUrl && !portionFailed) {
+    currentImageUrl = portionImageUrl;
+  } else if (activeAngle === 'top') {
     if (hasTopView && !topFailed) {
       currentImageUrl = topViewImageUrl;
     } else if (hasFrontView && !frontFailed) {
@@ -169,14 +210,6 @@ const DishCard = forwardRef(function DishCard(
       <span className="font-display text-2xl tracking-wider text-amber-100/80">{initials}</span>
     </div>
   );
-
-  const prepPrices = parsePreparationPrices(item);
-  const portions = parsePortions(item);
-  const [selectedPortionKey, setSelectedPortionKey] = useState(null);
-  const [selectedPrepKey, setSelectedPrepKey] = useState(null);
-
-  const activePortion = portions?.find((p) => p.key === selectedPortionKey) || null;
-  const activePrep = prepPrices?.find((p) => p.key === selectedPrepKey) || null;
 
   let priceDisplay = '';
   if (activePortion) {
@@ -235,7 +268,8 @@ const DishCard = forwardRef(function DishCard(
             loading={priority ? undefined : 'lazy'}
             className="dish-photo"
             onError={() => {
-              if (activeAngle === 'top') setTopFailed(true);
+              if (portionImageUrl && currentImageUrl === portionImageUrl) setPortionFailed(true);
+              else if (activeAngle === 'top') setTopFailed(true);
               else setFrontFailed(true);
             }}
           />
@@ -243,6 +277,14 @@ const DishCard = forwardRef(function DishCard(
           placeholder
         )}
         <div className="dish-photo-overlay" />
+
+        {/* Portion Serving Photo Indicator */}
+        {portionImageUrl && currentImageUrl === portionImageUrl && (
+          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded bg-black/85 px-2 py-0.5 border border-amber-400/40 text-[9px] font-bold text-amber-200 backdrop-blur-xs">
+            <span>📷</span>
+            <span>{activePortion.name} ({activePortion.short})</span>
+          </div>
+        )}
 
         {/* Tag / Sold Out */}
         {isUnavailable ? (
@@ -341,14 +383,15 @@ const DishCard = forwardRef(function DishCard(
                     const nextKey = isSelected ? null : p.key;
                     setSelectedPortionKey(nextKey);
                   }}
-                  className={`inline-flex items-center text-[10px] font-sans tracking-wider px-2 py-0.5 rounded transition cursor-pointer border ${
+                  className={`inline-flex items-center gap-1 text-[10px] font-sans tracking-wider px-2 py-0.5 rounded transition cursor-pointer border ${
                     isSelected
                       ? 'bg-[rgba(212,177,93,0.32)] border-[#d4b15d] text-[#faecc8] font-bold shadow-[0_0_8px_rgba(212,177,93,0.3)] ring-1 ring-[#d4b15d]/40'
                       : 'bg-[rgba(212,177,93,0.12)] text-[#e8c879] border-[rgba(212,177,93,0.25)] hover:border-[#d4b15d]/60 hover:bg-[rgba(212,177,93,0.2)]'
                   }`}
-                  title={`Select ${p.name} (₹${p.price})`}
+                  title={`Select ${p.name} (₹${p.price})${p.imageUrl ? ' - Shows serving photo' : ''}`}
                 >
-                  {p.short}: ₹{p.price}
+                  <span>{p.short}: ₹{p.price}</span>
+                  {p.imageUrl && <span className="text-[9px] opacity-80">📷</span>}
                 </button>
               );
             })}

@@ -40,14 +40,16 @@ export default function DishSheet({
 }) {
   const itemId = item?.id || item?._id || '';
   const portionPricesStr = typeof item?.portionPrices === 'string' ? item.portionPrices : JSON.stringify(item?.portionPrices || null);
+  const portionImagesStr = typeof item?.portionImages === 'string' ? item.portionImages : JSON.stringify(item?.portionImages || null);
   const prepPricesStr = typeof item?.preparationPrices === 'string' ? item.preparationPrices : JSON.stringify(item?.preparationPrices || null);
   const prepType = item?.preparationType || '';
 
-  const portions = useMemo(() => parsePortions(item), [portionPricesStr]);
+  const portions = useMemo(() => parsePortions(item), [portionPricesStr, portionImagesStr]);
   const prepPrices = useMemo(() => parsePreparationPrices(item), [prepPricesStr]);
   const [activeAngle, setActiveAngle] = useState(initialAngle || 'front');
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
+  const [portionFailed, setPortionFailed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState(() => {
     if (initialPrep) return initialPrep;
@@ -78,11 +80,20 @@ export default function DishSheet({
     }
   }, [itemId, initialPortion, portions]);
 
+  const activePortion = portions?.find((p) => p.key === selectedPortionKey) || portions?.[0] || null;
+  const activePrep = prepPrices?.find((p) => p.key === selectedStyle) || prepPrices?.[0] || null;
+
+  const portionRawUrl = activePortion?.imageUrl || null;
+  const portionImageUrl = portionRawUrl
+    ? (resolveImageUrl ? resolveImageUrl(portionRawUrl) : portionRawUrl)
+    : null;
+
   useEffect(() => {
     setActiveAngle(initialAngle || 'front');
     setFrontFailed(false);
     setTopFailed(false);
-  }, [item?.id, item?.name, initialAngle]);
+    setPortionFailed(false);
+  }, [item?.id, item?.name, initialAngle, portionImageUrl]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -105,7 +116,9 @@ export default function DishSheet({
   const hasBothViews = hasFrontView && hasTopView;
 
   let currentImageUrl = null;
-  if (activeAngle === 'top') {
+  if (portionImageUrl && !portionFailed) {
+    currentImageUrl = portionImageUrl;
+  } else if (activeAngle === 'top') {
     if (hasTopView && !topFailed) {
       currentImageUrl = topViewImageUrl;
     } else if (hasFrontView && !frontFailed) {
@@ -127,9 +140,6 @@ export default function DishSheet({
   } else if (item.spicyLevel === 'mild') spiceLevel = 1;
   else if (item.spicyLevel === 'medium') spiceLevel = 2;
   else if (item.spicyLevel === 'hot' || item.spicyLevel === 'high') spiceLevel = 4;
-
-  const activePortion = portions?.find((p) => p.key === selectedPortionKey) || portions?.[0] || null;
-  const activePrep = prepPrices?.find((p) => p.key === selectedStyle) || prepPrices?.[0] || null;
 
   let priceNum = 0;
   if (activePortion) {
@@ -205,7 +215,8 @@ export default function DishSheet({
               blurDataURL={getDishBlurDataUrl(item.name)}
               className="modal-hero"
               onError={() => {
-                if (activeAngle === 'top') setTopFailed(true);
+                if (portionImageUrl && currentImageUrl === portionImageUrl) setPortionFailed(true);
+                else if (activeAngle === 'top') setTopFailed(true);
                 else setFrontFailed(true);
               }}
             />
@@ -216,6 +227,14 @@ export default function DishSheet({
             </div>
           )}
           <div className="modal-photo-shade" />
+
+          {/* Portion Serving Photo Indicator */}
+          {portionImageUrl && currentImageUrl === portionImageUrl && (
+            <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 rounded bg-black/85 px-2.5 py-1 border border-amber-400/40 text-[11px] font-bold text-amber-200 backdrop-blur-xs">
+              <span>📷</span>
+              <span>{activePortion.name} Serving ({activePortion.short})</span>
+            </div>
+          )}
 
           {/* Dual Angle Switcher on Photo */}
           {hasBothViews && (
@@ -444,7 +463,10 @@ export default function DishSheet({
                           : 'bg-[rgba(255,255,255,0.03)] border-white/10 text-slate-300 hover:border-white/25 hover:bg-white/5'
                       }`}
                     >
-                      <span className="text-[11px] font-bold tracking-tight">{p.name}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-bold tracking-tight">{p.name}</span>
+                        {p.imageUrl && <span className="text-[10px] opacity-80" title="Serving photo available">📷</span>}
+                      </div>
                       <span className="text-[10px] text-slate-400 font-medium">({p.short})</span>
                       <span className="text-xs font-mono font-bold text-[#f0d68f] mt-0.5">₹{p.price}</span>
                     </button>

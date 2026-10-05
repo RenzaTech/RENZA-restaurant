@@ -63,8 +63,17 @@ const uploadSingle = (req, res, next) => {
       req.topViewFile =
         req.files.find((f) => f.fieldname === 'topViewImage' || f.fieldname === 'top_view_image') || null
 
-      // If neither specific field was matched and there is only 1 file with an unknown fieldname, fallback to req.file
-      if (!req.file && !req.topViewFile && req.files.length === 1 && req.files[0].fieldname !== 'topViewImage' && req.files[0].fieldname !== 'top_view_image') {
+      // Find portion quantity photos (Quarter, Half, Full)
+      req.quarterFile =
+        req.files.find((f) => f.fieldname === 'quarterImage' || f.fieldname === 'quarter_image') || null
+      req.halfFile =
+        req.files.find((f) => f.fieldname === 'halfImage' || f.fieldname === 'half_image') || null
+      req.fullFile =
+        req.files.find((f) => f.fieldname === 'fullImage' || f.fieldname === 'full_image') || null
+
+      // If no specific field was matched and there is only 1 file with an unknown fieldname, fallback to req.file
+      const hasSpecificField = req.file || req.topViewFile || req.quarterFile || req.halfFile || req.fullFile
+      if (!hasSpecificField && req.files.length === 1) {
         req.file = req.files[0]
       }
     }
