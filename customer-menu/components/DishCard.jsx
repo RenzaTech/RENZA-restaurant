@@ -254,6 +254,7 @@ const DishCard = forwardRef(function DishCard(
         }
       }}
     >
+      {/* ── Left Column: Dish Photo ── */}
       <div className="dish-photo-wrap">
         {hasAnyImage ? (
           <Image
@@ -261,7 +262,7 @@ const DishCard = forwardRef(function DishCard(
             src={currentImageUrl}
             alt={item.name}
             fill
-            sizes="(min-width: 900px) 33vw, 50vw"
+            sizes="(min-width: 600px) 130px, 110px"
             placeholder="blur"
             blurDataURL={getDishBlurDataUrl(item.name)}
             priority={priority}
@@ -278,28 +279,33 @@ const DishCard = forwardRef(function DishCard(
         )}
         <div className="dish-photo-overlay" />
 
+        {/* Veg / Non-Veg Indicator on Top-Left of Photo */}
+        <div
+          className={`type-dot ${isVeg ? 'veg' : 'nonveg'}`}
+          title={isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
+        />
+
         {/* Portion Serving Photo Indicator */}
         {portionImageUrl && currentImageUrl === portionImageUrl && (
-          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded bg-black/85 px-2 py-0.5 border border-amber-400/40 text-[9px] font-bold text-amber-200 backdrop-blur-xs">
+          <div className="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-1 rounded bg-black/85 px-1.5 py-0.5 border border-amber-400/40 text-[8px] font-bold text-amber-200 backdrop-blur-xs">
             <span>📷</span>
-            <span>{activePortion.name} ({activePortion.short})</span>
+            <span>{activePortion.short}</span>
           </div>
         )}
 
-        {/* Tag / Sold Out */}
-        {isUnavailable ? (
-          <div className="dish-tag border-rose-500 text-rose-300">Sold Out</div>
-        ) : item.specialTags ? (
-          <div className="dish-tag">{item.specialTags}</div>
-        ) : null}
-
-        {/* Veg / Non-Veg Indicator */}
-        <div className={`type-dot ${isVeg ? 'veg' : 'nonveg'}`} />
+        {/* Sold Out Overlay */}
+        {isUnavailable && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/75 backdrop-blur-2xs">
+            <span className="rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow">
+              Sold Out
+            </span>
+          </div>
+        )}
 
         {/* Dual Angle Toggle */}
-        {hasBothViews && !isUnavailable && (
+        {hasBothViews && !isUnavailable && !portionImageUrl && (
           <div
-            className="absolute bottom-2 left-2 z-10 flex items-center gap-1 rounded bg-black/85 p-0.5 border border-white/20 text-[9px]"
+            className="absolute bottom-1 right-1 z-10 flex items-center gap-0.5 rounded bg-black/85 p-0.5 border border-white/20 text-[8px]"
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
@@ -311,13 +317,13 @@ const DishCard = forwardRef(function DishCard(
                 setFrontFailed(false);
                 setActiveAngle('front');
               }}
-              className={`px-1.5 py-0.5 rounded font-bold uppercase transition ${
+              className={`px-1 py-0.2 rounded font-bold uppercase transition ${
                 activeAngle === 'front'
                   ? 'bg-amber-400 text-slate-950'
                   : 'text-white/70 hover:text-white'
               }`}
             >
-              Front
+              1
             </button>
             <button
               type="button"
@@ -326,89 +332,109 @@ const DishCard = forwardRef(function DishCard(
                 setTopFailed(false);
                 setActiveAngle('top');
               }}
-              className={`px-1.5 py-0.5 rounded font-bold uppercase transition ${
+              className={`px-1 py-0.2 rounded font-bold uppercase transition ${
                 activeAngle === 'top'
                   ? 'bg-amber-400 text-slate-950'
                   : 'text-white/70 hover:text-white'
               }`}
             >
-              Top
+              2
             </button>
           </div>
         )}
       </div>
 
+      {/* ── Right Column: Info & Price (No Add Button) ── */}
       <div className="dish-info">
-        <h3 className="dish-name">{item.name}</h3>
-        {priceDisplay ? <div className="dish-price">{priceDisplay}</div> : null}
-
-        {prepPrices && prepPrices.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
-            {prepPrices.map((p) => {
-              const isSelected = selectedPrepKey === p.key;
-              return (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const nextKey = isSelected ? null : p.key;
-                    setSelectedPrepKey(nextKey);
-                  }}
-                  className={`inline-flex items-center gap-1 text-[10px] font-sans tracking-wider px-2 py-0.5 rounded transition cursor-pointer border ${
-                    isSelected
-                      ? 'bg-[rgba(212,177,93,0.32)] border-[#d4b15d] text-[#faecc8] font-bold shadow-[0_0_8px_rgba(212,177,93,0.3)] ring-1 ring-[#d4b15d]/40'
-                      : 'bg-[rgba(212,177,93,0.12)] text-[#e8c879] border-[rgba(212,177,93,0.25)] hover:border-[#d4b15d]/60 hover:bg-[rgba(212,177,93,0.2)]'
-                  }`}
-                  title={`Select ${p.name} (₹${p.price})`}
-                >
-                  <span>{p.emoji}</span>
-                  <span>{p.name}: ₹{p.price}</span>
-                </button>
-              );
-            })}
+        <div className="space-y-1">
+          {/* Title & Special Tag Row */}
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="dish-name line-clamp-1">{item.name}</h3>
+            {item.specialTags && (
+              <span className="shrink-0 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/30">
+                {item.specialTags}
+              </span>
+            )}
           </div>
-        )}
 
-        {portions && portions.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
-            {portions.map((p) => {
-              const isSelected = selectedPortionKey === p.key;
-              return (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const nextKey = isSelected ? null : p.key;
-                    setSelectedPortionKey(nextKey);
-                  }}
-                  className={`inline-flex items-center gap-1 text-[10px] font-sans tracking-wider px-2 py-0.5 rounded transition cursor-pointer border ${
-                    isSelected
-                      ? 'bg-[rgba(212,177,93,0.32)] border-[#d4b15d] text-[#faecc8] font-bold shadow-[0_0_8px_rgba(212,177,93,0.3)] ring-1 ring-[#d4b15d]/40'
-                      : 'bg-[rgba(212,177,93,0.12)] text-[#e8c879] border-[rgba(212,177,93,0.25)] hover:border-[#d4b15d]/60 hover:bg-[rgba(212,177,93,0.2)]'
-                  }`}
-                  title={`Select ${p.name} (₹${p.price})${p.imageUrl ? ' - Shows serving photo' : ''}`}
-                >
-                  <span>{p.short}: ₹{p.price}</span>
-                  {p.imageUrl && <span className="text-[9px] opacity-80">📷</span>}
-                </button>
-              );
-            })}
+          {/* Description */}
+          {item.description && (
+            <p className="line-clamp-2 text-[11px] sm:text-xs leading-relaxed text-slate-400">
+              {item.description}
+            </p>
+          )}
+
+          {/* Portion Options Chips */}
+          {portions && portions.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-0.5" onClick={(e) => e.stopPropagation()}>
+              {portions.map((p) => {
+                const isSelected = selectedPortionKey === p.key;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const nextKey = isSelected ? null : p.key;
+                      setSelectedPortionKey(nextKey);
+                    }}
+                    className={`inline-flex items-center gap-1 text-[9px] font-sans tracking-wide px-1.5 py-0.5 rounded transition cursor-pointer border ${
+                      isSelected
+                        ? 'bg-[rgba(212,177,93,0.32)] border-[#d4b15d] text-[#faecc8] font-bold shadow-[0_0_8px_rgba(212,177,93,0.3)] ring-1 ring-[#d4b15d]/40'
+                        : 'bg-[rgba(212,177,93,0.12)] text-[#e8c879] border-[rgba(212,177,93,0.25)] hover:border-[#d4b15d]/60 hover:bg-[rgba(212,177,93,0.2)]'
+                    }`}
+                    title={`Select ${p.name} (₹${p.price})${p.imageUrl ? ' - Shows serving photo' : ''}`}
+                  >
+                    <span>{p.short}: ₹{p.price}</span>
+                    {p.imageUrl && <span className="text-[8px] opacity-80">📷</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Preparation Style Chips */}
+          {prepPrices && prepPrices.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-0.5" onClick={(e) => e.stopPropagation()}>
+              {prepPrices.map((p) => {
+                const isSelected = selectedPrepKey === p.key;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const nextKey = isSelected ? null : p.key;
+                      setSelectedPrepKey(nextKey);
+                    }}
+                    className={`inline-flex items-center gap-1 text-[9px] font-sans tracking-wide px-1.5 py-0.5 rounded transition cursor-pointer border ${
+                      isSelected
+                        ? 'bg-[rgba(212,177,93,0.32)] border-[#d4b15d] text-[#faecc8] font-bold shadow-[0_0_8px_rgba(212,177,93,0.3)] ring-1 ring-[#d4b15d]/40'
+                        : 'bg-[rgba(212,177,93,0.12)] text-[#e8c879] border-[rgba(212,177,93,0.25)] hover:border-[#d4b15d]/60 hover:bg-[rgba(212,177,93,0.2)]'
+                    }`}
+                    title={`Select ${p.name} (₹${p.price})`}
+                  >
+                    <span>{p.emoji}</span>
+                    <span>{p.name}: ₹{p.price}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Row: Price & Dietary Tags */}
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.06] mt-1.5">
+          {priceDisplay ? (
+            <div className="dish-price">{priceDisplay}</div>
+          ) : (
+            <div />
+          )}
+
+          <div className="flex items-center gap-1">
+            <DietaryTags item={item} />
           </div>
-        )}
-
-        {item.description && (
-          <p className="line-clamp-2 text-xs leading-relaxed text-slate-400 mb-2">
-            {item.description}
-          </p>
-        )}
-
-        <DietaryTags item={item} />
-
-        <button type="button" className="view-btn mt-3">
-          View Dish
-        </button>
+        </div>
       </div>
     </article>
   );

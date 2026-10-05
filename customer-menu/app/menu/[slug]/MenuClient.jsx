@@ -423,7 +423,7 @@ export default function MenuClient({ params }) {
               data-category-id={group.id}
               className="scroll-mt-24 mb-6"
             >
-              <div className="mx-auto max-w-[1240px] px-5 py-3 flex items-center justify-between border-b border-white/[0.08] mb-3">
+              <div className="mx-auto max-w-[780px] sm:max-w-[800px] px-4 sm:px-5 py-3 flex items-center justify-between border-b border-white/[0.08] mb-2">
                 <div className="flex items-center gap-3">
                   <h3 className="font-display text-xl sm:text-2xl text-[#f6f2eb] font-semibold tracking-wide">
                     {group.name}
