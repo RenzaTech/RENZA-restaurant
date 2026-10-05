@@ -139,7 +139,7 @@ export default function DishSheet({
   } else {
     priceNum = Number(item.price) || 0;
   }
-  const priceDisplay = `₹${priceNum.toFixed(2)}`;
+  const priceDisplay = priceNum > 0 ? `₹${priceNum.toFixed(2)}` : '';
   const categoryName = item.category?.name || item.categoryName || 'House Special';
 
   const handleShare = async () => {
@@ -457,7 +457,7 @@ export default function DishSheet({
           {/* Price & Share */}
           <div className="price-row">
             <div>
-              <div className="modal-price">{priceDisplay}</div>
+              {priceDisplay ? <div className="modal-price">{priceDisplay}</div> : null}
               <div className="modal-price-note">
                 {activePortion
                   ? `${activePortion.name} portion (${activePortion.short}) · All taxes included`

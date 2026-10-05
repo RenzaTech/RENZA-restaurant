@@ -195,7 +195,7 @@ const DishCard = forwardRef(function DishCard(
     priceDisplay = minP === maxP ? `₹${minP.toFixed(0)}` : `₹${minP.toFixed(0)} – ₹${maxP.toFixed(0)}`;
   } else {
     const priceNum = Number(item.price) || 0;
-    priceDisplay = `₹${priceNum.toFixed(0)}`;
+    priceDisplay = priceNum > 0 ? `₹${priceNum.toFixed(0)}` : '';
   }
 
   const handleCardClick = (e, options = {}) => {
@@ -298,7 +298,7 @@ const DishCard = forwardRef(function DishCard(
 
       <div className="dish-info">
         <h3 className="dish-name">{item.name}</h3>
-        <div className="dish-price">{priceDisplay}</div>
+        {priceDisplay ? <div className="dish-price">{priceDisplay}</div> : null}
 
         {prepPrices && prepPrices.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2" onClick={(e) => e.stopPropagation()}>

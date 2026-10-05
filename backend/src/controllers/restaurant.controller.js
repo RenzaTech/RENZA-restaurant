@@ -400,21 +400,28 @@ const createFood = async (req, res) => {
     }
   }
 
-  let parsedPrice = parseFloat(price)
+  let parsedPrice = price !== undefined && price !== '' ? parseFloat(price) : NaN
   if (isNaN(parsedPrice) || parsedPrice <= 0) {
     if (cleanPortionPrices) {
-      const obj = JSON.parse(cleanPortionPrices)
-      const values = Object.values(obj).filter(v => v > 0)
-      if (values.length > 0) parsedPrice = Math.min(...values)
+      try {
+        const obj = JSON.parse(cleanPortionPrices)
+        const values = Object.values(obj).filter(v => v > 0)
+        if (values.length > 0) parsedPrice = Math.min(...values)
+      } catch {}
     } else if (cleanPreparationPrices) {
-      const obj = JSON.parse(cleanPreparationPrices)
-      const values = Object.values(obj).filter(v => v > 0)
-      if (values.length > 0) parsedPrice = Math.min(...values)
+      try {
+        const obj = JSON.parse(cleanPreparationPrices)
+        const values = Object.values(obj).filter(v => v > 0)
+        if (values.length > 0) parsedPrice = Math.min(...values)
+      } catch {}
     }
   }
 
   if (isNaN(parsedPrice) || parsedPrice < 0) {
-    return res.status(400).json({ error: 'Price must be a valid non-negative number' })
+    if (!isNaN(parsedPrice) && parsedPrice < 0) {
+      return res.status(400).json({ error: 'Price must be a valid non-negative number' })
+    }
+    parsedPrice = 0
   }
 
   // Parse tags if provided as JSON array or string
@@ -658,7 +665,9 @@ const updateFood = async (req, res) => {
 
   if (!isNaN(parsedPrice) && parsedPrice >= 0) {
     updateData.price = parsedPrice
-  } else if (price !== undefined && price !== '') {
+  } else if (price === '' || price === null || price === '0' || price === 0) {
+    updateData.price = 0
+  } else if (!isNaN(parsedPrice) && parsedPrice < 0) {
     return res.status(400).json({ error: 'Price must be a valid non-negative number' })
   }
 

@@ -244,8 +244,10 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
                 ))}
               </div>
             </div>
-          ) : (
+          ) : Number(item.price) > 0 ? (
             <p className="text-slate-900 font-black text-sm sm:text-base">₹{item.price}</p>
+          ) : (
+            <p className="text-slate-400 font-medium text-xs">Price not set</p>
           )}
 
           <div className="flex flex-wrap items-center gap-1.5 mt-1">

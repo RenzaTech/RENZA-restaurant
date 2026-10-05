@@ -317,53 +317,47 @@ export default function FoodItemForm({
       if (dishKind === 'both') {
         const regVal = parseFloat(regularPrice);
         const specVal = parseFloat(specialPrice);
-        if (isNaN(regVal) || regVal <= 0 || isNaN(specVal) || specVal <= 0) {
-          toast.error('Please enter valid prices for both Regular and Special options');
-          return;
-        }
         const pObj = {};
-        pObj.regular = regVal;
-        pObj.special = specVal;
-        cleanPortionPrices = JSON.stringify(pObj);
-        basePrice = String(Math.min(regVal, specVal));
+        if (!isNaN(regVal) && regVal > 0) pObj.regular = regVal;
+        if (!isNaN(specVal) && specVal > 0) pObj.special = specVal;
+        cleanPortionPrices = Object.keys(pObj).length > 0 ? JSON.stringify(pObj) : '';
+        const validBoth = [regVal, specVal].filter((v) => !isNaN(v) && v > 0);
+        basePrice = validBoth.length > 0 ? String(Math.min(...validBoth)) : (form.price ? String(parseFloat(form.price)) : '0');
         cleanPrepPrices = '';
         resolvedPrepType = '';
-      } else if (dishKind === 'regular' && regularPrice) {
-        const regVal = parseFloat(regularPrice);
-        if (isNaN(regVal) || regVal < 0) {
+      } else if (dishKind === 'regular') {
+        if (regularPrice && (isNaN(parseFloat(regularPrice)) || parseFloat(regularPrice) < 0)) {
           toast.error('Please enter a valid regular price');
           return;
         }
-        basePrice = String(regVal);
+        basePrice = regularPrice ? String(parseFloat(regularPrice)) : (form.price ? String(parseFloat(form.price)) : '0');
         cleanPortionPrices = '';
         cleanPrepPrices = '';
         resolvedPrepType = '';
-      } else if (dishKind === 'special' && specialPrice) {
-        const specVal = parseFloat(specialPrice);
-        if (isNaN(specVal) || specVal < 0) {
+      } else if (dishKind === 'special') {
+        if (specialPrice && (isNaN(parseFloat(specialPrice)) || parseFloat(specialPrice) < 0)) {
           toast.error('Please enter a valid special price');
           return;
         }
-        basePrice = String(specVal);
+        basePrice = specialPrice ? String(parseFloat(specialPrice)) : (form.price ? String(parseFloat(form.price)) : '0');
         cleanPortionPrices = '';
         cleanPrepPrices = '';
         resolvedPrepType = '';
-      } else if (dishKind === 'seasonal' && seasonalPrice) {
-        const seasonVal = parseFloat(seasonalPrice);
-        if (isNaN(seasonVal) || seasonVal < 0) {
+      } else if (dishKind === 'seasonal') {
+        if (seasonalPrice && (isNaN(parseFloat(seasonalPrice)) || parseFloat(seasonalPrice) < 0)) {
           toast.error('Please enter a valid seasonal price');
           return;
         }
-        basePrice = String(seasonVal);
+        basePrice = seasonalPrice ? String(parseFloat(seasonalPrice)) : (form.price ? String(parseFloat(form.price)) : '0');
         cleanPortionPrices = '';
         cleanPrepPrices = '';
         resolvedPrepType = '';
       } else {
-        if (!form.price || isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0) {
+        if (form.price && (isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0)) {
           toast.error('Please enter a valid price');
           return;
         }
-        basePrice = form.price;
+        basePrice = form.price ? String(parseFloat(form.price)) : '0';
         cleanPortionPrices = '';
         cleanPrepPrices = '';
         resolvedPrepType = '';
@@ -493,9 +487,14 @@ export default function FoodItemForm({
             {/* Pricing Structure */}
             <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Pricing Structure <span className="text-rose-500">*</span>
-                </Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Pricing Structure
+                  </Label>
+                  <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                    Optional
+                  </span>
+                </div>
                 <span className="text-[11px] text-slate-500 font-medium">
                   {pricingMode === 'portions'
                     ? 'Quarter, Half & Full portion pricing'
@@ -548,9 +547,14 @@ export default function FoodItemForm({
               {/* Fixed Price Input */}
               {pricingMode === 'single' && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="price" className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Price (INR) <span className="text-rose-500">*</span>
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="price" className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Price (INR)
+                    </Label>
+                    <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                      Optional
+                    </span>
+                  </div>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
                       ₹
@@ -558,10 +562,9 @@ export default function FoodItemForm({
                     <Input
                       id="price"
                       type="number"
-                      placeholder="249"
+                      placeholder="e.g. 249 (optional)"
                       value={form.price}
                       onChange={set('price')}
-                      required={pricingMode === 'single'}
                       min="0"
                       step="0.01"
                       className="pl-8 rounded-xl border-slate-200 text-xs sm:text-sm h-11 focus:ring-orange-500/20 focus:border-orange-500 font-mono font-bold"
@@ -1823,12 +1826,13 @@ export default function FoodItemForm({
                           ? Number(seasonalPrice).toFixed(2)
                           : '0.00'}
                       </span>
-                    ) : (
+                    ) : Number(form.price) > 0 ? (
                       <span className="text-sm font-black text-slate-900 font-mono">
-                        ₹
-                        {Number(form.price) > 0
-                          ? Number(form.price).toFixed(2)
-                          : '0.00'}
+                        ₹{Number(form.price).toFixed(2)}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold text-slate-400 italic">
+                        Price not set
                       </span>
                     )}
                   </div>
