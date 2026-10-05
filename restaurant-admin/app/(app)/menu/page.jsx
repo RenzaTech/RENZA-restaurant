@@ -20,7 +20,21 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-const FILTERS = ['All', 'Available', 'Sold Out', 'Specials'];
+const FILTERS = ['All', 'Available', 'Sold Out', 'Specials', 'Seasonal'];
+
+const SEASONAL_KEYWORDS = ['season', 'summer', 'winter', 'monsoon', 'festive', 'mango', 'spring', 'holiday', 'autumn'];
+const isSeasonalDish = (tag) => {
+  if (!tag || typeof tag !== 'string') return false;
+  const t = tag.trim().toLowerCase();
+  if (['jain', 'vegan', 'gluten-free'].includes(t)) return false;
+  return SEASONAL_KEYWORDS.some((kw) => t.includes(kw));
+};
+const isSpecialDish = (tag) => {
+  if (!tag || typeof tag !== 'string') return false;
+  const t = tag.trim().toLowerCase();
+  if (['jain', 'vegan', 'gluten-free'].includes(t)) return false;
+  return !isSeasonalDish(tag);
+};
 
 function FoodItemSkeleton() {
   return (
@@ -123,6 +137,7 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
   const hasBothImages = Boolean(rawFrontImage && rawTopImage);
 
   const isVeg = item.isVeg === true || item.foodType === 'veg';
+  const seasonal = isSeasonalDish(item.specialTags);
 
   return (
     <div className={cn(
@@ -153,8 +168,13 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
                 </span>
               )}
               {item.specialTags && (
-                <span className="absolute top-1 left-1 z-10 text-[8px] font-black tracking-wide uppercase px-1.5 py-0.5 rounded bg-black/80 text-amber-300 border border-amber-400/40 shadow-xs backdrop-blur-xs">
-                  {item.specialTags}
+                <span className={cn(
+                  "absolute top-1 left-1 z-10 text-[8px] font-black tracking-wide uppercase px-1.5 py-0.5 rounded shadow-xs backdrop-blur-xs",
+                  seasonal
+                    ? "bg-black/80 text-emerald-300 border border-emerald-400/40"
+                    : "bg-black/80 text-amber-300 border border-amber-400/40"
+                )}>
+                  {seasonal ? `🍁 ${item.specialTags}` : item.specialTags}
                 </span>
               )}
             </>
@@ -230,8 +250,13 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
 
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
             {item.specialTags ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full shadow-2xs">
-                ⭐ {item.specialTags}
+              <span className={cn(
+                "inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white px-2 py-0.5 rounded-full shadow-2xs",
+                seasonal
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600"
+                  : "bg-gradient-to-r from-amber-500 to-orange-500"
+              )}>
+                {seasonal ? `🍁 ${item.specialTags}` : `⭐ ${item.specialTags}`}
               </span>
             ) : (
               <span className="inline-flex items-center text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
@@ -378,7 +403,9 @@ export default function MenuPage() {
           : filter === 'Sold Out'
           ? !item.isAvailable
           : filter === 'Specials'
-          ? Boolean(item.specialTags && !['jain', 'vegan', 'gluten-free'].includes(item.specialTags.trim().toLowerCase()))
+          ? isSpecialDish(item.specialTags)
+          : filter === 'Seasonal'
+          ? isSeasonalDish(item.specialTags)
           : true;
 
       const matchesCategory =
@@ -441,7 +468,8 @@ export default function MenuPage() {
             {filteredItems.length !== items.length ? `Showing ${filteredItems.length} of ${items.length} dishes • ` : `Total ${items.length} dishes • `}
             {items.filter((i) => i.isAvailable).length} Available •{' '}
             {items.filter((i) => !i.isAvailable).length} Sold Out •{' '}
-            {items.filter((i) => Boolean(i.specialTags && !['jain', 'vegan', 'gluten-free'].includes(i.specialTags.trim().toLowerCase()))).length} Specials
+            {items.filter((i) => isSpecialDish(i.specialTags)).length} Specials •{' '}
+            {items.filter((i) => isSeasonalDish(i.specialTags)).length} Seasonal
           </p>
         </div>
 

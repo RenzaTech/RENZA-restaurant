@@ -47,6 +47,17 @@ const SPECIAL_TAG_PRESETS = [
   "House Specialty",
 ];
 
+const SEASONAL_TAG_PRESETS = [
+  "Seasonal Special",
+  "Summer Special",
+  "Winter Special",
+  "Monsoon Special",
+  "Festive Special",
+  "Mango Season",
+  "Limited Season",
+  "Spring Special",
+];
+
 const parseInitialPortions = (portionPrices) => {
   if (!portionPrices) return { quarter: '', half: '', full: '', regular: '', special: '' };
   try {
@@ -121,10 +132,19 @@ export default function FoodItemForm({
 
   const rawSpecialTags = typeof initialData.specialTags === 'string' ? initialData.specialTags.trim() : '';
   const isDietaryTagOnly = ['jain', 'vegan', 'gluten-free', 'jain, vegan', 'vegan, gluten-free'].includes(rawSpecialTags.toLowerCase());
-  const initialIsSpecial = Boolean(rawSpecialTags && !isDietaryTagOnly);
+  const isSeasonalTag = Boolean(
+    rawSpecialTags &&
+    !isDietaryTagOnly &&
+    ['season', 'summer', 'winter', 'monsoon', 'festive', 'mango', 'spring', 'holiday', 'autumn'].some((kw) =>
+      rawSpecialTags.toLowerCase().includes(kw)
+    )
+  );
+  const initialIsSpecial = Boolean(rawSpecialTags && !isDietaryTagOnly && !isSeasonalTag);
 
   const initialDishKind = (initialPortions.regular && initialPortions.special)
     ? 'both'
+    : isSeasonalTag
+    ? 'seasonal'
     : initialIsSpecial
     ? 'special'
     : initialPortions.regular
@@ -138,7 +158,11 @@ export default function FoodItemForm({
   const [specialPrice, setSpecialPrice] = useState(
     initialPortions.special || (initialDishKind === 'special' ? String(initialData.price || '') : '')
   );
+  const [seasonalPrice, setSeasonalPrice] = useState(
+    initialDishKind === 'seasonal' ? String(initialData.price || '') : ''
+  );
   const [specialTag, setSpecialTag] = useState(initialIsSpecial ? rawSpecialTags : "Chef's Special");
+  const [seasonalTag, setSeasonalTag] = useState(isSeasonalTag ? rawSpecialTags : "Seasonal Special");
 
   useEffect(() => {
     if (initialData.imageUrl) {
@@ -179,10 +203,21 @@ export default function FoodItemForm({
       const tagStr = String(initialData.specialTags).trim();
       const isDietOnly = ['jain', 'vegan', 'gluten-free', 'jain, vegan', 'vegan, gluten-free'].includes(tagStr.toLowerCase());
       if (tagStr && !isDietOnly) {
-        setSpecialTag(tagStr);
-        setDishKind((prev) => (prev === 'both' ? 'both' : 'special'));
-        if (!specialPrice && initialData.price) {
-          setSpecialPrice(String(initialData.price));
+        const isSeason = ['season', 'summer', 'winter', 'monsoon', 'festive', 'mango', 'spring', 'holiday', 'autumn'].some((kw) =>
+          tagStr.toLowerCase().includes(kw)
+        );
+        if (isSeason) {
+          setSeasonalTag(tagStr);
+          setDishKind('seasonal');
+          if (initialData.price) {
+            setSeasonalPrice((prev) => (!prev ? String(initialData.price) : prev));
+          }
+        } else {
+          setSpecialTag(tagStr);
+          setDishKind((prev) => (prev === 'both' ? 'both' : 'special'));
+          if (initialData.price) {
+            setSpecialPrice((prev) => (!prev ? String(initialData.price) : prev));
+          }
         }
       }
     }
@@ -313,6 +348,16 @@ export default function FoodItemForm({
         cleanPortionPrices = '';
         cleanPrepPrices = '';
         resolvedPrepType = '';
+      } else if (dishKind === 'seasonal' && seasonalPrice) {
+        const seasonVal = parseFloat(seasonalPrice);
+        if (isNaN(seasonVal) || seasonVal < 0) {
+          toast.error('Please enter a valid seasonal price');
+          return;
+        }
+        basePrice = String(seasonVal);
+        cleanPortionPrices = '';
+        cleanPrepPrices = '';
+        resolvedPrepType = '';
       } else {
         if (!form.price || isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0) {
           toast.error('Please enter a valid price');
@@ -357,7 +402,14 @@ export default function FoodItemForm({
     formData.append('isJain', String(isJain));
     formData.append('isVegan', String(isVegan));
     formData.append('isGlutenFree', String(isGlutenFree));
-    formData.append('specialTags', (dishKind === 'special' || dishKind === 'both') ? (specialTag.trim() || 'Special') : '');
+    formData.append(
+      'specialTags',
+      (dishKind === 'special' || dishKind === 'both')
+        ? (specialTag.trim() || 'Special')
+        : dishKind === 'seasonal'
+        ? (seasonalTag.trim() || 'Seasonal Special')
+        : ''
+    );
 
     // Primary Front View Image
     if (imageFile) {
@@ -735,10 +787,10 @@ export default function FoodItemForm({
                     Optional
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400">Regular, Special, or Both</span>
+                <span className="text-[10px] text-slate-400">Regular, Special, Seasonal, or Both</span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 {/* Standard / None */}
                 <button
                   type="button"
@@ -802,6 +854,29 @@ export default function FoodItemForm({
                   </span>
                 </button>
 
+                {/* Seasonal Dish */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = dishKind === 'seasonal' ? 'none' : 'seasonal';
+                    setDishKind(next);
+                    if (next === 'seasonal' && !seasonalPrice && form.price) {
+                      setSeasonalPrice(form.price);
+                    }
+                  }}
+                  className={cn(
+                    'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
+                    dishKind === 'seasonal'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-950 shadow-xs ring-1 ring-emerald-600/20'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
+                  )}
+                >
+                  <span className="text-sm">🍁 Seasonal Dish</span>
+                  <span className={cn('text-[10px] font-normal leading-tight', dishKind === 'seasonal' ? 'text-emerald-700' : 'text-slate-400')}>
+                    Seasonal Price &amp; Tag
+                  </span>
+                </button>
+
                 {/* Both: Regular & Special */}
                 <button
                   type="button"
@@ -814,7 +889,7 @@ export default function FoodItemForm({
                     }
                   }}
                   className={cn(
-                    'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer text-center',
+                    'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 flex flex-col items-center justify-center gap-1 cursor-pointer text-center col-span-2 sm:col-span-1',
                     dishKind === 'both'
                       ? 'border-orange-500 bg-orange-50 text-orange-950 shadow-xs ring-1 ring-orange-500/20'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50/50'
@@ -926,6 +1001,80 @@ export default function FoodItemForm({
                       onChange={(e) => setSpecialTag(e.target.value)}
                       maxLength={30}
                       className="h-9 text-xs rounded-xl bg-white border-amber-200 focus:border-amber-500 focus:ring-amber-500/20"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Price & Details Box for Seasonal Dish */}
+              {dishKind === 'seasonal' && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white rounded-2xl border border-emerald-200/90 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                      🍁 Seasonal Dish Price
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-medium">Price in INR</span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 260"
+                      value={seasonalPrice}
+                      onChange={(e) => {
+                        setSeasonalPrice(e.target.value);
+                        setForm((f) => ({ ...f, price: e.target.value }));
+                      }}
+                      min="0"
+                      step="0.01"
+                      className="pl-7 h-10 text-xs sm:text-sm font-mono font-bold rounded-xl bg-white border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/20"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                      Seasonal Badge Label
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-medium">
+                      Shown on customer menu card
+                    </span>
+                  </div>
+
+                  {/* Preset Quick-Picks */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {SEASONAL_TAG_PRESETS.map((preset) => {
+                      const isSelected = seasonalTag.trim().toLowerCase() === preset.toLowerCase();
+                      return (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setSeasonalTag(preset)}
+                          className={cn(
+                            'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border',
+                            isSelected
+                              ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs ring-1 ring-emerald-500/30'
+                              : 'bg-white text-slate-700 border-emerald-200 hover:bg-emerald-100/60'
+                          )}
+                        >
+                          {preset}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Tag Input */}
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-600">
+                      Or type custom seasonal badge label:
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. Seasonal Special, Summer Refresh, Monsoon Delight"
+                      value={seasonalTag}
+                      onChange={(e) => setSeasonalTag(e.target.value)}
+                      maxLength={30}
+                      className="h-9 text-xs rounded-xl bg-white border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -1477,6 +1626,12 @@ export default function FoodItemForm({
                       </span>
                     )}
 
+                    {dishKind === 'seasonal' && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-2xs">
+                        🍁 {seasonalTag.trim() || 'Seasonal Special'}
+                      </span>
+                    )}
+
                     {/* Dual photo indicator badge */}
                     {(livePreviewUrl && liveTopPreviewUrl) && (
                       <span className="rounded-full bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.2 text-[9px] font-bold">
@@ -1661,6 +1816,13 @@ export default function FoodItemForm({
                           );
                         })()}
                       </div>
+                    ) : dishKind === 'seasonal' && seasonalPrice ? (
+                      <span className="text-sm font-black text-slate-900 font-mono">
+                        ₹
+                        {Number(seasonalPrice) > 0
+                          ? Number(seasonalPrice).toFixed(2)
+                          : '0.00'}
+                      </span>
                     ) : (
                       <span className="text-sm font-black text-slate-900 font-mono">
                         ₹
@@ -1697,6 +1859,11 @@ export default function FoodItemForm({
                           {(dishKind === 'special' || dishKind === 'both') && (
                             <span className="absolute top-1 right-1 z-10 text-[8px] font-black tracking-wide uppercase px-1.5 py-0.5 rounded bg-black/85 text-amber-300 border border-amber-400/50 shadow-xs backdrop-blur-xs">
                               {specialTag.trim() || 'Special'}
+                            </span>
+                          )}
+                          {dishKind === 'seasonal' && (
+                            <span className="absolute top-1 right-1 z-10 text-[8px] font-black tracking-wide uppercase px-1.5 py-0.5 rounded bg-black/85 text-emerald-300 border border-emerald-400/50 shadow-xs backdrop-blur-xs">
+                              {seasonalTag.trim() || 'Seasonal Special'}
                             </span>
                           )}
                           <span className="absolute bottom-1 left-1 z-10 text-[8px] font-bold px-1.5 py-0.5 rounded bg-black/70 text-white backdrop-blur-xs">
