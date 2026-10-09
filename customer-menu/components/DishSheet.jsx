@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect, useMemo } from 'react';
-import { UtensilsCrossed, Share2, Check, ZoomIn } from 'lucide-react';
+import { UtensilsCrossed, Share2, Check } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
 import { DietaryTags, parsePortions, parsePreparationPrices } from './DishCard';
 import DishImageZoomModal from './DishImageZoomModal';
@@ -244,22 +244,6 @@ export default function DishSheet({
             </div>
           )}
           <div className="modal-photo-shade" />
-
-          {/* Zoom Overlay Prompt Button */}
-          {hasAnyImage && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsZoomOpen(true);
-              }}
-              className="absolute bottom-4 right-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/85 px-3 py-1.5 border border-amber-300/40 text-[11px] font-bold text-amber-200 backdrop-blur-md hover:bg-black hover:border-amber-300 hover:scale-105 active:scale-95 transition shadow-lg cursor-pointer"
-              aria-label="Zoom food photo"
-            >
-              <ZoomIn className="h-3.5 w-3.5 text-amber-300" />
-              <span>Tap to Zoom</span>
-            </button>
-          )}
 
           {/* Portion Serving Photo Indicator */}
           {portionImageUrl && currentImageUrl === portionImageUrl && (

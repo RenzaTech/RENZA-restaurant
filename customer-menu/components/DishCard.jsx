@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { forwardRef, useState, useEffect } from 'react';
-import { UtensilsCrossed, ZoomIn } from 'lucide-react';
+import { UtensilsCrossed } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
 import DishImageZoomModal from './DishImageZoomModal';
 
@@ -258,7 +258,16 @@ const DishCard = forwardRef(function DishCard(
       }}
     >
       {/* ── Left Column: Dish Photo ── */}
-      <div className="dish-photo-wrap">
+      <div
+        className={`dish-photo-wrap ${hasAnyImage && !isUnavailable ? 'cursor-zoom-in' : ''}`}
+        onClick={(e) => {
+          if (hasAnyImage && !isUnavailable) {
+            e.stopPropagation();
+            setIsZoomOpen(true);
+          }
+        }}
+        title={hasAnyImage && !isUnavailable ? `Click to zoom photo of ${item.name}` : undefined}
+      >
         {hasAnyImage ? (
           <Image
             key={currentImageUrl}
@@ -287,22 +296,6 @@ const DishCard = forwardRef(function DishCard(
           className={`type-dot ${isVeg ? 'veg' : 'nonveg'}`}
           title={isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
         />
-
-        {/* Quick Zoom Button on Dish Card Photo */}
-        {hasAnyImage && !isUnavailable && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsZoomOpen(true);
-            }}
-            className="absolute top-1.5 right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/80 border border-amber-400/40 text-amber-300 shadow backdrop-blur-xs hover:bg-black hover:border-amber-300 hover:scale-110 active:scale-95 transition cursor-pointer"
-            title="Zoom food photo"
-            aria-label={`Zoom photo of ${item.name}`}
-          >
-            <ZoomIn className="h-3 w-3" />
-          </button>
-        )}
 
         {/* Portion Serving Photo Indicator */}
         {portionImageUrl && currentImageUrl === portionImageUrl && (
