@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Search, X, MapPin, Phone } from 'lucide-react';
+import { Search, X, MapPin, Phone, Star } from 'lucide-react';
 
 export default function MenuHero({
   restaurant,
@@ -9,6 +9,7 @@ export default function MenuHero({
   searchQuery,
   setSearchQuery,
   searchInputRef,
+  onRateUs,
 }) {
   const logoUrl = resolveImageUrl ? resolveImageUrl(restaurant?.logoUrl) : null;
   const heroCoverUrl =
@@ -127,8 +128,8 @@ export default function MenuHero({
         )}
       </div>
 
-      {/* ── Bottom CTA Pill ── */}
-      <div className="hero-bottom-bar !mb-8">
+      {/* ── Bottom CTA & Rate Us Action ── */}
+      <div className="hero-bottom-bar !mb-8 flex flex-col items-center justify-center gap-2.5">
         <a
           href="#menuSection"
           onClick={handleScrollToMenu}
@@ -139,6 +140,18 @@ export default function MenuHero({
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </a>
+
+        {onRateUs && (
+          <button
+            type="button"
+            onClick={onRateUs}
+            className="hero-rate-pill cursor-pointer"
+            aria-label="Rate us and leave dining feedback"
+          >
+            <Star className="h-3.5 w-3.5 fill-[#d4b15d] text-[#d4b15d]" />
+            <span>Rate Us</span>
+          </button>
+        )}
       </div>
 
       {/* Curved Arc Divider */}

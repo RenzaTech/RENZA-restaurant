@@ -374,6 +374,7 @@ export default function MenuClient({ params }) {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         searchInputRef={searchInputRef}
+        onRateUs={() => setRateModalOpen(true)}
       />
 
       {/* ════ 2. MENU INTRO HEADING ════ */}
