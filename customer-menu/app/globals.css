@@ -808,6 +808,7 @@ body {
   right: 0;
   height: 30%;
   background: linear-gradient(to top, var(--navy-dark), transparent);
+  pointer-events: none;
 }
 
 .modal-body {

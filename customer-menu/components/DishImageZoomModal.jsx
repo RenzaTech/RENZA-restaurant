@@ -216,6 +216,9 @@ export default function DishImageZoomModal({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onClick={(e) => {
+          if (scale === 1 && !isDragging) handleDoubleTap(e.clientX, e.clientY);
+        }}
         onDoubleClick={(e) => handleDoubleTap(e.clientX, e.clientY)}
         style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in' }}
       >

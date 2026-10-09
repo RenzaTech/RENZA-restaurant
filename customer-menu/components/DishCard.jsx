@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { forwardRef, useState, useEffect } from 'react';
 import { UtensilsCrossed } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
-import DishImageZoomModal from './DishImageZoomModal';
 
 export function VegIndicator({ isVeg }) {
   const isVegetarian = isVeg !== false;
@@ -144,7 +143,6 @@ const DishCard = forwardRef(function DishCard(
   ref
 ) {
   const [activeAngle, setActiveAngle] = useState('front');
-  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
   const [portionFailed, setPortionFailed] = useState(false);
@@ -242,9 +240,8 @@ const DishCard = forwardRef(function DishCard(
   };
 
   return (
-    <>
-      <article
-        ref={ref}
+    <article
+      ref={ref}
       className={`dish-card ${isUnavailable ? 'opacity-70 cursor-not-allowed' : ''}`}
       onClick={handleCardClick}
       role="button"
@@ -258,16 +255,7 @@ const DishCard = forwardRef(function DishCard(
       }}
     >
       {/* ── Left Column: Dish Photo ── */}
-      <div
-        className={`dish-photo-wrap ${hasAnyImage && !isUnavailable ? 'cursor-zoom-in' : ''}`}
-        onClick={(e) => {
-          if (hasAnyImage && !isUnavailable) {
-            e.stopPropagation();
-            setIsZoomOpen(true);
-          }
-        }}
-        title={hasAnyImage && !isUnavailable ? `Click to zoom photo of ${item.name}` : undefined}
-      >
+      <div className="dish-photo-wrap">
         {hasAnyImage ? (
           <Image
             key={currentImageUrl}
@@ -449,25 +437,7 @@ const DishCard = forwardRef(function DishCard(
         </div>
       </div>
     </article>
-
-    {/* Dish Food Image Full-Screen Zoom Modal */}
-    {isZoomOpen && hasAnyImage && (
-      <DishImageZoomModal
-        isOpen={isZoomOpen}
-        onClose={() => setIsZoomOpen(false)}
-        imageUrl={currentImageUrl}
-        dishName={item.name}
-        subtitle={
-          portionImageUrl && currentImageUrl === portionImageUrl
-            ? `${activePortion.name} Serving (${activePortion.short})`
-            : activeAngle === 'top'
-            ? 'Top Overhead View'
-            : 'Front View'
-        }
-      />
-    )}
-  </>
-);
+  );
 });
 
 export default DishCard;
