@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Image from 'next/image';
+import { createPortal } from 'react-dom';
 import { ZoomIn, ZoomOut, RotateCcw, X } from 'lucide-react';
 
 export default function DishImageZoomModal({
@@ -11,6 +11,7 @@ export default function DishImageZoomModal({
   dishName,
   subtitle,
 }) {
+  const [mounted, setMounted] = useState(false);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -18,6 +19,10 @@ export default function DishImageZoomModal({
   const posStartRef = useRef({ x: 0, y: 0 });
   const lastTouchDistanceRef = useRef(null);
   const lastTapRef = useRef(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Reset zoom & position whenever modal opens or image changes
   useEffect(() => {
@@ -68,7 +73,6 @@ export default function DishImageZoomModal({
         setPosition({ x: 0, y: 0 });
       } else {
         setScale(2.2);
-        // Center zoom around tap point if on screen
         const centerX = window.innerWidth / 2;
         const centerY = window.innerHeight / 2;
         const offsetX = (centerX - clientX) * 0.8;
@@ -117,7 +121,6 @@ export default function DishImageZoomModal({
   // Touch handlers (Pinch-to-zoom + Drag + Double-tap)
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
-      // Pinch start
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const dist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
@@ -126,7 +129,6 @@ export default function DishImageZoomModal({
       const now = Date.now();
       const touch = e.touches[0];
       if (now - lastTapRef.current < 300) {
-        // Double-tap detected
         handleDoubleTap(touch.clientX, touch.clientY);
         lastTapRef.current = 0;
         return;
@@ -143,7 +145,6 @@ export default function DishImageZoomModal({
 
   const handleTouchMove = (e) => {
     if (e.touches.length === 2 && lastTouchDistanceRef.current !== null) {
-      // Pinch move
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const dist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
@@ -157,7 +158,6 @@ export default function DishImageZoomModal({
         lastTouchDistanceRef.current = dist;
       }
     } else if (e.touches.length === 1 && isDragging && scale > 1) {
-      // Single finger pan
       const touch = e.touches[0];
       const dx = touch.clientX - dragStartRef.current.x;
       const dy = touch.clientY - dragStartRef.current.y;
@@ -174,11 +174,11 @@ export default function DishImageZoomModal({
     setIsDragging(false);
   };
 
-  if (!isOpen || !imageUrl) return null;
+  if (!isOpen || !imageUrl || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-black/95 backdrop-blur-xl animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-[99999] flex flex-col items-center justify-between bg-black/95 backdrop-blur-xl animate-in fade-in duration-200 select-none"
       onWheel={handleWheel}
       role="dialog"
       aria-modal="true"
@@ -223,19 +223,17 @@ export default function DishImageZoomModal({
         style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in' }}
       >
         <div
-          className="relative max-h-[80vh] max-w-[92vw] aspect-square transition-transform"
+          className="relative max-h-[82vh] max-w-[94vw] flex items-center justify-center transition-transform"
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={imageUrl}
             alt={dishName || 'Dish food photo'}
-            width={900}
-            height={900}
-            priority
-            className="h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]"
+            className="max-h-[82vh] max-w-[94vw] w-auto h-auto object-contain select-none pointer-events-none drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]"
           />
         </div>
       </main>
@@ -293,6 +291,7 @@ export default function DishImageZoomModal({
           </button>
         </div>
       </footer>
-    </div>
+    </div>,
+    document.body
   );
 }

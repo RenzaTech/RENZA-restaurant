@@ -243,7 +243,21 @@ export default function DishSheet({
               <span className="font-display text-4xl text-amber-100">{item.name?.slice(0, 2)}</span>
             </div>
           )}
-          <div className="modal-photo-shade" />
+          {/* Invisible full-area click overlay to ensure mobile tap always fires */}
+          {hasAnyImage && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsZoomOpen(true);
+              }}
+              className="absolute inset-0 z-10 w-full h-full cursor-zoom-in bg-transparent border-0 p-0 m-0 outline-none"
+              aria-label={`Zoom ${item.name} photo`}
+              title="Click to zoom image"
+            />
+          )}
+
+          <div className="modal-photo-shade pointer-events-none" />
 
           {/* Portion Serving Photo Indicator */}
           {portionImageUrl && currentImageUrl === portionImageUrl && (
