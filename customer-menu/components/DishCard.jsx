@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import { forwardRef, useState, useEffect } from 'react';
-import { UtensilsCrossed } from 'lucide-react';
+import { UtensilsCrossed, ZoomIn } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
+import DishImageZoomModal from './DishImageZoomModal';
 
 export function VegIndicator({ isVeg }) {
   const isVegetarian = isVeg !== false;
@@ -143,6 +144,7 @@ const DishCard = forwardRef(function DishCard(
   ref
 ) {
   const [activeAngle, setActiveAngle] = useState('front');
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [frontFailed, setFrontFailed] = useState(false);
   const [topFailed, setTopFailed] = useState(false);
   const [portionFailed, setPortionFailed] = useState(false);
@@ -240,8 +242,9 @@ const DishCard = forwardRef(function DishCard(
   };
 
   return (
-    <article
-      ref={ref}
+    <>
+      <article
+        ref={ref}
       className={`dish-card ${isUnavailable ? 'opacity-70 cursor-not-allowed' : ''}`}
       onClick={handleCardClick}
       role="button"
@@ -284,6 +287,22 @@ const DishCard = forwardRef(function DishCard(
           className={`type-dot ${isVeg ? 'veg' : 'nonveg'}`}
           title={isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
         />
+
+        {/* Quick Zoom Button on Dish Card Photo */}
+        {hasAnyImage && !isUnavailable && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsZoomOpen(true);
+            }}
+            className="absolute top-1.5 right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/80 border border-amber-400/40 text-amber-300 shadow backdrop-blur-xs hover:bg-black hover:border-amber-300 hover:scale-110 active:scale-95 transition cursor-pointer"
+            title="Zoom food photo"
+            aria-label={`Zoom photo of ${item.name}`}
+          >
+            <ZoomIn className="h-3 w-3" />
+          </button>
+        )}
 
         {/* Portion Serving Photo Indicator */}
         {portionImageUrl && currentImageUrl === portionImageUrl && (
@@ -437,7 +456,25 @@ const DishCard = forwardRef(function DishCard(
         </div>
       </div>
     </article>
-  );
+
+    {/* Dish Food Image Full-Screen Zoom Modal */}
+    {isZoomOpen && hasAnyImage && (
+      <DishImageZoomModal
+        isOpen={isZoomOpen}
+        onClose={() => setIsZoomOpen(false)}
+        imageUrl={currentImageUrl}
+        dishName={item.name}
+        subtitle={
+          portionImageUrl && currentImageUrl === portionImageUrl
+            ? `${activePortion.name} Serving (${activePortion.short})`
+            : activeAngle === 'top'
+            ? 'Top Overhead View'
+            : 'Front View'
+        }
+      />
+    )}
+  </>
+);
 });
 
 export default DishCard;
