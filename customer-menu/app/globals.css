@@ -115,7 +115,7 @@ body {
 
 .hero-top-search-wrap {
   position: relative;
-  z-index: 20;
+  z-index: 70;
   width: min(100%, 580px);
   margin: 0 auto;
   padding: 1.5rem 1.2rem 0;
@@ -1307,7 +1307,7 @@ body {
 .sticky-search-bar {
   position: sticky;
   top: 0;
-  z-index: 45;
+  z-index: 80;
   width: 100%;
   background: rgba(6, 9, 13, 0.94);
   border-bottom: 1px solid rgba(200, 167, 93, 0.18);
@@ -1443,20 +1443,41 @@ mark.search-highlight {
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  z-index: 60;
+  z-index: 90;
+  max-height: min(72vh, 440px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   list-style: none;
   margin: 0;
-  padding: 0.3rem 0;
+  padding: 0.35rem 0;
   background: rgba(8, 12, 20, 0.98);
-  border: 1px solid rgba(200, 167, 93, 0.3);
+  border: 1px solid rgba(212, 177, 93, 0.35);
   border-radius: 6px;
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(200, 167, 93, 0.08);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  overflow: hidden;
+    0 24px 60px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(212, 177, 93, 0.12);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   animation: suggestionSlideIn 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.suggestions-panel::-webkit-scrollbar {
+  width: 5px;
+}
+.suggestions-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25);
+}
+.suggestions-panel::-webkit-scrollbar-thumb {
+  background: rgba(212, 177, 93, 0.35);
+  border-radius: 3px;
+}
+.suggestions-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 177, 93, 0.55);
+}
+
+.sticky-search-inner .suggestions-panel {
+  left: 0.5rem;
+  right: 0.5rem;
 }
 
 /* ── Individual row ── */

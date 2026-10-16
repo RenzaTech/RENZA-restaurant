@@ -42,70 +42,72 @@ export default function MenuHero({
       <div className="hero-photo-shade" />
 
       {/* ── Top Bar: Search Bar + Suggestions ── */}
-      <div className="hero-top-search-wrap" style={{ position: 'relative' }}>
-        {/* combobox wrapper: role + aria-expanded live here, not on the input */}
-        <div
-          className="hero-search-bar"
-          role="combobox"
-          aria-expanded={suggestionsOpen}
-          aria-haspopup="listbox"
-          aria-owns="hero-suggestion-list"
-          aria-controls="hero-suggestion-list"
-        >
-          <Search className="hero-search-icon !ml-0 !mr-2.5 h-4 w-4 text-[#d4b15d]" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            className="hero-search-input"
-            placeholder="Search dishes or ingredients..."
-            value={searchQuery || ''}
-            autoComplete="off"
-            aria-autocomplete="list"
+      <div className="hero-top-search-wrap">
+        <div className="relative w-full">
+          {/* combobox wrapper: role + aria-expanded live here, not on the input */}
+          <div
+            className="hero-search-bar"
+            role="combobox"
+            aria-expanded={suggestionsOpen}
+            aria-haspopup="listbox"
+            aria-owns="hero-suggestion-list"
             aria-controls="hero-suggestion-list"
-            aria-activedescendant={suggestionIndex >= 0 ? `suggestion-${suggestionIndex}` : undefined}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              if (setSuggestionsOpen) setSuggestionsOpen(true);
-              if (setSuggestionIndex) setSuggestionIndex(-1);
-            }}
-            onFocus={() => {
-              if (searchQuery && setSuggestionsOpen) setSuggestionsOpen(true);
-            }}
-            onBlur={() => {
-              // Delay so mousedown on a row fires first
-              setTimeout(() => {
-                if (setSuggestionsOpen) setSuggestionsOpen(false);
+          >
+            <Search className="hero-search-icon !ml-0 !mr-2.5 h-4 w-4 text-[#d4b15d]" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="hero-search-input"
+              placeholder="Search dishes or ingredients..."
+              value={searchQuery || ''}
+              autoComplete="off"
+              aria-autocomplete="list"
+              aria-controls="hero-suggestion-list"
+              aria-activedescendant={suggestionIndex >= 0 ? `suggestion-${suggestionIndex}` : undefined}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (setSuggestionsOpen) setSuggestionsOpen(true);
                 if (setSuggestionIndex) setSuggestionIndex(-1);
-              }, 150);
-            }}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                if (setSuggestionsOpen) setSuggestionsOpen(false);
               }}
-              className="text-[#d4b15d] hover:text-[#f5d98f] p-1 transition"
-              aria-label="Clear search"
-            >
-              <X className="h-4 w-4" />
-            </button>
+              onFocus={() => {
+                if (searchQuery && setSuggestionsOpen) setSuggestionsOpen(true);
+              }}
+              onBlur={() => {
+                // Delay so mousedown on a row fires first
+                setTimeout(() => {
+                  if (setSuggestionsOpen) setSuggestionsOpen(false);
+                  if (setSuggestionIndex) setSuggestionIndex(-1);
+                }, 150);
+              }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  if (setSuggestionsOpen) setSuggestionsOpen(false);
+                }}
+                className="text-[#d4b15d] hover:text-[#f5d98f] p-1 transition"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Autocomplete dropdown */}
+          {suggestionsOpen && (
+            <SearchSuggestions
+              query={searchQuery}
+              allItems={allItems}
+              activeIndex={suggestionIndex}
+              onSelectItem={onSelectSuggestion}
+              onCommitSearch={onCommitSearch}
+              resolveImageUrl={resolveImageUrl}
+              suggestionListId="hero-suggestion-list"
+            />
           )}
         </div>
-
-        {/* Autocomplete dropdown */}
-        {suggestionsOpen && (
-          <SearchSuggestions
-            query={searchQuery}
-            allItems={allItems}
-            activeIndex={suggestionIndex}
-            onSelectItem={onSelectSuggestion}
-            onCommitSearch={onCommitSearch}
-            resolveImageUrl={resolveImageUrl}
-            suggestionListId="hero-suggestion-list"
-          />
-        )}
       </div>
 
       {/* ── Center Unified Brand Block ── */}
