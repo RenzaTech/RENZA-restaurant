@@ -233,18 +233,6 @@ export default function MenuClient({ params }) {
   }, []);
 
 
-  // Auto-scroll to first search result after debounce settles
-  useEffect(() => {
-    if (!debouncedSearch || filteredGroups.length === 0) return;
-    const firstCatId = filteredGroups[0].id;
-    const el = sectionRefs.current[firstCatId];
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 110;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
-
   // Search analytics — fire when query is >= 3 chars, debounced 1s
   useEffect(() => {
     if (!debouncedSearch || debouncedSearch.length < 3) return;
@@ -448,7 +436,11 @@ export default function MenuClient({ params }) {
   const handleCommitSearch = useCallback(() => {
     setSuggestionsOpen(false);
     setSuggestionIndex(-1);
-  }, []);
+    if (heroVisible) {
+      const el = document.getElementById('menuSection');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [heroVisible]);
 
   // Filter groups
   const filteredGroups = useMemo(() => {
