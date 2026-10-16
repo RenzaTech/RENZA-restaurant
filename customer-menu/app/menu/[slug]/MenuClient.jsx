@@ -14,6 +14,7 @@ import EmptyState from '../../../components/EmptyState';
 import RateUsModal from '../../../components/RateUsModal';
 import { SkeletonPage } from '../../../components/Skeletons';
 import SplashScreen from '../../../components/SplashScreen';
+import SearchSuggestions from '../../../components/SearchSuggestions';
 import fallbackMenuData from '../../../data/anbude-cafe-menu.json';
 
 function getApiUrl() {
@@ -98,6 +99,11 @@ export default function MenuClient({ params }) {
 
   const [heroVisible, setHeroVisible] = useState(true);
 
+  // Search suggestions (autocomplete dropdown)
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const suggestionsRef = useRef(null);  // wraps sticky bar for click-outside detection
+
   // Restore query params from URL
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -140,10 +146,15 @@ export default function MenuClient({ params }) {
     return () => observer.disconnect();
   }, []);
 
-  // Keyboard shortcut: '/' to focus search, Escape to clear + blur
+  // Keyboard: '/' focus, Escape close/clear, ↑↓ navigate suggestions, Enter select
   useEffect(() => {
     const handleKey = (e) => {
       const tag = document.activeElement?.tagName;
+      const inSearch =
+        document.activeElement === searchInputRef.current ||
+        document.activeElement === stickySearchInputRef.current;
+
+      // '/' to open search when not already in an input
       if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
         e.preventDefault();
         if (heroVisible) {
@@ -152,19 +163,75 @@ export default function MenuClient({ params }) {
         } else {
           stickySearchInputRef.current?.focus();
         }
+        return;
       }
-      if (
-        e.key === 'Escape' &&
-        (document.activeElement === searchInputRef.current ||
-          document.activeElement === stickySearchInputRef.current)
-      ) {
-        setSearchQuery('');
-        document.activeElement.blur();
+
+      if (!inSearch) return;
+
+      // Escape: close dropdown first; if already closed, clear query
+      if (e.key === 'Escape') {
+        if (suggestionsOpen) {
+          setSuggestionsOpen(false);
+          setSuggestionIndex(-1);
+        } else {
+          setSearchQuery('');
+          document.activeElement.blur();
+        }
+        return;
+      }
+
+      // Arrow navigation (only when dropdown is open)
+      if (!suggestionsOpen) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        // +1 for the "Search for …" commit row
+        setSuggestionIndex((i) => Math.min(i + 1, 6)); // max 6 dish rows + 1 commit
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSuggestionIndex((i) => Math.max(i - 1, -1));
+        return;
+      }
+
+      // Enter: select highlighted row
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // suggestionIndex === -1 means no highlight → commit plain search
+        if (suggestionIndex === -1) {
+          setSuggestionsOpen(false);
+          return;
+        }
+        // The "Search for …" row is always index === suggestions length
+        // We don't know the count here, but handleEnterFromKeyboard below handles it
+        setSuggestionIndex((i) => {
+          // Signal to SearchSuggestions that Enter was pressed — handled via
+          // the onKeyboardEnter prop pattern; use a ref flag instead
+          return i;
+        });
+        // Trigger commit via a custom event the component listens to
+        window.dispatchEvent(new CustomEvent('suggestion:enter', { detail: { index: suggestionIndex } }));
       }
     };
+
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [heroVisible]);
+  }, [heroVisible, suggestionsOpen, suggestionIndex]);
+
+  // Click-outside → close suggestions
+  useEffect(() => {
+    const handler = (e) => {
+      // Hero bar area is handled via onBlur; this covers the sticky bar
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target)) {
+        setSuggestionsOpen(false);
+        setSuggestionIndex(-1);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
 
   // Auto-scroll to first search result after debounce settles
   useEffect(() => {
@@ -345,6 +412,43 @@ export default function MenuClient({ params }) {
     setActiveFilters([]);
     setSortBy('default');
   };
+  // Flat pool of all items — used by the suggestion scoring engine
+  const allFlatItems = useMemo(
+    () =>
+      categoryGroups.flatMap((g) =>
+        g.items.map((item) => ({
+          ...item,
+          categoryName: item.categoryName || g.name,
+          categoryId: item.categoryId || g.id,
+        }))
+      ),
+    [categoryGroups]
+  );
+
+  // Suggestion: user clicked a dish row → open DishSheet directly
+  const handleSuggestionSelect = useCallback(
+    (item) => {
+      setSearchQuery(item.name);
+      setSuggestionsOpen(false);
+      setSuggestionIndex(-1);
+      setSelectedItem(item);
+      setSelectedAngle('front');
+      setSelectedPortionOption(null);
+      setSelectedPrepOption(null);
+      const url = new URL(window.location.href);
+      url.searchParams.set('dish', item.id || item._id);
+      url.searchParams.delete('angle');
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+      trackEvent(slug, 'search_suggestion_select', item.id || item._id);
+    },
+    [slug]
+  );
+
+  // Suggestion: user clicked "Search for …" row → close dropdown, grid filters naturally
+  const handleCommitSearch = useCallback(() => {
+    setSuggestionsOpen(false);
+    setSuggestionIndex(-1);
+  }, []);
 
   // Filter groups
   const filteredGroups = useMemo(() => {
@@ -440,16 +544,32 @@ export default function MenuClient({ params }) {
               setSearchQuery={setSearchQuery}
               searchInputRef={searchInputRef}
               onRateUs={() => setRateModalOpen(true)}
+              allItems={allFlatItems}
+              suggestionsOpen={suggestionsOpen && heroVisible}
+              setSuggestionsOpen={setSuggestionsOpen}
+              suggestionIndex={suggestionIndex}
+              setSuggestionIndex={setSuggestionIndex}
+              onSelectSuggestion={handleSuggestionSelect}
+              onCommitSearch={handleCommitSearch}
             />
           </div>
 
           {/* ════ STICKY SEARCH BAR (shown when hero scrolls out of view) ════ */}
           <div
+            ref={suggestionsRef}
             className={`sticky-search-bar ${heroVisible ? 'sticky-search-bar--hidden' : 'sticky-search-bar--visible'}`}
             role="search"
             aria-label="Search menu dishes"
           >
-            <div className="sticky-search-inner">
+            <div
+              className="sticky-search-inner"
+              style={{ position: 'relative' }}
+              role="combobox"
+              aria-expanded={suggestionsOpen && !heroVisible}
+              aria-haspopup="listbox"
+              aria-owns="sticky-suggestion-list"
+              aria-controls="sticky-suggestion-list"
+            >
               <Search className="sticky-search-icon" aria-hidden="true" />
               <input
                 ref={stickySearchInputRef}
@@ -457,10 +577,29 @@ export default function MenuClient({ params }) {
                 className="sticky-search-input"
                 placeholder="Search dishes… (press / to focus)"
                 value={searchQuery || ''}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                autoComplete="off"
+                aria-autocomplete="list"
+                aria-controls="sticky-suggestion-list"
+                aria-activedescendant={
+                  suggestionIndex >= 0 ? `suggestion-${suggestionIndex}` : undefined
+                }
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSuggestionsOpen(true);
+                  setSuggestionIndex(-1);
+                }}
+                onFocus={() => {
+                  if (searchQuery) setSuggestionsOpen(true);
+                }}
+                onBlur={() => {
+                  setTimeout(() => {
+                    setSuggestionsOpen(false);
+                    setSuggestionIndex(-1);
+                  }, 150);
+                }}
                 aria-label="Search dishes"
               />
-              {debouncedSearch && (
+              {debouncedSearch && !suggestionsOpen && (
                 <span className="sticky-search-count" aria-live="polite">
                   {resultCount} {resultCount === 1 ? 'dish' : 'dishes'}
                 </span>
@@ -468,7 +607,10 @@ export default function MenuClient({ params }) {
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSuggestionsOpen(false);
+                  }}
                   className="sticky-search-clear"
                   aria-label="Clear search"
                 >
@@ -478,6 +620,19 @@ export default function MenuClient({ params }) {
               {/* Keyboard hint — desktop only */}
               {!searchQuery && (
                 <kbd className="sticky-search-kbd" aria-hidden="true">/</kbd>
+              )}
+
+              {/* Suggestions dropdown for sticky bar */}
+              {suggestionsOpen && !heroVisible && (
+                <SearchSuggestions
+                  query={searchQuery}
+                  allItems={allFlatItems}
+                  activeIndex={suggestionIndex}
+                  onSelectItem={handleSuggestionSelect}
+                  onCommitSearch={handleCommitSearch}
+                  resolveImageUrl={resolveImageUrl}
+                  suggestionListId="sticky-suggestion-list"
+                />
               )}
             </div>
           </div>

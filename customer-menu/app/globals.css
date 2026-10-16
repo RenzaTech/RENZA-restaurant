@@ -1436,3 +1436,152 @@ mark.search-highlight {
   from { opacity: 0; transform: scale(0.9); }
   to   { opacity: 1; transform: scale(1); }
 }
+
+/* ════════════════ SEARCH SUGGESTIONS DROPDOWN ════════════════ */
+.suggestions-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem 0;
+  background: rgba(8, 12, 20, 0.98);
+  border: 1px solid rgba(200, 167, 93, 0.3);
+  border-radius: 6px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(200, 167, 93, 0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  overflow: hidden;
+  animation: suggestionSlideIn 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ── Individual row ── */
+.suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.62rem 1rem;
+  cursor: pointer;
+  min-height: 48px;
+  transition: background 0.1s ease;
+  border-left: 2px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--cream);
+}
+.suggestion-row:hover,
+.suggestion-row--active {
+  background: rgba(212, 177, 93, 0.1);
+  border-left-color: var(--gold);
+}
+
+/* ── Thumbnail / veg-dot ── */
+.suggestion-thumb {
+  flex-shrink: 0;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suggestion-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1.5px solid currentColor;
+}
+.suggestion-dot--veg {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.2);
+}
+.suggestion-dot--nonveg {
+  color: #e53935;
+  background: rgba(229, 57, 53, 0.2);
+}
+
+/* ── Text body ── */
+.suggestion-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.suggestion-name {
+  font-weight: 600;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.suggestion-category {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(154, 163, 175, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Price ── */
+.suggestion-price {
+  flex-shrink: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+}
+
+/* ── "Search for …" commit row ── */
+.suggestion-row--commit {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(246, 242, 235, 0.5);
+  font-size: 0.78rem;
+  font-weight: 400;
+  gap: 0.6rem;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  margin-top: 0.15rem;
+}
+.suggestion-row--commit:hover,
+.suggestion-row--commit.suggestion-row--active {
+  background: rgba(212, 177, 93, 0.07);
+  border-left-color: rgba(212, 177, 93, 0.4);
+  color: rgba(246, 242, 235, 0.75);
+}
+
+.suggestion-commit-icon {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  color: var(--gold);
+  opacity: 0.7;
+}
+
+/* ── Slide-in animation ── */
+@keyframes suggestionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Search, X, MapPin, Phone, Star } from 'lucide-react';
+import SearchSuggestions from './SearchSuggestions';
 
 export default function MenuHero({
   restaurant,
@@ -10,6 +11,14 @@ export default function MenuHero({
   setSearchQuery,
   searchInputRef,
   onRateUs,
+  // Suggestion props
+  allItems = [],
+  suggestionsOpen = false,
+  setSuggestionsOpen,
+  suggestionIndex = -1,
+  setSuggestionIndex,
+  onSelectSuggestion,
+  onCommitSearch,
 }) {
   const logoUrl = resolveImageUrl ? resolveImageUrl(restaurant?.logoUrl) : null;
   const heroCoverUrl =
@@ -32,9 +41,17 @@ export default function MenuHero({
       />
       <div className="hero-photo-shade" />
 
-      {/* ── Top Bar: Search Bar ── */}
-      <div className="hero-top-search-wrap">
-        <div className="hero-search-bar">
+      {/* ── Top Bar: Search Bar + Suggestions ── */}
+      <div className="hero-top-search-wrap" style={{ position: 'relative' }}>
+        {/* combobox wrapper: role + aria-expanded live here, not on the input */}
+        <div
+          className="hero-search-bar"
+          role="combobox"
+          aria-expanded={suggestionsOpen}
+          aria-haspopup="listbox"
+          aria-owns="hero-suggestion-list"
+          aria-controls="hero-suggestion-list"
+        >
           <Search className="hero-search-icon !ml-0 !mr-2.5 h-4 w-4 text-[#d4b15d]" />
           <input
             ref={searchInputRef}
@@ -42,12 +59,33 @@ export default function MenuHero({
             className="hero-search-input"
             placeholder="Search dishes or ingredients..."
             value={searchQuery || ''}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            autoComplete="off"
+            aria-autocomplete="list"
+            aria-controls="hero-suggestion-list"
+            aria-activedescendant={suggestionIndex >= 0 ? `suggestion-${suggestionIndex}` : undefined}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (setSuggestionsOpen) setSuggestionsOpen(true);
+              if (setSuggestionIndex) setSuggestionIndex(-1);
+            }}
+            onFocus={() => {
+              if (searchQuery && setSuggestionsOpen) setSuggestionsOpen(true);
+            }}
+            onBlur={() => {
+              // Delay so mousedown on a row fires first
+              setTimeout(() => {
+                if (setSuggestionsOpen) setSuggestionsOpen(false);
+                if (setSuggestionIndex) setSuggestionIndex(-1);
+              }, 150);
+            }}
           />
           {searchQuery && (
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
+              onClick={() => {
+                setSearchQuery('');
+                if (setSuggestionsOpen) setSuggestionsOpen(false);
+              }}
               className="text-[#d4b15d] hover:text-[#f5d98f] p-1 transition"
               aria-label="Clear search"
             >
@@ -55,6 +93,19 @@ export default function MenuHero({
             </button>
           )}
         </div>
+
+        {/* Autocomplete dropdown */}
+        {suggestionsOpen && (
+          <SearchSuggestions
+            query={searchQuery}
+            allItems={allItems}
+            activeIndex={suggestionIndex}
+            onSelectItem={onSelectSuggestion}
+            onCommitSearch={onCommitSearch}
+            resolveImageUrl={resolveImageUrl}
+            suggestionListId="hero-suggestion-list"
+          />
+        )}
       </div>
 
       {/* ── Center Unified Brand Block ── */}
@@ -93,14 +144,14 @@ export default function MenuHero({
           )}
         </div>
 
-        {/* Restaurant Description (Bigger, elegant font & centered) */}
+        {/* Restaurant Description */}
         {restaurant?.description && (
           <p className="mt-4 font-display text-base sm:text-lg italic text-[#f6f2eb] max-w-md mx-auto leading-relaxed drop-shadow px-2">
             &ldquo;{restaurant.description}&rdquo;
           </p>
         )}
 
-        {/* Location & Phone Number Meta Badges (Bigger, properly aligned) */}
+        {/* Location & Phone Meta Badges */}
         {(restaurant?.address || restaurant?.phone) && (
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
             {restaurant?.address && (
