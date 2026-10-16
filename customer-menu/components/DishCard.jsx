@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { forwardRef, useState, useEffect } from 'react';
 import { UtensilsCrossed } from 'lucide-react';
 import { getDishBlurDataUrl } from '../utils/image';
+import { renderHighlight } from '../utils/highlight';
 
 export function VegIndicator({ isVeg }) {
   const isVegetarian = isVeg !== false;
@@ -139,6 +140,7 @@ const DishCard = forwardRef(function DishCard(
     onSelect,
     resolveImageUrl,
     priority = false,
+    searchQuery = '',
   },
   ref
 ) {
@@ -349,7 +351,9 @@ const DishCard = forwardRef(function DishCard(
         <div className="space-y-1">
           {/* Title & Special Tag Row */}
           <div className="flex items-start justify-between gap-2">
-            <h3 className="dish-name line-clamp-1">{item.name}</h3>
+            <h3 className="dish-name line-clamp-1">
+              {searchQuery ? renderHighlight(item.name, searchQuery) : item.name}
+            </h3>
             {item.specialTags && (
               <span className="shrink-0 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/30">
                 {item.specialTags}
@@ -360,7 +364,7 @@ const DishCard = forwardRef(function DishCard(
           {/* Description */}
           {item.description && (
             <p className="line-clamp-2 text-[11px] sm:text-xs leading-relaxed text-slate-400">
-              {item.description}
+              {searchQuery ? renderHighlight(item.description, searchQuery) : item.description}
             </p>
           )}
 

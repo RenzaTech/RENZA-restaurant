@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Search, X } from 'lucide-react';
 import { trackEvent } from '../../../utils/analytics';
 import MenuHero from '../../../components/MenuHero';
 import { DietaryFilters } from '../../../components/SearchBar';
@@ -90,8 +91,12 @@ export default function MenuClient({ params }) {
 
   const sectionRefs = useRef({});
   const searchInputRef = useRef(null);
+  const stickySearchInputRef = useRef(null);
   const triggerCardRef = useRef(null);
   const trackedItemRef = useRef(null);
+  const heroRef = useRef(null);
+
+  const [heroVisible, setHeroVisible] = useState(true);
 
   // Restore query params from URL
   useEffect(() => {
@@ -123,6 +128,64 @@ export default function MenuClient({ params }) {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 200);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Hero visibility — controls sticky search bar
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroVisible(entry.isIntersecting),
+      { threshold: 0.05 }
+    );
+    observer.observe(heroRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Keyboard shortcut: '/' to focus search, Escape to clear + blur
+  useEffect(() => {
+    const handleKey = (e) => {
+      const tag = document.activeElement?.tagName;
+      if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        e.preventDefault();
+        if (heroVisible) {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          stickySearchInputRef.current?.focus();
+        }
+      }
+      if (
+        e.key === 'Escape' &&
+        (document.activeElement === searchInputRef.current ||
+          document.activeElement === stickySearchInputRef.current)
+      ) {
+        setSearchQuery('');
+        document.activeElement.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [heroVisible]);
+
+  // Auto-scroll to first search result after debounce settles
+  useEffect(() => {
+    if (!debouncedSearch || filteredGroups.length === 0) return;
+    const firstCatId = filteredGroups[0].id;
+    const el = sectionRefs.current[firstCatId];
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 110;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  // Search analytics — fire when query is >= 3 chars, debounced 1s
+  useEffect(() => {
+    if (!debouncedSearch || debouncedSearch.length < 3) return;
+    const timer = setTimeout(() => {
+      trackEvent(slug, 'search', null);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [debouncedSearch, slug]);
 
   const applyMenuData = useCallback((data) => {
     setRestaurant(data.restaurant || data);
@@ -368,14 +431,56 @@ export default function MenuClient({ params }) {
             </div>
           )}
           {/* ════ 1. CINEMATIC HERO ════ */}
-      <MenuHero
-        restaurant={restaurant}
-        resolveImageUrl={resolveImageUrl}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        searchInputRef={searchInputRef}
-        onRateUs={() => setRateModalOpen(true)}
-      />
+          {/* ref div so IntersectionObserver can track hero exit */}
+          <div ref={heroRef}>
+            <MenuHero
+              restaurant={restaurant}
+              resolveImageUrl={resolveImageUrl}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              searchInputRef={searchInputRef}
+              onRateUs={() => setRateModalOpen(true)}
+            />
+          </div>
+
+          {/* ════ STICKY SEARCH BAR (shown when hero scrolls out of view) ════ */}
+          <div
+            className={`sticky-search-bar ${heroVisible ? 'sticky-search-bar--hidden' : 'sticky-search-bar--visible'}`}
+            role="search"
+            aria-label="Search menu dishes"
+          >
+            <div className="sticky-search-inner">
+              <Search className="sticky-search-icon" aria-hidden="true" />
+              <input
+                ref={stickySearchInputRef}
+                type="text"
+                className="sticky-search-input"
+                placeholder="Search dishes… (press / to focus)"
+                value={searchQuery || ''}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search dishes"
+              />
+              {debouncedSearch && (
+                <span className="sticky-search-count" aria-live="polite">
+                  {resultCount} {resultCount === 1 ? 'dish' : 'dishes'}
+                </span>
+              )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="sticky-search-clear"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {/* Keyboard hint — desktop only */}
+              {!searchQuery && (
+                <kbd className="sticky-search-kbd" aria-hidden="true">/</kbd>
+              )}
+            </div>
+          </div>
 
       {/* ════ 2. MENU INTRO HEADING ════ */}
       <section className="menu-intro" id="menuSection" aria-labelledby="menuHeading">
@@ -443,6 +548,7 @@ export default function MenuClient({ params }) {
                     priority={cardIndex++ < 4}
                     onSelect={handleItemSelect}
                     resolveImageUrl={resolveImageUrl}
+                    searchQuery={debouncedSearch}
                   />
                 ))}
               </div>
