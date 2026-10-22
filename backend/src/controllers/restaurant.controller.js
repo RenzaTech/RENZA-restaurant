@@ -121,6 +121,7 @@ const getDashboard = async (req, res) => {
     availableCount,
     unavailableCount,
     totalFoods,
+    tableAgg,
   ] = await Promise.all([
     // Today metrics
     prisma.analyticsEvent.count({
@@ -150,7 +151,15 @@ const getDashboard = async (req, res) => {
     prisma.foodItem.count({ where: { restaurantId, isAvailable: true } }),
     prisma.foodItem.count({ where: { restaurantId, isAvailable: false } }),
     prisma.foodItem.count({ where: { restaurantId } }),
+    prisma.diningTable.aggregate({
+      where: { restaurantId },
+      _sum: { scansCount: true },
+    }),
   ])
+
+  const tableScansTotal = tableAgg?._sum?.scansCount || 0
+  const finalTotalMenuViews = totalMenuViews + tableScansTotal
+  const finalTotalQrScans = totalQrScans + tableScansTotal
 
   // Top 3 food items today by item_view
   const topRaw = await prisma.analyticsEvent.groupBy({
@@ -178,15 +187,16 @@ const getDashboard = async (req, res) => {
       uniqueVisitors: todayUnique.length,
     },
     total: {
-      menuViews: totalMenuViews,
-      qrScans: totalQrScans,
+      menuViews: finalTotalMenuViews,
+      qrScans: finalTotalQrScans,
       uniqueVisitors: totalUnique.length,
     },
     allTime: {
-      menuViews: totalMenuViews,
-      qrScans: totalQrScans,
+      menuViews: finalTotalMenuViews,
+      qrScans: finalTotalQrScans,
       uniqueVisitors: totalUnique.length,
     },
+    tableScans: tableScansTotal,
     foodItems: {
       total: totalFoods,
       available: availableCount,

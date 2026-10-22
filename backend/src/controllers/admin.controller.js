@@ -101,7 +101,7 @@ const listRestaurants = async (req, res) => {
 
   const results = await Promise.all(
     restaurants.map(async (r) => {
-      const [todayQr, todayMenu, allQr, allMenu, uniqueToday] = await Promise.all([
+      const [todayQr, todayMenu, allQr, allMenu, uniqueToday, tableAgg] = await Promise.all([
         prisma.analyticsEvent.count({
           where: { restaurantId: r.id, eventType: 'qr_scan', createdAt: { gte: today } },
         }),
@@ -119,7 +119,15 @@ const listRestaurants = async (req, res) => {
           select: { sessionId: true },
           distinct: ['sessionId'],
         }),
+        prisma.diningTable.aggregate({
+          where: { restaurantId: r.id },
+          _sum: { scansCount: true },
+        }),
       ])
+
+      const tableScans = tableAgg._sum.scansCount || 0
+      const totalScans = allQr + tableScans
+      const totalMenuViews = allMenu + tableScans
 
       return {
         id: r.id,
@@ -151,10 +159,11 @@ const listRestaurants = async (req, res) => {
         foodItemCount: r._count.foodItems,
         foodItemsCount: r._count.foodItems,
         categoryCount: r._count.categories,
-        totalScans: allQr,
-        totalMenuViews: allMenu,
+        totalScans,
+        totalMenuViews,
         todayScans: todayQr,
         todayMenuViews: todayMenu,
+        tableScans,
         analytics: {
           today: {
             qrScans: todayQr,
@@ -162,8 +171,8 @@ const listRestaurants = async (req, res) => {
             uniqueVisitors: uniqueToday.length,
           },
           allTime: {
-            qrScans: allQr,
-            menuViews: allMenu,
+            qrScans: totalScans,
+            menuViews: totalMenuViews,
           },
         },
       }
@@ -472,6 +481,7 @@ const getAnalytics = async (req, res) => {
     allMenu,
     allUnique,
     topItems,
+    tableAgg,
   ] = await Promise.all([
     prisma.analyticsEvent.count({ where: { restaurantId: id, eventType: 'qr_scan', createdAt: { gte: today } } }),
     prisma.analyticsEvent.count({ where: { restaurantId: id, eventType: 'menu_view', createdAt: { gte: today } } }),
@@ -494,7 +504,15 @@ const getAnalytics = async (req, res) => {
       orderBy: { _count: { foodItemId: 'desc' } },
       take: 5,
     }),
+    prisma.diningTable.aggregate({
+      where: { restaurantId: id },
+      _sum: { scansCount: true },
+    }),
   ])
+
+  const tableScansTotal = tableAgg?._sum?.scansCount || 0
+  const totalAllQr = allQr + tableScansTotal
+  const totalAllMenu = allMenu + tableScansTotal
 
   // Resolve top item names
   const topItemsWithNames = await Promise.all(
@@ -572,11 +590,16 @@ const getAnalytics = async (req, res) => {
     thisMonth: monthMetrics,
     month: monthMetrics,
     allTime: {
-      qrScans: allQr,
-      scans: allQr,
-      menuViews: allMenu,
+      qrScans: totalAllQr,
+      scans: totalAllQr,
+      menuViews: totalAllMenu,
       uniqueVisitors: allUnique.length,
     },
+    total: {
+      scans: totalAllQr,
+      menuViews: totalAllMenu,
+    },
+    tableScans: tableScansTotal,
     topItems: topItemsWithNames,
     hourlyToday,
     hourly: hourlyToday,

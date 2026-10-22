@@ -29,40 +29,53 @@ const getMenu = async (req, res) => {
       },
     })
 
-    // If not found by restaurant slug, check if this is a table QR token or table id
-    if (!restaurant) {
-      const tableMatch = await prisma.diningTable.findFirst({
-        where: {
-          OR: [{ qrToken: slug }, { id: slug }],
-        },
-        include: {
-          restaurant: {
-            include: {
-              categories: {
-                orderBy: { sortOrder: 'asc' },
+    let matchedTable = null
+
+    // 1. Check if slug is a table QR token or table id
+    const tableMatch = await prisma.diningTable.findFirst({
+      where: {
+        OR: [{ qrToken: slug }, { id: slug }],
+      },
+      include: {
+        restaurant: {
+          include: {
+            categories: {
+              orderBy: { sortOrder: 'asc' },
+            },
+            foodItems: {
+              include: {
+                category: { select: { id: true, name: true } },
               },
-              foodItems: {
-                include: {
-                  category: { select: { id: true, name: true } },
-                },
-                orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-              },
+              orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
             },
           },
         },
-      })
-      if (tableMatch?.restaurant) {
-        restaurant = tableMatch.restaurant
-        if (restaurant.status === 'active') {
-          await prisma.diningTable.update({
-            where: { id: tableMatch.id },
-            data: { scansCount: { increment: 1 } },
-          }).catch(() => {})
-        }
-      }
+      },
+    })
+    if (tableMatch?.restaurant) {
+      matchedTable = tableMatch
+      restaurant = tableMatch.restaurant
     }
 
-    // If exact slug match not found, check for prefix match or stripped suffix (e.g. -t1, -t01)
+    // 2. If not found by table token, check by restaurant slug
+    if (!restaurant) {
+      restaurant = await prisma.restaurant.findUnique({
+        where: { slug },
+        include: {
+          categories: {
+            orderBy: { sortOrder: 'asc' },
+          },
+          foodItems: {
+            include: {
+              category: { select: { id: true, name: true } },
+            },
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+          },
+        },
+      })
+    }
+
+    // 3. If exact slug match not found, check for prefix match or stripped suffix (e.g. -t1, -t01)
     if (!restaurant) {
       const strippedSlug = slug.replace(/-t\d+$/i, '').replace(/-[a-z0-9]{4}$/, '')
       restaurant = await prisma.restaurant.findFirst({
@@ -84,6 +97,66 @@ const getMenu = async (req, res) => {
           },
         },
       })
+    }
+
+    // 4. If restaurant was found but table not yet matched, check if slug or query params reference a table
+    if (restaurant && !matchedTable) {
+      const tableNumMatch = slug.match(/-t(\d+)$/i)
+      const queryTable = req.query?.table || req.query?.t
+      const candidates = []
+
+      if (tableNumMatch) {
+        const num = parseInt(tableNumMatch[1], 10)
+        candidates.push({ qrToken: slug })
+        candidates.push({ label: `Table ${num}` })
+        candidates.push({ label: `Table ${String(num).padStart(2, '0')}` })
+      }
+      if (queryTable) {
+        const qStr = queryTable.toString().trim()
+        const qNum = parseInt(qStr.replace(/\D+/g, ''), 10)
+        candidates.push({ label: qStr })
+        candidates.push({ label: `Table ${qStr}` })
+        if (!isNaN(qNum)) {
+          candidates.push({ label: `Table ${qNum}` })
+          candidates.push({ label: `Table ${String(qNum).padStart(2, '0')}` })
+        }
+      }
+
+      if (candidates.length > 0) {
+        matchedTable = await prisma.diningTable.findFirst({
+          where: {
+            restaurantId: restaurant.id,
+            OR: candidates,
+          },
+        })
+      }
+    }
+
+    // 5. Track table scans count & analytics event when restaurant is active
+    if (restaurant && restaurant.status === 'active') {
+      if (matchedTable) {
+        await prisma.diningTable.update({
+          where: { id: matchedTable.id },
+          data: { scansCount: { increment: 1 } },
+        }).catch(() => {})
+      }
+
+      const rawIp =
+        req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+        req.socket?.remoteAddress ||
+        'unknown'
+      const ipHash = crypto.createHash('sha256').update(rawIp).digest('hex')
+      const sessionId = req.headers['x-session-id'] || `scan_${matchedTable?.id || slug}_${Date.now()}`
+
+      await prisma.analyticsEvent.create({
+        data: {
+          restaurantId: restaurant.id,
+          eventType: 'qr_scan',
+          sessionId,
+          deviceType: 'mobile',
+          ipHash,
+        },
+      }).catch(() => {})
     }
   } catch (dbErr) {
     console.warn('[Menu] Database offline or unreachable. Loading fallback json:', dbErr.message)
@@ -126,6 +199,24 @@ const getMenu = async (req, res) => {
   // Renza platform feedback / issue reporting is managed by Super Admin and displayed in the footer
   const renzaFeedbackUrl = restaurant.superAdminFeedbackUrl?.trim() || process.env.RENZA_FEEDBACK_URL || null
 
+  // Derive table representation (if matchedTable was found, or inferred from slug like -t1)
+  let tableInfo = null
+  if (matchedTable) {
+    tableInfo = {
+      id: matchedTable.id,
+      label: matchedTable.label,
+      qrToken: matchedTable.qrToken,
+    }
+  } else {
+    const tableNumMatch = slug.match(/-t(\d+)$/i)
+    if (tableNumMatch) {
+      tableInfo = {
+        label: `Table ${parseInt(tableNumMatch[1], 10)}`,
+        qrToken: slug,
+      }
+    }
+  }
+
   // Return all items with isAvailable flag (frontend decides what to show)
   return res.json({
     restaurant: {
@@ -142,7 +233,9 @@ const getMenu = async (req, res) => {
       googleReviewUrl: restaurant.googleReviewUrl,
       feedbackUrl: diningFeedbackUrl,
       superAdminFeedbackUrl: renzaFeedbackUrl,
+      table: tableInfo,
     },
+    table: tableInfo,
     categories: restaurant.categories,
     foodItems: restaurant.foodItems,
   })
@@ -167,20 +260,40 @@ const trackEvent = async (req, res) => {
 
   // Find restaurant by slug or table qrToken
   let restaurant = await prisma.restaurant.findUnique({ where: { slug } })
+  let matchedTable = null
   if (!restaurant) {
     const tableMatch = await prisma.diningTable.findFirst({
       where: { OR: [{ qrToken: slug }, { id: slug }] },
       include: { restaurant: true },
     })
     if (tableMatch?.restaurant) {
+      matchedTable = tableMatch
       restaurant = tableMatch.restaurant
-      if (restaurant.status === 'active' && (eventType === 'qr_scan' || eventType === 'menu_view')) {
-        await prisma.diningTable.update({
-          where: { id: tableMatch.id },
-          data: { scansCount: { increment: 1 } },
-        }).catch(() => {})
-      }
     }
+  }
+
+  if (restaurant && !matchedTable) {
+    const tableNumMatch = slug.match(/-t(\d+)$/i)
+    if (tableNumMatch) {
+      const num = parseInt(tableNumMatch[1], 10)
+      matchedTable = await prisma.diningTable.findFirst({
+        where: {
+          restaurantId: restaurant.id,
+          OR: [
+            { qrToken: slug },
+            { label: `Table ${num}` },
+            { label: `Table ${String(num).padStart(2, '0')}` },
+          ],
+        },
+      })
+    }
+  }
+
+  if (matchedTable && restaurant?.status === 'active' && (eventType === 'qr_scan' || eventType === 'menu_view')) {
+    await prisma.diningTable.update({
+      where: { id: matchedTable.id },
+      data: { scansCount: { increment: 1 } },
+    }).catch(() => {})
   }
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
