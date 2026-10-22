@@ -106,7 +106,12 @@ app.use((err, _req, res, _next) => {
     return res.status(404).json({ error: 'Record not found.' })
   }
 
-  res.status(500).json({ error: 'Internal server error' })
+  res.status(500).json({
+    error: 'Internal server error',
+    details: err?.message,
+    code: err?.code,
+    stack: err?.stack,
+  })
 })
 
 // ─── Start server ─────────────────────────────────────────────────────────────
