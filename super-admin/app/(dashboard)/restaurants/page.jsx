@@ -22,7 +22,7 @@ import {
   ShieldCheck,
   UserCheck,
 } from 'lucide-react'
-import api from '@/lib/api'
+import api, { apiFetch } from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
 import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
@@ -181,8 +181,8 @@ export default function RestaurantsPage() {
   const fetchRestaurants = async () => {
     setLoading(true)
     try {
-      const res = await api.get('/api/admin/restaurants')
-      setRestaurants(res.data?.restaurants || res.data || [])
+      const data = await apiFetch('/api/admin/restaurants')
+      setRestaurants(data?.restaurants || data || [])
     } catch {
       toast.error('Failed to load restaurants')
     } finally {

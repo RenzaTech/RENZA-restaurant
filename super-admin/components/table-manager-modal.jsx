@@ -14,7 +14,7 @@ import {
   AlertCircle,
   Hash,
 } from 'lucide-react'
-import api from '@/lib/api'
+import api, { apiFetch } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function TableManagerModal({
@@ -40,8 +40,7 @@ export default function TableManagerModal({
     setLoading(true)
     setError(null)
     try {
-      const res = await api.get(`/api/admin/restaurants/${id}/tables`)
-      const raw = res.data
+      const raw = await apiFetch(`/api/admin/restaurants/${id}/tables`)
       const list = Array.isArray(raw)
         ? raw
         : Array.isArray(raw?.tables)
@@ -63,12 +62,8 @@ export default function TableManagerModal({
       const nextNum = (maxNum > 0 ? maxNum : list.length) + 1
       setFirst(String(nextNum).padStart(2, '0'))
     } catch (err) {
-      console.error('[TableManager] Failed to load dining tables:', err?.response?.data || err?.message || err)
-      const errorMsg =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        err?.message ||
-        'Failed to load dining tables'
+      console.error('[TableManager] Failed to load dining tables:', err)
+      const errorMsg = err?.message || 'Failed to load dining tables'
       setError(errorMsg)
       toast.error(errorMsg)
       setTables([])
@@ -123,10 +118,10 @@ export default function TableManagerModal({
           num++
         }
 
-        const res = await api.post(`/api/admin/restaurants/${selectedId}/tables`, {
-          label,
+        const createdTable = await apiFetch(`/api/admin/restaurants/${selectedId}/tables`, {
+          method: 'POST',
+          body: JSON.stringify({ label }),
         })
-        const createdTable = res.data
         existingLabels.add(label.toLowerCase())
         newlyCreated.push(createdTable)
       }
@@ -142,7 +137,7 @@ export default function TableManagerModal({
       setFirst(String(num).padStart(2, '0'))
     } catch (err) {
       console.error('[TableManager] Failed to create dining tables:', err)
-      toast.error(err.response?.data?.error || err.message || 'Failed to create dining tables')
+      toast.error(err.message || 'Failed to create dining tables')
     } finally {
       setSaving(false)
     }
@@ -155,7 +150,9 @@ export default function TableManagerModal({
 
     setDeletingId(table.id)
     try {
-      await api.delete(`/api/admin/restaurants/${selectedId}/tables/${table.id}`)
+      await apiFetch(`/api/admin/restaurants/${selectedId}/tables/${table.id}`, {
+        method: 'DELETE',
+      })
       toast.success(`${table.label} deleted`)
       const updated = tables.filter((t) => t.id !== table.id)
       setTables(updated)
@@ -164,7 +161,7 @@ export default function TableManagerModal({
       }
     } catch (err) {
       console.error('[TableManager] Failed to delete table:', err)
-      toast.error(err.response?.data?.error || err.message || 'Failed to delete table')
+      toast.error(err.message || 'Failed to delete table')
     } finally {
       setDeletingId(null)
     }

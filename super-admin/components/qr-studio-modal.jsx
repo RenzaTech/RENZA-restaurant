@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import QRCode from 'qrcode'
-import api from '@/lib/api'
+import api, { apiFetch } from '@/lib/api'
 import { getCustomerMenuBaseUrl } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -92,8 +92,10 @@ export default function QRStudioModal({
 
     setBusy(true)
     try {
-      const res = await api.post(`/api/admin/restaurants/${restaurantId}/tables/${tableId}/qr`)
-      const newToken = res.data?.qrCode?.token || res.data?.table?.qrToken
+      const resData = await apiFetch(`/api/admin/restaurants/${restaurantId}/tables/${tableId}/qr`, {
+        method: 'POST',
+      })
+      const newToken = resData?.qrCode?.token || resData?.table?.qrToken
       if (newToken) {
         setCurrentToken(newToken)
         toast.success(`QR token refreshed for ${tableLabel}!`)

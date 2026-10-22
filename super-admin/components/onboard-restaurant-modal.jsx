@@ -19,7 +19,7 @@ import {
   FileText,
   ShieldCheck,
 } from 'lucide-react'
-import api from '@/lib/api'
+import api, { apiFetch } from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function OnboardRestaurantModal({ isOpen, onClose, onSuccess }) {
@@ -117,8 +117,11 @@ export default function OnboardRestaurantModal({ isOpen, onClose, onSuccess }) {
         salesExecutiveCode: 'ADMIN-DIR',
       }
 
-      const res = await api.post('/api/admin/restaurants', payload)
-      const created = res.data?.restaurant || res.data
+      const resData = await apiFetch('/api/admin/restaurants', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+      const created = resData?.restaurant || resData
 
       toast.success(`🚀 Restaurant "${form.name.trim()}" onboarded with ${payload.initialTableCount} tables!`)
       if (onSuccess) {
@@ -126,7 +129,7 @@ export default function OnboardRestaurantModal({ isOpen, onClose, onSuccess }) {
       }
       onClose()
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to onboard restaurant'
+      const msg = err.message || 'Failed to onboard restaurant'
       toast.error(msg)
     } finally {
       setLoading(false)
