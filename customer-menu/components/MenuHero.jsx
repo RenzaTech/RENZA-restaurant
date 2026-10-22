@@ -25,6 +25,13 @@ export default function MenuHero({
   const heroCoverUrl =
     'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2000&q=80';
 
+  const rawTableLabel = (table?.label || restaurant?.table?.label || table?.name || '').trim();
+  let tableNumber = null;
+  if (rawTableLabel) {
+    const match = rawTableLabel.match(/(\d+)/);
+    tableNumber = match ? `Table ${parseInt(match[1], 10)}` : rawTableLabel;
+  }
+
   const handleScrollToMenu = (e) => {
     e.preventDefault();
     const menuEl = document.getElementById('menuSection');
@@ -113,6 +120,12 @@ export default function MenuHero({
 
       {/* ── Center Unified Brand Block ── */}
       <div className="relative z-20 flex flex-col items-center justify-center text-center my-auto py-5 px-4 w-full max-w-xl">
+        {tableNumber && (
+          <div className="mb-3.5 inline-flex items-center px-4 py-1 rounded-full bg-[rgba(9,13,20,0.85)] border border-[rgba(200,167,93,0.45)] text-[#f5d77f] text-xs font-black tracking-wider uppercase shadow-md backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
+            {tableNumber}
+          </div>
+        )}
+
         {/* Center Circular Lens Badge */}
         <div className="center-lens-circle">
           {logoUrl ? (
@@ -139,15 +152,6 @@ export default function MenuHero({
           <div className="center-lens-text gold-accent-text">
             {restaurant?.name || 'Royal Dining'}
           </div>
-
-          {(table || restaurant?.table) && (
-            <div className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500/25 via-amber-400/30 to-amber-500/25 border border-amber-300/60 text-amber-100 shadow-lg shadow-black/50 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse" />
-              <span className="text-xs font-black tracking-wider uppercase font-sans">
-                Dine-in • {((table || restaurant?.table)?.label || (table || restaurant?.table)?.name || 'Table 1').replace(/^Table 0(\d)$/i, 'Table $1')}
-              </span>
-            </div>
-          )}
 
           {restaurant?.cuisineType && (
             <span className="text-[10px] tracking-[0.2em] text-amber-200/85 font-bold uppercase mt-1">

@@ -560,19 +560,19 @@ export default function MenuClient({ params }) {
             />
           </div>
 
-          {/* ════ STICKY TABLE & SEARCH BAR (shown when hero scrolls out of view) ════ */}
+          {/* ════ STICKY TABLE (shown when hero scrolls out of view) ════ */}
           {diningTable && (
             <div className={`sticky top-0 z-40 bg-[#070a12]/95 border-b border-amber-500/30 px-3.5 py-1.5 flex items-center justify-between text-xs text-amber-200 backdrop-blur-md shadow-md transition-opacity duration-200 ${heroVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[11px] font-extrabold tracking-wide text-amber-300 uppercase">
-                  Dine-in • {(diningTable.label || 'Table 1').replace(/^Table 0(\d)$/i, 'Table $1')}
+                <span className="text-xs font-black tracking-wide text-amber-300 uppercase">
+                  {(() => {
+                    const raw = (diningTable.label || diningTable.name || '').trim();
+                    const match = raw.match(/(\d+)/);
+                    return match ? `Table ${parseInt(match[1], 10)}` : (raw || 'Table 1');
+                  })()}
                 </span>
-                <span className="text-amber-200/50 text-[11px] truncate max-w-[140px]">• {restaurant?.name}</span>
+                <span className="text-amber-200/50 text-[11px] truncate max-w-[160px]">• {restaurant?.name}</span>
               </div>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                Active Table
-              </span>
             </div>
           )}
 
