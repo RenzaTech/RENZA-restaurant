@@ -10,6 +10,7 @@ import {
   Check,
   ExternalLink,
   Sparkles,
+  Eye,
 } from 'lucide-react'
 import QRCode from 'qrcode'
 import api, { apiFetch } from '@/lib/api'
@@ -179,6 +180,10 @@ export default function QRStudioModal({
               <span className="text-slate-300">•</span>
               <span className="text-sm font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
                 {tableLabel}
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200" title="Total customer QR views for this table">
+                <Eye className="w-3.5 h-3.5 text-blue-600" />
+                <span>{table?.views ?? table?.scansTotal ?? table?.qrCode?.scansTotal ?? 0} views</span>
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">

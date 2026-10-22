@@ -2363,7 +2363,7 @@ function TableManagerModal({
               <span className="table-manager-icon"><QrCode size={18} /></span>
               <span className="table-manager-name">
                 <strong>{table.label}</strong>
-                <small>{restaurant} · {table.qrCode?.scansTotal || 0} scans</small>
+                <small>{restaurant}</small>
               </span>
               <span className={`status ${table.qrCode?.status === 'ACTIVE' ? 'status-active' : 'status-suspended'}`}>
                 <i />{table.qrCode?.status || 'Missing QR'}

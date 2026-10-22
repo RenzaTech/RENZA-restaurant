@@ -88,6 +88,7 @@ model DiningTable {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   label        String
   qrToken      String?    @unique @map("qr_token")
+  scansCount   Int        @default(0) @map("scans_count")
   createdAt    DateTime   @default(now()) @map("created_at")
 
   @@map("dining_tables")

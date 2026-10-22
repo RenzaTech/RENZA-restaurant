@@ -53,6 +53,12 @@ const getMenu = async (req, res) => {
       })
       if (tableMatch?.restaurant) {
         restaurant = tableMatch.restaurant
+        if (restaurant.status === 'active') {
+          await prisma.diningTable.update({
+            where: { id: tableMatch.id },
+            data: { scansCount: { increment: 1 } },
+          }).catch(() => {})
+        }
       }
     }
 
@@ -159,8 +165,23 @@ const trackEvent = async (req, res) => {
     return res.status(400).json({ error: 'sessionId is required' })
   }
 
-  // Find restaurant by slug
-  const restaurant = await prisma.restaurant.findUnique({ where: { slug } })
+  // Find restaurant by slug or table qrToken
+  let restaurant = await prisma.restaurant.findUnique({ where: { slug } })
+  if (!restaurant) {
+    const tableMatch = await prisma.diningTable.findFirst({
+      where: { OR: [{ qrToken: slug }, { id: slug }] },
+      include: { restaurant: true },
+    })
+    if (tableMatch?.restaurant) {
+      restaurant = tableMatch.restaurant
+      if (restaurant.status === 'active' && (eventType === 'qr_scan' || eventType === 'menu_view')) {
+        await prisma.diningTable.update({
+          where: { id: tableMatch.id },
+          data: { scansCount: { increment: 1 } },
+        }).catch(() => {})
+      }
+    }
+  }
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
   }

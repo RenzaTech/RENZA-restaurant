@@ -724,10 +724,13 @@ const listRestaurantTables = async (req, res) => {
   const result = tables.map((t) => ({
     id: t.id,
     label: t.label,
+    views: t.scansCount || 0,
+    scansTotal: t.scansCount || 0,
     qrCode: {
       token: t.qrToken || t.id,
       status: 'ACTIVE',
       url: `${baseCustomerUrl}/menu/${t.qrToken || t.id}`,
+      scansTotal: t.scansCount || 0,
     },
   }))
   return res.json(result)
@@ -771,6 +774,8 @@ const createRestaurantTable = async (req, res) => {
   return res.status(201).json({
     id: table.id,
     label: table.label,
+    views: 0,
+    scansTotal: 0,
     qrCode: {
       token: table.qrToken,
       status: 'ACTIVE',
