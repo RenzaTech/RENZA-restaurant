@@ -13,24 +13,8 @@ const getMenu = async (req, res) => {
   const { slug } = req.params
 
   let restaurant = null
+  let matchedTable = null
   try {
-    restaurant = await prisma.restaurant.findUnique({
-      where: { slug },
-      include: {
-        categories: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        foodItems: {
-          include: {
-            category: { select: { id: true, name: true } },
-          },
-          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-        },
-      },
-    })
-
-    let matchedTable = null
-
     // 1. Check if slug is a table QR token or table id
     const tableMatch = await prisma.diningTable.findFirst({
       where: {
@@ -160,7 +144,21 @@ const getMenu = async (req, res) => {
     }
   } catch (dbErr) {
     console.error('[Menu Error]', dbErr)
-    return res.status(500).json({ error: 'Internal server error', message: dbErr?.message, stack: dbErr?.stack })
+    const candidates = [
+      path.join(__dirname, '..', '..', 'data', `${slug}-menu.json`),
+      path.join(__dirname, '..', '..', 'data', 'anbude-cafe-menu.json'),
+      path.join(__dirname, '..', '..', '..', 'data', `${slug}-menu.json`),
+      path.join(__dirname, '..', '..', '..', 'data', 'anbude-cafe-menu.json'),
+      path.join(__dirname, '..', '..', '..', 'customer-menu', 'data', 'anbude-cafe-menu.json'),
+    ]
+    const targetFile = candidates.find((f) => fs.existsSync(f))
+    if (targetFile) {
+      try {
+        const fallbackData = JSON.parse(fs.readFileSync(targetFile, 'utf8'))
+        return res.json(fallbackData)
+      } catch (_) {}
+    }
+    return res.status(500).json({ error: 'Internal server error', message: dbErr?.message })
   }
 
   if (!restaurant) {
@@ -190,9 +188,11 @@ const getMenu = async (req, res) => {
   // Derive table representation (if matchedTable was found, or inferred from slug like -t1)
   let tableInfo = null
   if (matchedTable) {
+    const cleanLabel = matchedTable.label?.replace(/^Table 0(\d)$/i, 'Table $1') || matchedTable.label
     tableInfo = {
       id: matchedTable.id,
-      label: matchedTable.label,
+      label: cleanLabel,
+      rawLabel: matchedTable.label,
       qrToken: matchedTable.qrToken,
     }
   } else {

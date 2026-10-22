@@ -144,7 +144,7 @@ export default function MenuHero({
             <div className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500/25 via-amber-400/30 to-amber-500/25 border border-amber-300/60 text-amber-100 shadow-lg shadow-black/50 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse" />
               <span className="text-xs font-black tracking-wider uppercase font-sans">
-                Dine-in • {(table || restaurant?.table)?.label || (table || restaurant?.table)?.name || 'Table 1'}
+                Dine-in • {((table || restaurant?.table)?.label || (table || restaurant?.table)?.name || 'Table 1').replace(/^Table 0(\d)$/i, 'Table $1')}
               </span>
             </div>
           )}

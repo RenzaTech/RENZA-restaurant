@@ -566,7 +566,7 @@ export default function MenuClient({ params }) {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[11px] font-extrabold tracking-wide text-amber-300 uppercase">
-                  Dine-in • {diningTable.label || 'Table 1'}
+                  Dine-in • {(diningTable.label || 'Table 1').replace(/^Table 0(\d)$/i, 'Table $1')}
                 </span>
                 <span className="text-amber-200/50 text-[11px] truncate max-w-[140px]">• {restaurant?.name}</span>
               </div>
