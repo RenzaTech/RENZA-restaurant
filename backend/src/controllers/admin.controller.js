@@ -585,6 +585,14 @@ const getAnalytics = async (req, res) => {
   })
 }
 
+const getCustomerBaseUrl = () => {
+  const envUrl = process.env.CUSTOMER_URL?.trim()
+  if (envUrl && !envUrl.includes('vercel.app')) {
+    return envUrl.replace(/\/+$/, '')
+  }
+  return 'https://customermenu.scanzaa.in'
+}
+
 /**
  * GET /api/admin/restaurants/:id/qr
  * Generate QR code as base64 PNG data URL
@@ -595,9 +603,11 @@ const getQRCode = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
+  const baseCustomerUrl = getCustomerBaseUrl()
   const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
-  const menuUrl = req.query.url || restaurant.customMenuUrl || defaultUrl
+  const rawCustomUrl = restaurant.customMenuUrl && !restaurant.customMenuUrl.includes('vercel.app') ? restaurant.customMenuUrl : null
+  const rawUrl = req.query.url || rawCustomUrl || defaultUrl
+  const menuUrl = rawUrl.replace(/https?:\/\/[^/]*vercel\.app/, baseCustomerUrl)
 
   // Encode ?source=qr into the scanned QR code image
   const separator = menuUrl.includes('?') ? '&' : '?'
@@ -636,9 +646,11 @@ const updateQRUrl = async (req, res) => {
     data: { customMenuUrl: customMenuUrl ? customMenuUrl.trim() : null },
   })
 
-  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
+  const baseCustomerUrl = getCustomerBaseUrl()
   const defaultUrl = `${baseCustomerUrl}/menu/${updated.slug}`
-  const menuUrl = updated.customMenuUrl || defaultUrl
+  const rawCustomUrl = updated.customMenuUrl && !updated.customMenuUrl.includes('vercel.app') ? updated.customMenuUrl : null
+  const rawUrl = rawCustomUrl || defaultUrl
+  const menuUrl = rawUrl.replace(/https?:\/\/[^/]*vercel\.app/, baseCustomerUrl)
 
   // Encode ?source=qr into the scanned QR code image
   const separator = menuUrl.includes('?') ? '&' : '?'
@@ -720,7 +732,7 @@ const listRestaurantTables = async (req, res) => {
     })
   }
 
-  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
+  const baseCustomerUrl = getCustomerBaseUrl()
   const result = tables.map((t) => ({
     id: t.id,
     label: t.label,
@@ -770,7 +782,7 @@ const createRestaurantTable = async (req, res) => {
     data: { initialTableCount: currentCount + 1 },
   }).catch(() => {})
 
-  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
+  const baseCustomerUrl = getCustomerBaseUrl()
   return res.status(201).json({
     id: table.id,
     label: table.label,
@@ -807,7 +819,7 @@ const getTableQR = async (req, res) => {
     })
   }
 
-  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
+  const baseCustomerUrl = getCustomerBaseUrl()
   const url = `${baseCustomerUrl}/menu/${table.qrToken || table.id}`
   const qrDataUrl = await QRCode.toDataURL(url, {
     errorCorrectionLevel: 'H',

@@ -37,7 +37,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import api from '@/lib/api'
-import { formatDate, formatNumber } from '@/lib/utils'
+import { formatDate, formatNumber, getCustomerMenuBaseUrl } from '@/lib/utils'
 import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
 import TableManagerModal from '@/components/table-manager-modal'
@@ -448,10 +448,12 @@ export default function RestaurantDetailPage() {
     )
   }
 
-  const menuUrl =
+  const customerBase = getCustomerMenuBaseUrl()
+  const rawMenuUrl =
     qrData?.menuUrl ||
     qrData?.menu_url ||
-    `${(process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${restaurant.slug || id}`
+    `${customerBase}/menu/${restaurant.slug || id}`
+  const menuUrl = rawMenuUrl.replace(/https?:\/\/[^/]*vercel\.app/, customerBase)
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">

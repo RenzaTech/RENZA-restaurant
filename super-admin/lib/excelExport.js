@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { getCustomerMenuBaseUrl } from './utils';
 
 /**
  * Format date nicely for report
@@ -26,8 +27,9 @@ function formatDate(dateStr) {
  */
 export function exportRestaurantReport(restaurant, analytics = {}) {
   const wb = XLSX.utils.book_new();
-  const customerBaseUrl = (process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '');
-  const menuUrl = restaurant.customMenuUrl || `${customerBaseUrl}/menu/${restaurant.slug}`;
+  const customerBaseUrl = getCustomerMenuBaseUrl();
+  const rawMenuUrl = restaurant.customMenuUrl || `${customerBaseUrl}/menu/${restaurant.slug}`;
+  const menuUrl = rawMenuUrl.replace(/https?:\/\/[^/]*vercel\.app/, customerBaseUrl);
   const nowStr = formatDate(new Date());
 
   const allViews = analytics.allTime?.menuViews ?? analytics.totalMenuViews ?? 0;

@@ -39,7 +39,12 @@ export default function QRStudioModal({
   }, [initialToken])
 
   const customerBase = getCustomerMenuBaseUrl()
-  const menuUrl = currentToken ? `${customerBase}/menu/${currentToken}` : ''
+  const rawUrl = table?.qrCode?.url && !table.qrCode.url.includes('vercel.app')
+    ? table.qrCode.url
+    : currentToken
+    ? `${customerBase}/menu/${currentToken}`
+    : ''
+  const menuUrl = rawUrl.replace(/https?:\/\/[^/]*vercel\.app/, customerBase)
 
   useEffect(() => {
     if (!menuUrl) return

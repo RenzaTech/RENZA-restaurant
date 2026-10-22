@@ -37,7 +37,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const primaryTable = r.tables.find((t) => t.qrCode?.token) || r.tables[0];
     const token = primaryTable?.qrCode?.token || r.slug;
-    const customerBase = (process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '');
+    const envUrl = process.env.NEXT_PUBLIC_CUSTOMER_URL?.trim();
+    const customerBase = (envUrl && !envUrl.includes('vercel.app') ? envUrl : 'https://customermenu.scanzaa.in').replace(/\/+$/, '');
     const menuUrl = `${customerBase}/menu/${token}`;
 
     const qrDataUrl = await QRCode.toDataURL(menuUrl, {

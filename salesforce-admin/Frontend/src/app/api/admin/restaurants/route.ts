@@ -125,8 +125,8 @@ export async function GET(req: NextRequest) {
         // QR tokens
         qrToken: primaryTable?.qrCode?.token || null,
         menuUrl: primaryTable?.qrCode?.token
-          ? `${(process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${primaryTable.qrCode.token}`
-          : `${(process.env.NEXT_PUBLIC_CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${r.slug}`,
+          ? `${(process.env.NEXT_PUBLIC_CUSTOMER_URL && !process.env.NEXT_PUBLIC_CUSTOMER_URL.includes('vercel.app') ? process.env.NEXT_PUBLIC_CUSTOMER_URL : 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${primaryTable.qrCode.token}`
+          : `${(process.env.NEXT_PUBLIC_CUSTOMER_URL && !process.env.NEXT_PUBLIC_CUSTOMER_URL.includes('vercel.app') ? process.env.NEXT_PUBLIC_CUSTOMER_URL : 'https://customermenu.scanzaa.in').replace(/\/+$/, '')}/menu/${r.slug}`,
       };
     });
 

@@ -910,9 +910,12 @@ const getMyQRCode = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
+  const envUrl = process.env.CUSTOMER_URL?.trim()
+  const baseCustomerUrl = (envUrl && !envUrl.includes('vercel.app') ? envUrl : 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
-  const menuUrl = req.query.url || restaurant.customMenuUrl || defaultUrl
+  const rawCustomUrl = restaurant.customMenuUrl && !restaurant.customMenuUrl.includes('vercel.app') ? restaurant.customMenuUrl : null
+  const rawUrl = req.query.url || rawCustomUrl || defaultUrl
+  const menuUrl = rawUrl.replace(/https?:\/\/[^/]*vercel\.app/, baseCustomerUrl)
 
   // Encode ?source=qr into the scanned QR code image
   const separator = menuUrl.includes('?') ? '&' : '?'

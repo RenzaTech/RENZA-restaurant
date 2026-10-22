@@ -20,8 +20,9 @@ export function formatNumber(num) {
 }
 
 export function getCustomerMenuBaseUrl() {
-  if (process.env.NEXT_PUBLIC_CUSTOMER_URL) {
-    return process.env.NEXT_PUBLIC_CUSTOMER_URL.replace(/\/+$/, '')
+  const envUrl = process.env.NEXT_PUBLIC_CUSTOMER_URL?.trim()
+  if (envUrl && !envUrl.includes('vercel.app')) {
+    return envUrl.replace(/\/+$/, '')
   }
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://localhost:3003'
