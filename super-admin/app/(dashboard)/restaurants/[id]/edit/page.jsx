@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   ExternalLink,
+  KeyRound,
 } from 'lucide-react'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
@@ -45,6 +46,7 @@ export default function EditRestaurantPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [adminEmail, setAdminEmail] = useState('')
   const [form, setForm] = useState({
     name: '',
     cuisineType: '',
@@ -55,6 +57,7 @@ export default function EditRestaurantPage() {
     feedbackUrl: '',
     superAdminFeedbackUrl: '',
     overrideFeedbackUrl: false,
+    adminPassword: '',
   })
   const [errors, setErrors] = useState({})
 
@@ -64,6 +67,7 @@ export default function EditRestaurantPage() {
       try {
         const res = await api.get(`/api/admin/restaurants/${id}`)
         const data = res.data?.restaurant || res.data
+        setAdminEmail(data.adminEmail || data.admin_email || data.adminUsers?.[0]?.email || '')
         setForm({
           name: data.name || '',
           cuisineType: data.cuisineType || data.cuisine_type || '',
@@ -74,6 +78,7 @@ export default function EditRestaurantPage() {
           feedbackUrl: data.feedbackUrl || '',
           superAdminFeedbackUrl: data.superAdminFeedbackUrl || '',
           overrideFeedbackUrl: Boolean(data.overrideFeedbackUrl),
+          adminPassword: '',
         })
       } catch {
         toast.error('Failed to load restaurant details')
@@ -92,6 +97,9 @@ export default function EditRestaurantPage() {
   const validate = () => {
     const errs = {}
     if (!form.name.trim()) errs.name = 'Restaurant name is required'
+    if (form.adminPassword && form.adminPassword.trim().length < 6) {
+      errs.adminPassword = 'Admin password must be at least 6 characters'
+    }
     return errs
   }
 
@@ -114,6 +122,7 @@ export default function EditRestaurantPage() {
         phone: form.phone.trim(),
         superAdminFeedbackUrl: form.superAdminFeedbackUrl?.trim() || null,
         overrideFeedbackUrl: form.overrideFeedbackUrl,
+        adminPassword: form.adminPassword.trim() || undefined,
       })
       toast.success('Restaurant profile updated successfully!')
       router.push(`/restaurants/${id}`)
@@ -295,12 +304,47 @@ export default function EditRestaurantPage() {
           </div>
         </div>
 
-        {/* Security Notice */}
-        <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/60 flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-blue-800 leading-relaxed">
-            <strong>Admin Account Security:</strong> The restaurant manager&apos;s email address and master password cannot be altered from this profile form.
-          </p>
+        {/* ── CARD 3: RESTAURANT ADMIN ACCOUNT SECURITY ── */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/80 flex items-center justify-center font-bold">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Restaurant Admin Account Security</h2>
+              <p className="text-xs text-slate-400">Change or reset the login password for the restaurant admin</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary Admin Email</p>
+                <p className="text-xs font-semibold text-slate-800 mt-0.5">{adminEmail || '—'}</p>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-2.5 py-1 rounded-lg">
+                Linked Account
+              </span>
+            </div>
+
+            <FormField
+              label="New Admin Password"
+              icon={KeyRound}
+              hint="Leave blank to keep existing password unchanged. Minimum 6 characters if updating."
+            >
+              <input
+                type="password"
+                value={form.adminPassword}
+                onChange={set('adminPassword')}
+                placeholder="Enter new password to change (leave blank to keep current)"
+                className={`${inputCls} ${errors.adminPassword ? 'border-rose-400 bg-rose-50/20' : ''}`}
+                autoComplete="new-password"
+              />
+              {errors.adminPassword && (
+                <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.adminPassword}</p>
+              )}
+            </FormField>
+          </div>
         </div>
 
         {/* Actions */}

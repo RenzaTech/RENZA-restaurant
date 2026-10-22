@@ -21,6 +21,7 @@ import {
   FileSpreadsheet,
   ShieldCheck,
   UserCheck,
+  KeyRound,
 } from 'lucide-react'
 import api, { apiFetch } from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
@@ -29,6 +30,7 @@ import toast from 'react-hot-toast'
 import OnboardRestaurantModal from '@/components/onboard-restaurant-modal'
 import TableManagerModal from '@/components/table-manager-modal'
 import QRStudioModal from '@/components/qr-studio-modal'
+import ChangePasswordModal from '@/components/change-password-modal'
 
 function StatusBadge({ status }) {
   if (status === 'setup') {
@@ -151,6 +153,7 @@ export default function RestaurantsPage() {
   const [isOnboardOpen, setIsOnboardOpen] = useState(false)
   const [isTableManagerOpen, setIsTableManagerOpen] = useState(false)
   const [tableManagerRestId, setTableManagerRestId] = useState('')
+  const [passwordTarget, setPasswordTarget] = useState(null)
   const [qrModalData, setQrModalData] = useState({ isOpen: false, table: null, restaurant: null })
 
   const handleExport = async (r) => {
@@ -468,6 +471,15 @@ export default function RestaurantsPage() {
                             <span>Tables</span>
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={() => setPasswordTarget(r)}
+                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-200"
+                            title="Change Restaurant Admin Password"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                          </button>
+
                           <Link
                             href={`/restaurants/${id}`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors border border-orange-200/60"
@@ -635,6 +647,16 @@ export default function RestaurantsPage() {
         onClose={() => setQrModalData({ isOpen: false, table: null, restaurant: null })}
         table={qrModalData.table}
         restaurant={qrModalData.restaurant}
+      />
+
+      {/* ── CHANGE ADMIN PASSWORD MODAL ── */}
+      <ChangePasswordModal
+        isOpen={Boolean(passwordTarget)}
+        onClose={() => setPasswordTarget(null)}
+        restaurant={passwordTarget}
+        onSuccess={() => {
+          setPasswordTarget(null)
+        }}
       />
     </div>
   )

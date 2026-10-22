@@ -35,6 +35,7 @@ import {
   Wrench,
   UserCheck,
   ShieldCheck,
+  KeyRound,
 } from 'lucide-react'
 import api from '@/lib/api'
 import { formatDate, formatNumber, getCustomerMenuBaseUrl } from '@/lib/utils'
@@ -42,6 +43,7 @@ import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
 import TableManagerModal from '@/components/table-manager-modal'
 import QRStudioModal from '@/components/qr-studio-modal'
+import ChangePasswordModal from '@/components/change-password-modal'
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -240,6 +242,7 @@ export default function RestaurantDetailPage() {
   const [lastUpdated, setLastUpdated] = useState(null)
   const [exportingReport, setExportingReport] = useState(false)
   const [isTableManagerOpen, setIsTableManagerOpen] = useState(false)
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const [qrModalData, setQrModalData] = useState({ isOpen: false, table: null, restaurant: null })
   const analyticsLoadedRef = useRef(false)
 
@@ -511,6 +514,15 @@ export default function RestaurantDetailPage() {
           </Link>
 
           <button
+            onClick={() => setIsChangePasswordOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 cursor-pointer"
+            title="Change Restaurant Admin Password"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+            <span>Change Password</span>
+          </button>
+
+          <button
             onClick={() => setIsTableManagerOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200/80 cursor-pointer"
             title="Manage Dining Tables & Table-wise QRs"
@@ -703,6 +715,27 @@ export default function RestaurantDetailPage() {
                   </div>
                 </div>
               ))}
+
+              {/* Admin Password & Security */}
+              <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/60 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center flex-shrink-0">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Admin Account Password</p>
+                    <p className="text-xs font-semibold text-slate-800 mt-0.5">•••••••••••• (Encrypted Hash)</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsChangePasswordOpen(true)}
+                  className="px-3 py-1.5 text-xs font-bold text-amber-900 bg-white hover:bg-amber-100 border border-amber-300 rounded-xl transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Change Password</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1058,6 +1091,16 @@ export default function RestaurantDetailPage() {
         onClose={() => setQrModalData({ isOpen: false, table: null, restaurant: null })}
         table={qrModalData.table}
         restaurant={qrModalData.restaurant || restaurant}
+      />
+
+      {/* ── CHANGE ADMIN PASSWORD MODAL ── */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+        restaurant={restaurant}
+        onSuccess={() => {
+          toast.success('Admin password updated successfully')
+        }}
       />
     </div>
   )

@@ -20,6 +20,7 @@ router.put('/restaurants/:id', authenticate, requireSalesOrSuperAdmin, adminCont
 router.patch('/restaurants/:id/status', authenticate, requireSalesOrSuperAdmin, adminController.toggleStatus)
 router.get('/restaurants/:id/analytics', authenticate, requireSuperAdmin, adminController.getAnalytics)
 router.patch('/restaurants/:id/qr-url', authenticate, requireSuperAdmin, adminController.updateQRUrl)
+router.patch('/restaurants/:id/admin-password', authenticate, requireSuperAdmin, adminController.changeRestaurantAdminPassword)
 router.delete('/restaurants/:id', authenticate, requireSuperAdmin, adminController.deleteRestaurant)
 
 // ─── Super Admin Exclusive Employee Management Routes ─────────────────────────

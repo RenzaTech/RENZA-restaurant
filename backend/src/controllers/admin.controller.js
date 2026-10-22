@@ -390,6 +390,23 @@ const updateRestaurant = async (req, res) => {
     updateData.overrideFeedbackUrl = overrideFeedbackUrl === true || overrideFeedbackUrl === 'true'
   }
 
+  if (req.body.adminPassword && req.body.adminPassword.trim()) {
+    const newPwd = req.body.adminPassword.trim()
+    if (newPwd.length < 6) {
+      return res.status(400).json({ error: 'Admin password must be at least 6 characters' })
+    }
+    const adminUser = await prisma.user.findFirst({
+      where: { restaurantId: req.params.id, role: 'restaurant_admin' },
+    })
+    if (adminUser) {
+      const passwordHash = await bcrypt.hash(newPwd, 12)
+      await prisma.user.update({
+        where: { id: adminUser.id },
+        data: { passwordHash },
+      })
+    }
+  }
+
   const updated = await prisma.restaurant.update({
     where: { id: req.params.id },
     data: updateData,
@@ -1102,6 +1119,67 @@ const deleteEmployee = async (req, res) => {
   })
 }
 
+/**
+ * PATCH /api/admin/restaurants/:id/admin-password
+ * Super Admin — change the password of the restaurant's admin user
+ */
+const changeRestaurantAdminPassword = async (req, res) => {
+  const { id } = req.params
+  const { newPassword, password } = req.body
+  const targetPassword = (newPassword || password || '').trim()
+
+  if (!targetPassword) {
+    return res.status(400).json({ error: 'New password is required' })
+  }
+
+  if (targetPassword.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' })
+  }
+
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id },
+    include: {
+      adminUsers: {
+        where: { role: 'restaurant_admin' },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  })
+
+  if (!restaurant) {
+    return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  let adminUser = restaurant.adminUsers?.[0]
+
+  if (!adminUser) {
+    adminUser = await prisma.user.findFirst({
+      where: { restaurantId: id },
+    })
+  }
+
+  if (!adminUser) {
+    return res.status(404).json({ error: 'No admin user found for this restaurant' })
+  }
+
+  const passwordHash = await bcrypt.hash(targetPassword, 12)
+
+  await prisma.user.update({
+    where: { id: adminUser.id },
+    data: { passwordHash },
+  })
+
+  return res.json({
+    success: true,
+    message: `Password successfully updated for ${adminUser.email}`,
+    adminUser: {
+      id: adminUser.id,
+      name: adminUser.name,
+      email: adminUser.email,
+    },
+  })
+}
+
 module.exports = {
   listRestaurants,
   createRestaurant,
@@ -1112,6 +1190,7 @@ module.exports = {
   getQRCode,
   updateQRUrl,
   deleteRestaurant,
+  changeRestaurantAdminPassword,
   listRestaurantTables,
   createRestaurantTable,
   getTableQR,
