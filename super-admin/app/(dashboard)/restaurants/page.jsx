@@ -26,6 +26,9 @@ import api from '@/lib/api'
 import { formatNumber, formatDate } from '@/lib/utils'
 import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
+import OnboardRestaurantModal from '@/components/onboard-restaurant-modal'
+import TableManagerModal from '@/components/table-manager-modal'
+import QRStudioModal from '@/components/qr-studio-modal'
 
 function StatusBadge({ status }) {
   if (status === 'setup') {
@@ -145,6 +148,10 @@ export default function RestaurantsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [exportingId, setExportingId] = useState(null)
+  const [isOnboardOpen, setIsOnboardOpen] = useState(false)
+  const [isTableManagerOpen, setIsTableManagerOpen] = useState(false)
+  const [tableManagerRestId, setTableManagerRestId] = useState('')
+  const [qrModalData, setQrModalData] = useState({ isOpen: false, table: null, restaurant: null })
 
   const handleExport = async (r) => {
     const id = r._id || r.id
@@ -277,13 +284,26 @@ export default function RestaurantsPage() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 text-teal-300 border border-slate-700/80 text-xs font-bold shadow-xs">
-            <ShieldCheck className="w-4 h-4 text-teal-400 flex-shrink-0" />
-            <div className="flex flex-col text-left">
-              <span className="text-[11px] text-white">Monitoring Mode</span>
-              <span className="text-[9px] font-normal text-slate-400">Sales Executive Onboarding Only</span>
-            </div>
-          </div>
+          <button
+            onClick={() => {
+              setTableManagerRestId(restaurants[0]?._id || restaurants[0]?.id || '')
+              setIsTableManagerOpen(true)
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all shadow-xs"
+            title="Manage Dining Tables & QRs"
+          >
+            <QrCode className="w-4 h-4 text-teal-600" />
+            <span>Manage Tables</span>
+          </button>
+
+          <button
+            onClick={() => setIsOnboardOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-500/20"
+            title="Onboard New Partner Restaurant"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Onboard Restaurant</span>
+          </button>
         </div>
       </div>
 
@@ -334,6 +354,7 @@ export default function RestaurantsPage() {
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Employee ID</th>
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Admin Email</th>
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Tables & QRs</th>
                 <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Dishes</th>
                 <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Total Scans</th>
                 <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Created</th>
@@ -345,18 +366,21 @@ export default function RestaurantsPage() {
                 [...Array(6)].map((_, i) => <TableRowSkeleton key={i} />)
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-16 px-4">
+                  <td colSpan={10} className="text-center py-16 px-4">
                     <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p className="text-slate-800 font-bold text-base">
                       {search ? 'No restaurants match your search' : 'No restaurants registered yet'}
                     </p>
                     <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-                      {search ? 'Try clearing or searching for something else' : 'Restaurants are added and onboarded exclusively by Sales Executives via the Sales Executive Portal.'}
+                      {search ? 'Try clearing or searching for something else' : 'Get started by onboarding your first dining partner on Renza cloud.'}
                     </p>
-                    <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-teal-50 border border-teal-200/80 text-teal-800 text-xs font-semibold">
-                      <ShieldCheck className="w-4 h-4 text-teal-600" />
-                      <span>Onboarding is managed via Sales Executive Portal (localhost:3000)</span>
-                    </div>
+                    <button
+                      onClick={() => setIsOnboardOpen(true)}
+                      className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold shadow-xs transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Onboard First Restaurant</span>
+                    </button>
                   </td>
                 </tr>
               ) : (
@@ -401,6 +425,25 @@ export default function RestaurantsPage() {
                       <td className="px-6 py-4">
                         <StatusBadge status={r.status} />
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTableManagerRestId(id)
+                            setIsTableManagerOpen(true)
+                          }}
+                          className="text-left group/tbl block"
+                          title="Open Table Manager"
+                        >
+                          <span className="text-xs font-bold text-teal-600 group-hover/tbl:text-teal-700 flex items-center gap-1.5">
+                            <QrCode className="w-3.5 h-3.5" />
+                            <span>{r.initialTableCount || r.tableCount || 5} Tables</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 block group-hover/tbl:underline">
+                            Click for QRs
+                          </span>
+                        </button>
+                      </td>
                       <td className="px-6 py-4 text-right text-slate-800 font-bold text-xs">
                         {formatNumber(r.foodItemsCount ?? r.food_items_count ?? r.foodItemCount ?? r._count?.foodItems ?? 0)}
                       </td>
@@ -412,13 +455,26 @@ export default function RestaurantsPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTableManagerRestId(id)
+                              setIsTableManagerOpen(true)
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors border border-teal-200/80"
+                            title="Manage Dining Tables and QRs"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                            <span>Tables</span>
+                          </button>
+
                           <Link
                             href={`/restaurants/${id}`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors border border-orange-200/60"
                             title="View QR code and analytics"
                           >
-                            <QrCode className="w-3.5 h-3.5" />
-                            <span>QR Studio</span>
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>View</span>
                           </Link>
 
                           <button
@@ -530,6 +586,41 @@ export default function RestaurantsPage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
         deleting={deleting}
+      />
+
+      {/* ── ONBOARD RESTAURANT MODAL ── */}
+      <OnboardRestaurantModal
+        isOpen={isOnboardOpen}
+        onClose={() => setIsOnboardOpen(false)}
+        onSuccess={() => {
+          fetchRestaurants()
+        }}
+      />
+
+      {/* ── TABLE MANAGER MODAL ── */}
+      <TableManagerModal
+        isOpen={isTableManagerOpen}
+        onClose={() => {
+          setIsTableManagerOpen(false)
+          setTableManagerRestId('')
+        }}
+        restaurants={restaurants}
+        initialRestaurantId={tableManagerRestId}
+        onOpenQr={(table, rest) => {
+          setQrModalData({
+            isOpen: true,
+            table,
+            restaurant: rest || restaurants.find((r) => (r._id || r.id) === tableManagerRestId),
+          })
+        }}
+      />
+
+      {/* ── TABLE QR STUDIO MODAL ── */}
+      <QRStudioModal
+        isOpen={qrModalData.isOpen}
+        onClose={() => setQrModalData({ isOpen: false, table: null, restaurant: null })}
+        table={qrModalData.table}
+        restaurant={qrModalData.restaurant}
       />
     </div>
   )

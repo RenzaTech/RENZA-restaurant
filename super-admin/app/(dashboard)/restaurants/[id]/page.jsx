@@ -40,6 +40,8 @@ import api from '@/lib/api'
 import { formatDate, formatNumber } from '@/lib/utils'
 import { exportRestaurantReport } from '@/lib/excelExport'
 import toast from 'react-hot-toast'
+import TableManagerModal from '@/components/table-manager-modal'
+import QRStudioModal from '@/components/qr-studio-modal'
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -237,6 +239,8 @@ export default function RestaurantDetailPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [exportingReport, setExportingReport] = useState(false)
+  const [isTableManagerOpen, setIsTableManagerOpen] = useState(false)
+  const [qrModalData, setQrModalData] = useState({ isOpen: false, table: null, restaurant: null })
   const analyticsLoadedRef = useRef(false)
 
   const handleExportReport = async () => {
@@ -503,6 +507,15 @@ export default function RestaurantDetailPage() {
             <Pencil className="w-3.5 h-3.5" />
             <span>Edit Profile</span>
           </Link>
+
+          <button
+            onClick={() => setIsTableManagerOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all shadow-xs text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200/80 cursor-pointer"
+            title="Manage Dining Tables & Table-wise QRs"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>Manage Tables</span>
+          </button>
 
           {/* Status Mode Controls */}
           {restaurant.status === 'setup' ? (
@@ -1017,6 +1030,29 @@ export default function RestaurantDetailPage() {
         onConfirm={handleDeleteRestaurant}
         onCancel={() => setDeleteConfirmOpen(false)}
         deleting={deleting}
+      />
+
+      {/* ── TABLE MANAGER MODAL ── */}
+      <TableManagerModal
+        isOpen={isTableManagerOpen}
+        onClose={() => setIsTableManagerOpen(false)}
+        restaurants={[restaurant]}
+        initialRestaurantId={id}
+        onOpenQr={(t, r) => {
+          setQrModalData({
+            isOpen: true,
+            table: t,
+            restaurant: r || restaurant,
+          })
+        }}
+      />
+
+      {/* ── TABLE QR STUDIO MODAL ── */}
+      <QRStudioModal
+        isOpen={qrModalData.isOpen}
+        onClose={() => setQrModalData({ isOpen: false, table: null, restaurant: null })}
+        table={qrModalData.table}
+        restaurant={qrModalData.restaurant || restaurant}
       />
     </div>
   )

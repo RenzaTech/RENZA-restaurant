@@ -235,13 +235,13 @@ const createRestaurant = async (req, res) => {
         superAdminFeedbackUrl: cleanSuperAdminFeedbackUrl,
         overrideFeedbackUrl: overrideFeedbackUrl === true || overrideFeedbackUrl === 'true',
         createdById: req.user ? req.user.id : null,
-        salesExecutiveName: req.user?.name || req.body.salesExecutiveName || null,
-        salesExecutiveEmail: req.user?.email || req.body.salesExecutiveEmail || null,
-        salesExecutiveCode: req.user?.employeeId || req.body.salesExecutiveCode || null,
-        salesExecutivePhone: req.user?.phone || req.body.salesExecutivePhone || null,
+        salesExecutiveName: req.body.salesExecutiveName || req.user?.name || (req.user?.role === 'superadmin' ? 'Super Admin' : null),
+        salesExecutiveEmail: req.body.salesExecutiveEmail || req.user?.email || null,
+        salesExecutiveCode: req.body.salesExecutiveCode || req.user?.employeeId || (req.user?.role === 'superadmin' ? 'ADMIN-DIR' : null),
+        salesExecutivePhone: req.body.salesExecutivePhone || req.user?.phone || null,
         salesNotes: salesNotes || req.body.salesNotes || null,
-        leadSource: leadSource || req.body.leadSource || 'Field Visit',
-        onboardingSource: 'SALES_EXECUTIVE',
+        leadSource: leadSource || req.body.leadSource || (req.user?.role === 'superadmin' ? 'Direct Platform' : 'Field Visit'),
+        onboardingSource: req.user?.role === 'superadmin' ? 'SUPER_ADMIN' : 'SALES_EXECUTIVE',
         initialTableCount: tableNum,
       },
     })
@@ -788,6 +788,26 @@ const getTableQR = async (req, res) => {
   })
 }
 
+/**
+ * DELETE /api/admin/restaurants/:id/tables/:tableId
+ */
+const deleteRestaurantTable = async (req, res) => {
+  const { id, tableId } = req.params
+  const table = await prisma.diningTable.findFirst({
+    where: { id: tableId, restaurantId: id },
+  })
+  if (!table) {
+    return res.status(404).json({ error: 'Table not found' })
+  }
+  await prisma.diningTable.delete({ where: { id: tableId } })
+  const currentCount = await prisma.diningTable.count({ where: { restaurantId: id } })
+  await prisma.restaurant.update({
+    where: { id },
+    data: { initialTableCount: currentCount },
+  }).catch(() => {})
+  return res.json({ success: true, message: 'Table deleted successfully' })
+}
+
 // ─── Employee / Sales Executive Management ────────────────────────────────────
 
 /**
@@ -1014,6 +1034,7 @@ module.exports = {
   listRestaurantTables,
   createRestaurantTable,
   getTableQR,
+  deleteRestaurantTable,
   listEmployees,
   createEmployee,
   updateEmployee,
