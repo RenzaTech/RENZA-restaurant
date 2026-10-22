@@ -159,20 +159,8 @@ const getMenu = async (req, res) => {
       }).catch(() => {})
     }
   } catch (dbErr) {
-    console.warn('[Menu] Database offline or unreachable. Loading fallback json:', dbErr.message)
-    const candidates = [
-      path.join(__dirname, '..', '..', 'data', `${slug}-menu.json`),
-      path.join(__dirname, '..', '..', 'data', 'anbude-cafe-menu.json'),
-      path.join(__dirname, '..', '..', '..', 'data', `${slug}-menu.json`),
-      path.join(__dirname, '..', '..', '..', 'data', 'anbude-cafe-menu.json'),
-      path.join(__dirname, '..', '..', '..', 'customer-menu', 'data', 'anbude-cafe-menu.json'),
-    ]
-    const targetFile = candidates.find((f) => fs.existsSync(f))
-    if (targetFile) {
-      const fallbackData = JSON.parse(fs.readFileSync(targetFile, 'utf8'))
-      return res.json(fallbackData)
-    }
-    throw dbErr
+    console.error('[Menu Error]', dbErr)
+    return res.status(500).json({ error: 'Internal server error', message: dbErr?.message, stack: dbErr?.stack })
   }
 
   if (!restaurant) {
