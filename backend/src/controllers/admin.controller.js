@@ -144,7 +144,7 @@ const listRestaurants = async (req, res) => {
         salesNotes: r.salesNotes || '',
         leadSource: r.leadSource || 'Field Visit',
         onboardingSource: r.onboardingSource || 'SALES_EXECUTIVE',
-        tableCount: r.initialTableCount || r._count?.tables || 5,
+        tableCount: (typeof r._count?.tables === 'number' && r._count.tables > 0) ? r._count.tables : (r.initialTableCount || 0),
         adminUsers: r.adminUsers,
         adminEmail: r.adminUsers?.[0]?.email || null,
         adminName: r.adminUsers?.[0]?.name || null,
@@ -684,10 +684,42 @@ const deleteRestaurant = async (req, res) => {
  * GET /api/admin/restaurants/:id/tables
  */
 const listRestaurantTables = async (req, res) => {
-  const tables = await prisma.diningTable.findMany({
-    where: { restaurantId: req.params.id },
+  const { id } = req.params
+
+  // Allow id to be either restaurant cuid or restaurant slug
+  let targetRestaurantId = id
+  const restaurant = await prisma.restaurant.findFirst({
+    where: { OR: [{ id }, { slug: id }] },
+    select: { id: true, slug: true, initialTableCount: true },
+  })
+  if (restaurant) {
+    targetRestaurantId = restaurant.id
+  }
+
+  let tables = await prisma.diningTable.findMany({
+    where: { restaurantId: targetRestaurantId },
     orderBy: { label: 'asc' },
   })
+
+  // Auto-provision initial tables if restaurant has initialTableCount configured but 0 tables in DB
+  if (tables.length === 0 && restaurant && (restaurant.initialTableCount || 0) > 0) {
+    const tableNum = restaurant.initialTableCount
+    for (let i = 1; i <= tableNum; i++) {
+      const label = `Table ${String(i).padStart(2, '0')}`
+      await prisma.diningTable.create({
+        data: {
+          restaurantId: targetRestaurantId,
+          label,
+          qrToken: `${restaurant.slug || 'table'}-t${i}`,
+        },
+      }).catch(() => {})
+    }
+    tables = await prisma.diningTable.findMany({
+      where: { restaurantId: targetRestaurantId },
+      orderBy: { label: 'asc' },
+    })
+  }
+
   const baseCustomerUrl = (process.env.CUSTOMER_URL || 'https://customermenu.scanzaa.in').replace(/\/+$/, '')
   const result = tables.map((t) => ({
     id: t.id,
@@ -708,19 +740,22 @@ const listRestaurantTables = async (req, res) => {
 const createRestaurantTable = async (req, res) => {
   const { id } = req.params
   const { label } = req.body
-  const restaurant = await prisma.restaurant.findUnique({ where: { id } })
+  const restaurant = await prisma.restaurant.findFirst({
+    where: { OR: [{ id }, { slug: id }] },
+  })
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
+  const restaurantId = restaurant.id
 
   // Count existing tables to provide safe default label
-  const currentCount = await prisma.diningTable.count({ where: { restaurantId: id } })
+  const currentCount = await prisma.diningTable.count({ where: { restaurantId } })
   const tableLabel = (label || `Table ${String(currentCount + 1).padStart(2, '0')}`).trim()
   const qrToken = `${restaurant.slug}-t${Math.random().toString(36).slice(2, 7)}`
 
   const table = await prisma.diningTable.create({
     data: {
-      restaurantId: id,
+      restaurantId,
       label: tableLabel,
       qrToken,
     },
@@ -728,7 +763,7 @@ const createRestaurantTable = async (req, res) => {
 
   // Update initialTableCount
   await prisma.restaurant.update({
-    where: { id },
+    where: { id: restaurantId },
     data: { initialTableCount: currentCount + 1 },
   }).catch(() => {})
 
@@ -793,19 +828,25 @@ const getTableQR = async (req, res) => {
  */
 const deleteRestaurantTable = async (req, res) => {
   const { id, tableId } = req.params
+  const restaurant = await prisma.restaurant.findFirst({
+    where: { OR: [{ id }, { slug: id }] },
+    select: { id: true },
+  })
+  const restaurantId = restaurant ? restaurant.id : id
+
   const table = await prisma.diningTable.findFirst({
-    where: { id: tableId, restaurantId: id },
+    where: { id: tableId, restaurantId },
   })
   if (!table) {
     return res.status(404).json({ error: 'Table not found' })
   }
   await prisma.diningTable.delete({ where: { id: tableId } })
-  const currentCount = await prisma.diningTable.count({ where: { restaurantId: id } })
+  const currentCount = await prisma.diningTable.count({ where: { restaurantId } })
   await prisma.restaurant.update({
-    where: { id },
+    where: { id: restaurantId },
     data: { initialTableCount: currentCount },
   }).catch(() => {})
-  return res.json({ success: true, message: 'Table deleted successfully' })
+  return res.json({ success: true, message: 'Table deleted successfully', count: currentCount })
 }
 
 // ─── Employee / Sales Executive Management ────────────────────────────────────

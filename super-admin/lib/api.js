@@ -2,11 +2,13 @@ import axios from 'axios'
 import { getToken, clearToken } from './auth'
 
 function getBaseUrl() {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '')
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  if (isLocal) {
+    return process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') || 'http://localhost:5000'
   }
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://localhost:5000'
+  const envUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '')
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl
   }
   return 'https://renza-restaurant.vercel.app'
 }

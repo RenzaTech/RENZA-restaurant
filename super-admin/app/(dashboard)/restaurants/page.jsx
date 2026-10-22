@@ -437,7 +437,7 @@ export default function RestaurantsPage() {
                         >
                           <span className="text-xs font-bold text-teal-600 group-hover/tbl:text-teal-700 flex items-center gap-1.5">
                             <QrCode className="w-3.5 h-3.5" />
-                            <span>{r.initialTableCount || r.tableCount || 5} Tables</span>
+                            <span>{r._count?.tables ?? r.tableCount ?? r.initialTableCount ?? 5} Tables</span>
                           </span>
                           <span className="text-[10px] text-slate-400 block group-hover/tbl:underline">
                             Click for QRs
@@ -612,6 +612,20 @@ export default function RestaurantsPage() {
             table,
             restaurant: rest || restaurants.find((r) => (r._id || r.id) === tableManagerRestId),
           })
+        }}
+        onTableCountChange={(restId, newCount) => {
+          setRestaurants((prev) =>
+            prev.map((r) =>
+              (r._id || r.id) === restId
+                ? {
+                    ...r,
+                    tableCount: newCount,
+                    initialTableCount: newCount,
+                    _count: { ...(r._count || {}), tables: newCount },
+                  }
+                : r
+            )
+          )
         }}
       />
 

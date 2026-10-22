@@ -1036,7 +1036,7 @@ export default function RestaurantDetailPage() {
       <TableManagerModal
         isOpen={isTableManagerOpen}
         onClose={() => setIsTableManagerOpen(false)}
-        restaurants={[restaurant]}
+        restaurants={restaurant ? [restaurant] : []}
         initialRestaurantId={id}
         onOpenQr={(t, r) => {
           setQrModalData({
@@ -1044,6 +1044,9 @@ export default function RestaurantDetailPage() {
             table: t,
             restaurant: r || restaurant,
           })
+        }}
+        onTableCountChange={(restId, newCount) => {
+          setRestaurant((prev) => (prev ? { ...prev, initialTableCount: newCount, tableCount: newCount } : prev))
         }}
       />
 
