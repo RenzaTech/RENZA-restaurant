@@ -114,10 +114,10 @@ const parseInitialComboItems = (comboItems) => {
     const p = typeof comboItems === 'string' ? JSON.parse(comboItems) : comboItems;
     if (Array.isArray(p)) {
       return p.map((item) => {
-        if (typeof item === 'string') return { name: item, quantity: '1 Portion' };
+        if (typeof item === 'string') return { name: item, quantity: '' };
         return {
           name: item.name || '',
-          quantity: item.quantity || '1 Portion',
+          quantity: item.quantity || '',
         };
       });
     }
@@ -237,7 +237,7 @@ export default function FoodItemForm({
   const [comboLabel, setComboLabel] = useState(initialData.comboLabel || '');
   const [comboItems, setComboItems] = useState(() => {
     const parsed = parseInitialComboItems(initialData.comboItems);
-    return parsed.length > 0 ? parsed : [{ name: '', quantity: '1 Portion' }, { name: '', quantity: '1 Portion' }];
+    return parsed.length > 0 ? parsed : [{ name: '', quantity: '' }, { name: '', quantity: '' }];
   });
 
   useEffect(() => {
@@ -486,7 +486,7 @@ export default function FoodItemForm({
       const cleanComboItems = comboItems
         .map((it) => ({
           name: (it.name || '').trim(),
-          quantity: (it.quantity || '').trim() || '1 Portion',
+          quantity: (it.quantity || '').trim(),
         }))
         .filter((it) => Boolean(it.name));
 
@@ -1428,8 +1428,8 @@ export default function FoodItemForm({
                     }
                     if (comboItems.length === 0 || (comboItems.length === 1 && !comboItems[0].name)) {
                       setComboItems([
-                        { name: '', quantity: '1 Portion' },
-                        { name: '', quantity: '1 Portion' },
+                        { name: '', quantity: '' },
+                        { name: '', quantity: '' },
                       ]);
                     }
                   }
@@ -1511,11 +1511,11 @@ export default function FoodItemForm({
                           />
                         </div>
 
-                        {/* Quantity / Serving Input */}
+                        {/* Quantity / Serving Input (Optional) */}
                         <div className="w-28 sm:w-36 shrink-0">
                           <Input
                             type="text"
-                            placeholder="Qty (e.g. 2 pcs, 1 Portion)"
+                            placeholder="Qty (optional)"
                             value={item.quantity}
                             onChange={(e) => {
                               const newItems = [...comboItems];
@@ -1531,7 +1531,7 @@ export default function FoodItemForm({
                           type="button"
                           onClick={() => {
                             if (comboItems.length <= 1) {
-                              setComboItems([{ name: '', quantity: '1 Portion' }]);
+                              setComboItems([{ name: '', quantity: '' }]);
                             } else {
                               setComboItems(comboItems.filter((_, i) => i !== index));
                             }
@@ -1549,12 +1549,12 @@ export default function FoodItemForm({
                   <button
                     type="button"
                     onClick={() => {
-                      setComboItems([...comboItems, { name: '', quantity: '1 Portion' }]);
+                      setComboItems([...comboItems, { name: '', quantity: '' }]);
                     }}
                     className="w-full py-2.5 px-3 border-2 border-dashed border-amber-300 hover:border-amber-500 hover:bg-amber-50/50 text-amber-900 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                   >
                     <Plus className="w-4 h-4 text-amber-700" />
-                    <span>+ Add Another Dish to this Combo</span>
+                    <span>Add Another Dish to this Combo</span>
                   </button>
                 </div>
               </div>
@@ -2250,9 +2250,11 @@ export default function FoodItemForm({
                           comboItems.filter((i) => i.name.trim()).map((it, idx) => (
                             <div key={idx} className="flex items-center gap-1.5 text-[10px] text-slate-800">
                               <Check className="w-3 h-3 text-emerald-600 shrink-0" />
-                              <span className="font-bold text-amber-950 font-mono text-[9px] bg-amber-100 px-1 py-0.2 rounded">
-                                {it.quantity || '1x'}
-                              </span>
+                              {it.quantity && (
+                                <span className="font-bold text-amber-950 font-mono text-[9px] bg-amber-100 px-1 py-0.2 rounded">
+                                  {it.quantity}
+                                </span>
+                              )}
                               <span className="truncate font-medium">{it.name}</span>
                             </div>
                           ))

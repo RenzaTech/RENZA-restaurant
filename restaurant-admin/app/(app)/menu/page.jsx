@@ -314,7 +314,7 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
                   <span className="text-[10px] font-bold text-purple-700 uppercase">Bundled:</span>
                   {parsed.map((c, i) => (
                     <span key={i} className="inline-flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-purple-200/80 text-[10px]">
-                      <span className="font-bold text-purple-700">{c.quantity || '1x'}</span>
+                      {c.quantity && <span className="font-bold text-purple-700">{c.quantity}</span>}
                       <span>{c.name}</span>
                     </span>
                   ))}

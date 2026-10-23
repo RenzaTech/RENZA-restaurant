@@ -388,9 +388,11 @@ export default function DishSheet({
                       ✓
                     </div>
                     <div className="min-w-0 flex-1 flex items-baseline gap-1.5">
-                      <span className="font-mono font-bold text-[#f0d68f] shrink-0 text-[11px] bg-white/5 px-1.5 py-0.2 rounded border border-white/10">
-                        {c.quantity || '1x'}
-                      </span>
+                      {c.quantity && (
+                        <span className="font-mono font-bold text-[#f0d68f] shrink-0 text-[11px] bg-white/5 px-1.5 py-0.2 rounded border border-white/10">
+                          {c.quantity}
+                        </span>
+                      )}
                       <span className="text-white/90 font-medium truncate">{c.name}</span>
                     </div>
                   </div>

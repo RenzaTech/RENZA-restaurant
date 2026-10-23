@@ -426,7 +426,7 @@ const createFood = async (req, res) => {
             parsed
               .map((item) => ({
                 name: (item.name || '').trim(),
-                quantity: (item.quantity || '1').trim(),
+                quantity: (item.quantity || '').trim(),
               }))
               .filter((item) => item.name.length > 0)
           )
@@ -822,7 +822,7 @@ const updateFood = async (req, res) => {
                 parsed
                   .map((item) => ({
                     name: (item.name || '').trim(),
-                    quantity: (item.quantity || '1').trim(),
+                    quantity: (item.quantity || '').trim(),
                   }))
                   .filter((item) => item.name.length > 0)
               )
