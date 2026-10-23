@@ -4,6 +4,7 @@ import { forwardRef } from 'react';
 import { ArrowUpDown } from 'lucide-react';
 
 export const filterOptions = [
+  { id: 'combo', label: '🍱 Combos', dot: 'bestseller' },
   { id: 'veg', label: 'Pure Veg', dot: 'veg' },
   { id: 'non-veg', label: 'Non-Veg', dot: 'nonveg' },
   { id: 'vegan', label: 'Vegan', dot: 'veg' },

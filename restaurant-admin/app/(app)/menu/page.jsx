@@ -20,7 +20,7 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-const FILTERS = ['All', 'Available', 'Sold Out', 'Specials', 'Seasonal'];
+const FILTERS = ['All', 'Available', 'Sold Out', 'Combos', 'Specials', 'Seasonal'];
 
 const SEASONAL_KEYWORDS = ['season', 'summer', 'winter', 'monsoon', 'festive', 'mango', 'spring', 'holiday', 'autumn'];
 const isSeasonalDish = (tag) => {
@@ -251,6 +251,11 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
           )}
 
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
+            {item.isCombo && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white px-2 py-0.5 rounded-full shadow-2xs bg-gradient-to-r from-purple-600 to-indigo-600">
+                🍱 {item.comboLabel || 'Combo'}
+              </span>
+            )}
             {item.specialTags ? (
               <span className={cn(
                 "inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white px-2 py-0.5 rounded-full shadow-2xs",
@@ -260,11 +265,11 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
               )}>
                 {seasonal ? `🍁 ${item.specialTags}` : `⭐ ${item.specialTags}`}
               </span>
-            ) : (
+            ) : !item.isCombo ? (
               <span className="inline-flex items-center text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                 Regular
               </span>
-            )}
+            ) : null}
             {item.category?.name && (
               <span className="inline-block text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md truncate max-w-full">
                 {item.category.name}
@@ -297,6 +302,27 @@ function FoodItemCard({ item, onToggle, onEdit, onDelete }) {
               {item.description}
             </p>
           )}
+
+          {item.isCombo && (() => {
+            let parsed = [];
+            try {
+              parsed = typeof item.comboItems === 'string' ? JSON.parse(item.comboItems) : (item.comboItems || []);
+            } catch {}
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return (
+                <div className="flex flex-wrap items-center gap-1 mt-1.5 text-[11px] text-purple-900 font-semibold bg-purple-50/80 border border-purple-200/70 rounded-lg px-2 py-1">
+                  <span className="text-[10px] font-bold text-purple-700 uppercase">Bundled:</span>
+                  {parsed.map((c, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-purple-200/80 text-[10px]">
+                      <span className="font-bold text-purple-700">{c.quantity || '1x'}</span>
+                      <span>{c.name}</span>
+                    </span>
+                  ))}
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
 
@@ -404,6 +430,8 @@ export default function MenuPage() {
           ? item.isAvailable
           : filter === 'Sold Out'
           ? !item.isAvailable
+          : filter === 'Combos'
+          ? Boolean(item.isCombo)
           : filter === 'Specials'
           ? isSpecialDish(item.specialTags)
           : filter === 'Seasonal'

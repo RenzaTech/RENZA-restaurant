@@ -29,7 +29,7 @@ function getApiUrl() {
   return envUrl;
 }
 
-const FILTER_IDS = ['veg', 'non-veg', 'vegan', 'jain', 'gluten-free', 'available'];
+const FILTER_IDS = ['combo', 'veg', 'non-veg', 'vegan', 'jain', 'gluten-free', 'available'];
 
 function resolveImageUrl(url) {
   if (!url) return null;
@@ -472,6 +472,7 @@ export default function MenuClient({ params }) {
 
           const isVeg = item.isVeg !== false && item.foodType !== 'non-veg';
           const matchesDiet = activeFilters.every((filter) => {
+            if (filter === 'combo') return Boolean(item.isCombo);
             if (filter === 'veg') return isVeg;
             if (filter === 'non-veg') return !isVeg;
             if (filter === 'vegan') return item.isVegan;

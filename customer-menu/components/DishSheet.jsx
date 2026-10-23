@@ -155,6 +155,18 @@ export default function DishSheet({
   const priceDisplay = priceNum > 0 ? `₹${priceNum.toFixed(2)}` : '';
   const categoryName = item.category?.name || item.categoryName || 'House Special';
 
+  const comboList = item?.isCombo
+    ? Array.isArray(item.comboItemsList)
+      ? item.comboItemsList
+      : (() => {
+          try {
+            return typeof item.comboItems === 'string' ? JSON.parse(item.comboItems) : (item.comboItems || []);
+          } catch {
+            return [];
+          }
+        })()
+    : [];
+
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
@@ -313,11 +325,18 @@ export default function DishSheet({
         <div className="modal-body">
           <div className="modal-top-row flex items-center justify-between gap-2">
             <span className="modal-cat-badge">{categoryName}</span>
-            {item.specialTags && (
-              <span className="dish-tag !static text-[10px] font-bold py-0.5 px-2.5 rounded-sm">
-                {item.specialTags}
-              </span>
-            )}
+            <div className="flex items-center gap-1.5">
+              {item.isCombo && (
+                <span className="text-[10px] font-black uppercase tracking-wider py-0.5 px-2.5 rounded-sm bg-gradient-to-r from-amber-500/30 to-orange-500/30 text-amber-200 border border-amber-400/40 shadow-xs">
+                  🍱 {item.comboLabel || 'Combo'}
+                </span>
+              )}
+              {item.specialTags && (
+                <span className="dish-tag !static text-[10px] font-bold py-0.5 px-2.5 rounded-sm">
+                  {item.specialTags}
+                </span>
+              )}
+            </div>
           </div>
 
           <h2 id="dishModalTitle" className="modal-name">
@@ -342,6 +361,39 @@ export default function DishSheet({
                     key={lvl}
                     className={`spice-icon ${lvl <= spiceLevel ? 'active' : ''}`}
                   />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Itemized Combo Package Card */}
+          {item.isCombo && comboList.length > 0 && (
+            <div className="my-3.5 p-3.5 rounded-2xl bg-[rgba(212,177,93,0.08)] border border-[rgba(212,177,93,0.35)] shadow-inner">
+              <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-[rgba(212,177,93,0.18)]">
+                <span className="text-xs font-sans font-bold tracking-wider uppercase text-[#d4b15d] flex items-center gap-1.5">
+                  <span>🍱</span>
+                  <span>Combo Pack Includes ({comboList.length} Dishes)</span>
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/30">
+                  Single Price Deal
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {comboList.map((c, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 p-2 rounded-xl bg-black/40 border border-white/5 text-xs text-slate-200"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold">
+                      ✓
+                    </div>
+                    <div className="min-w-0 flex-1 flex items-baseline gap-1.5">
+                      <span className="font-mono font-bold text-[#f0d68f] shrink-0 text-[11px] bg-white/5 px-1.5 py-0.2 rounded border border-white/10">
+                        {c.quantity || '1x'}
+                      </span>
+                      <span className="text-white/90 font-medium truncate">{c.name}</span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -512,7 +564,9 @@ export default function DishSheet({
             <div>
               {priceDisplay ? <div className="modal-price">{priceDisplay}</div> : null}
               <div className="modal-price-note">
-                {activePortion
+                {item.isCombo
+                  ? `Single combo price · All ${comboList.length > 0 ? comboList.length : ''} bundled dishes included · All taxes included`
+                  : activePortion
                   ? `${activePortion.name} portion (${activePortion.short}) · All taxes included`
                   : activePrep
                   ? `${activePrep.emoji} ${activePrep.name} preparation · All taxes included`

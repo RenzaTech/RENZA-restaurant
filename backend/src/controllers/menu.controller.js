@@ -205,6 +205,41 @@ const getMenu = async (req, res) => {
     }
   }
 
+  // Process combos for sequential auto-enumeration (Combo 1, Combo 2, ...) and parsed combo items
+  let comboCounter = 1
+  const processedFoodItems = (restaurant.foodItems || []).map((item) => {
+    if (item.isCombo) {
+      const assignedLabel = item.comboLabel || `Combo ${comboCounter++}`
+      let parsedItems = []
+      if (item.comboItems) {
+        try {
+          parsedItems = typeof item.comboItems === 'string' ? JSON.parse(item.comboItems) : item.comboItems
+          if (!Array.isArray(parsedItems)) parsedItems = []
+        } catch {
+          parsedItems = []
+        }
+      }
+      return {
+        ...item,
+        isCombo: true,
+        comboLabel: assignedLabel,
+        comboItemsList: parsedItems,
+      }
+    }
+    return item
+  })
+
+  const categoriesWithItems = (restaurant.categories || []).map((cat) => {
+    const catItems = processedFoodItems.filter(
+      (item) => item.categoryId === cat.id || item.category?.id === cat.id
+    )
+    return {
+      ...cat,
+      items: catItems,
+      foodItems: catItems,
+    }
+  })
+
   // Return all items with isAvailable flag (frontend decides what to show)
   return res.json({
     restaurant: {
@@ -224,8 +259,8 @@ const getMenu = async (req, res) => {
       table: tableInfo,
     },
     table: tableInfo,
-    categories: restaurant.categories,
-    foodItems: restaurant.foodItems,
+    categories: categoriesWithItems,
+    foodItems: processedFoodItems,
   })
 }
 

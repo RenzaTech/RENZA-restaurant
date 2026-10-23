@@ -410,6 +410,42 @@ const createFood = async (req, res) => {
     }
   }
 
+  // Clean and parse combo fields if provided
+  const isCombo = req.body.isCombo === true || req.body.isCombo === 'true'
+  let cleanComboItems = null
+  let cleanComboLabel = null
+
+  if (isCombo) {
+    if (req.body.comboItems) {
+      try {
+        const parsed = typeof req.body.comboItems === 'string'
+          ? JSON.parse(req.body.comboItems)
+          : req.body.comboItems
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          cleanComboItems = JSON.stringify(
+            parsed
+              .map((item) => ({
+                name: (item.name || '').trim(),
+                quantity: (item.quantity || '1').trim(),
+              }))
+              .filter((item) => item.name.length > 0)
+          )
+        }
+      } catch {
+        cleanComboItems = null
+      }
+    }
+
+    if (req.body.comboLabel && req.body.comboLabel.trim()) {
+      cleanComboLabel = req.body.comboLabel.trim()
+    } else {
+      const existingCombosCount = await prisma.foodItem.count({
+        where: { restaurantId: req.user.restaurantId, isCombo: true },
+      })
+      cleanComboLabel = `Combo ${existingCombosCount + 1}`
+    }
+  }
+
   let parsedPrice = price !== undefined && price !== '' ? parseFloat(price) : NaN
   if (isNaN(parsedPrice) || parsedPrice <= 0) {
     if (cleanPortionPrices) {
@@ -520,6 +556,9 @@ const createFood = async (req, res) => {
       portionImages,
       preparationPrices: cleanPreparationPrices,
       preparationType: resolvedPreparationType,
+      isCombo,
+      comboItems: cleanComboItems,
+      comboLabel: cleanComboLabel,
       imageUrl,
       topViewImageUrl,
       description: description?.trim() || null,
@@ -764,6 +803,67 @@ const updateFood = async (req, res) => {
 
   if (isAvailable !== undefined) updateData.isAvailable = isAvailable === 'true' || isAvailable === true
   if (sortOrder !== undefined) updateData.sortOrder = parseInt(sortOrder) || 0
+
+  // Handle combo fields update
+  if (req.body.isCombo !== undefined) {
+    const isCombo = req.body.isCombo === true || req.body.isCombo === 'true'
+    updateData.isCombo = isCombo
+
+    if (isCombo) {
+      if (req.body.comboItems !== undefined) {
+        let cleanComboItems = null
+        if (req.body.comboItems) {
+          try {
+            const parsed = typeof req.body.comboItems === 'string'
+              ? JSON.parse(req.body.comboItems)
+              : req.body.comboItems
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              cleanComboItems = JSON.stringify(
+                parsed
+                  .map((item) => ({
+                    name: (item.name || '').trim(),
+                    quantity: (item.quantity || '1').trim(),
+                  }))
+                  .filter((item) => item.name.length > 0)
+              )
+            }
+          } catch {
+            cleanComboItems = null
+          }
+        }
+        updateData.comboItems = cleanComboItems
+      }
+
+      if (req.body.comboLabel !== undefined) {
+        updateData.comboLabel = req.body.comboLabel?.trim() || null
+      }
+      if (!updateData.comboLabel && !existing.comboLabel) {
+        const existingCombosCount = await prisma.foodItem.count({
+          where: { restaurantId: req.user.restaurantId, isCombo: true, NOT: { id: existing.id } },
+        })
+        updateData.comboLabel = `Combo ${existingCombosCount + 1}`
+      }
+    } else {
+      updateData.comboItems = null
+      updateData.comboLabel = null
+    }
+  } else if (req.body.comboItems !== undefined || req.body.comboLabel !== undefined) {
+    if (req.body.comboItems !== undefined) {
+      try {
+        const parsed = typeof req.body.comboItems === 'string'
+          ? JSON.parse(req.body.comboItems)
+          : req.body.comboItems
+        updateData.comboItems = Array.isArray(parsed) && parsed.length > 0
+          ? JSON.stringify(parsed.map(i => ({ name: (i.name || '').trim(), quantity: (i.quantity || '1').trim() })).filter(i => i.name.length > 0))
+          : null
+      } catch {
+        updateData.comboItems = null
+      }
+    }
+    if (req.body.comboLabel !== undefined) {
+      updateData.comboLabel = req.body.comboLabel?.trim() || null
+    }
+  }
 
   // If a new front image was uploaded
   if (req.file) {

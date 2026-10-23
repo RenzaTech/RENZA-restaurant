@@ -206,6 +206,18 @@ const DishCard = forwardRef(function DishCard(
       .join('')
       .toUpperCase() || 'R';
 
+  const comboList = item.isCombo
+    ? Array.isArray(item.comboItemsList)
+      ? item.comboItemsList
+      : (() => {
+          try {
+            return typeof item.comboItems === 'string' ? JSON.parse(item.comboItems) : (item.comboItems || []);
+          } catch {
+            return [];
+          }
+        })()
+    : [];
+
   const placeholder = (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090e15] text-amber-200">
       <UtensilsCrossed className="mb-2 h-7 w-7 text-amber-300/70" strokeWidth={1.5} />
@@ -354,11 +366,18 @@ const DishCard = forwardRef(function DishCard(
             <h3 className="dish-name line-clamp-1">
               {searchQuery ? renderHighlight(item.name, searchQuery) : item.name}
             </h3>
-            {item.specialTags && (
-              <span className="shrink-0 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/30">
-                {item.specialTags}
-              </span>
-            )}
+            <div className="flex items-center gap-1 shrink-0">
+              {item.isCombo && (
+                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500/25 to-orange-500/25 text-amber-200 border border-amber-400/40 shadow-xs">
+                  🍱 {item.comboLabel || 'Combo'}
+                </span>
+              )}
+              {item.specialTags && (
+                <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/30">
+                  {item.specialTags}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Description */}
@@ -366,6 +385,22 @@ const DishCard = forwardRef(function DishCard(
             <p className="line-clamp-2 text-[11px] sm:text-xs leading-relaxed text-slate-400">
               {searchQuery ? renderHighlight(item.description, searchQuery) : item.description}
             </p>
+          )}
+
+          {/* Combo Items Included Pills */}
+          {item.isCombo && comboList.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 pt-0.5">
+              <span className="text-[9px] font-bold text-amber-300/90 uppercase tracking-tight">Includes:</span>
+              {comboList.map((c, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center text-[9px] font-sans px-1.5 py-0.2 rounded bg-amber-400/10 text-amber-200 border border-amber-400/25"
+                >
+                  {c.quantity && <strong className="mr-1 text-amber-300 font-bold">{c.quantity}</strong>}
+                  <span>{c.name}</span>
+                </span>
+              ))}
+            </div>
           )}
 
           {/* Portion Options Chips */}

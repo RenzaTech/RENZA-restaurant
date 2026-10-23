@@ -14,6 +14,8 @@ import {
   Clock,
   Scale,
   Zap,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,6 +106,23 @@ const parseInitialPortionImages = (portionImages) => {
     }
   } catch {}
   return { quarter: null, half: null, full: null };
+};
+
+const parseInitialComboItems = (comboItems) => {
+  if (!comboItems) return [];
+  try {
+    const p = typeof comboItems === 'string' ? JSON.parse(comboItems) : comboItems;
+    if (Array.isArray(p)) {
+      return p.map((item) => {
+        if (typeof item === 'string') return { name: item, quantity: '1 Portion' };
+        return {
+          name: item.name || '',
+          quantity: item.quantity || '1 Portion',
+        };
+      });
+    }
+  } catch {}
+  return [];
 };
 
 export default function FoodItemForm({
@@ -214,6 +233,13 @@ export default function FoodItemForm({
   const [specialTag, setSpecialTag] = useState(initialIsSpecial ? rawSpecialTags : "Chef's Special");
   const [seasonalTag, setSeasonalTag] = useState(isSeasonalTag ? rawSpecialTags : "Seasonal Special");
 
+  const [isCombo, setIsCombo] = useState(Boolean(initialData.isCombo));
+  const [comboLabel, setComboLabel] = useState(initialData.comboLabel || '');
+  const [comboItems, setComboItems] = useState(() => {
+    const parsed = parseInitialComboItems(initialData.comboItems);
+    return parsed.length > 0 ? parsed : [{ name: '', quantity: '1 Portion' }, { name: '', quantity: '1 Portion' }];
+  });
+
   useEffect(() => {
     if (initialData.imageUrl) {
       setLivePreviewUrl(initialData.imageUrl);
@@ -279,7 +305,17 @@ export default function FoodItemForm({
         }
       }
     }
-  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionImages, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle, initialData.specialTags, initialData.price]);
+    if (initialData.isCombo !== undefined) {
+      setIsCombo(Boolean(initialData.isCombo));
+    }
+    if (initialData.comboLabel !== undefined) {
+      setComboLabel(initialData.comboLabel || '');
+    }
+    if (initialData.comboItems) {
+      const parsed = parseInitialComboItems(initialData.comboItems);
+      if (parsed.length > 0) setComboItems(parsed);
+    }
+  }, [initialData.imageUrl, initialData.topViewImageUrl, initialData.portionImages, initialData.portionPrices, initialData.preparationPrices, initialData.preparationType, initialData.dishStyle, initialData.specialTags, initialData.price, initialData.isCombo, initialData.comboLabel, initialData.comboItems]);
 
   const initialTags = Array.isArray(initialData.tags)
     ? initialData.tags
@@ -444,6 +480,28 @@ export default function FoodItemForm({
     formData.append('portionPrices', cleanPortionPrices);
     formData.append('preparationPrices', cleanPrepPrices);
 
+    // Combo Dish fields
+    formData.append('isCombo', String(isCombo));
+    if (isCombo) {
+      const cleanComboItems = comboItems
+        .map((it) => ({
+          name: (it.name || '').trim(),
+          quantity: (it.quantity || '').trim() || '1 Portion',
+        }))
+        .filter((it) => Boolean(it.name));
+
+      if (cleanComboItems.length === 0) {
+        toast.error('Please add at least one dish included in this combo');
+        return;
+      }
+
+      formData.append('comboItems', JSON.stringify(cleanComboItems));
+      formData.append('comboLabel', comboLabel.trim());
+    } else {
+      formData.append('comboItems', '[]');
+      formData.append('comboLabel', '');
+    }
+
     // Explicitly append boolean dietary flags
     const isVeg = form.foodType === 'veg';
     const isJain = form.tags.includes('Jain');
@@ -597,11 +655,19 @@ export default function FoodItemForm({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPricingMode('portions')}
+                  onClick={() => {
+                    if (isCombo) {
+                      toast('Combos are offered at a single bundle price', { icon: '🍱' });
+                      return;
+                    }
+                    setPricingMode('portions');
+                  }}
                   className={cn(
                     'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
                     pricingMode === 'portions'
                       ? 'bg-white text-orange-600 shadow-xs ring-1 ring-orange-500/20'
+                      : isCombo
+                      ? 'opacity-40 text-slate-400 cursor-not-allowed'
                       : 'text-slate-500 hover:text-slate-800'
                   )}
                 >
@@ -609,11 +675,19 @@ export default function FoodItemForm({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPricingMode('dryGravy')}
+                  onClick={() => {
+                    if (isCombo) {
+                      toast('Combos are offered at a single bundle price', { icon: '🍱' });
+                      return;
+                    }
+                    setPricingMode('dryGravy');
+                  }}
                   className={cn(
                     'py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
                     pricingMode === 'dryGravy'
                       ? 'bg-white text-amber-800 shadow-xs ring-1 ring-amber-500/20'
+                      : isCombo
+                      ? 'opacity-40 text-slate-400 cursor-not-allowed'
                       : 'text-slate-500 hover:text-slate-800'
                   )}
                 >
@@ -626,10 +700,10 @@ export default function FoodItemForm({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="price" className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      Price (INR)
+                      {isCombo ? 'Combo Bundle Price (INR)' : 'Price (INR)'}
                     </Label>
                     <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                      Optional
+                      {isCombo ? 'Single Price for All Dishes' : 'Optional'}
                     </span>
                   </div>
                   <div className="relative">
@@ -639,7 +713,7 @@ export default function FoodItemForm({
                     <Input
                       id="price"
                       type="number"
-                      placeholder="e.g. 249 (optional)"
+                      placeholder={isCombo ? "e.g. 399 (all bundled dishes included)" : "e.g. 249 (optional)"}
                       value={form.price}
                       onChange={set('price')}
                       min="0"
@@ -1313,6 +1387,180 @@ export default function FoodItemForm({
             </div>
           </div>
 
+          {/* Card: Combo Dish / Value Meal */}
+          <div className={cn(
+            'rounded-2xl sm:rounded-3xl border transition-all p-5 sm:p-7 shadow-xs space-y-5',
+            isCombo
+              ? 'bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-white border-amber-300 ring-2 ring-amber-400/20'
+              : 'bg-white border-slate-200/80'
+          )}>
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base transition-colors shrink-0',
+                  isCombo ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 text-slate-500'
+                )}>
+                  🍱
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                      Combo Dish / Value Meal
+                    </h3>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                      Multi-Item Bundle
+                    </span>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-500">
+                    Bundle multiple dishes together at a single fixed price (e.g. Combo 1, Combo 2)
+                  </p>
+                </div>
+              </div>
+
+              <Switch
+                checked={isCombo}
+                onCheckedChange={(checked) => {
+                  setIsCombo(checked);
+                  if (checked) {
+                    setPricingMode('single');
+                    if (dishKind !== 'none' && dishKind !== 'regular') {
+                      setDishKind('none');
+                    }
+                    if (comboItems.length === 0 || (comboItems.length === 1 && !comboItems[0].name)) {
+                      setComboItems([
+                        { name: '', quantity: '1 Portion' },
+                        { name: '', quantity: '1 Portion' },
+                      ]);
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            {isCombo && (
+              <div className="space-y-4 pt-1 animate-in fade-in duration-200">
+                {/* Information banner */}
+                <div className="p-3 bg-amber-100/70 border border-amber-200/80 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
+                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-amber-900">
+                      Combos bundle multiple dishes at a single price
+                    </p>
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      Enter the bundled single price above in <strong>Price</strong>. Below, add all the dishes included in this combo. On the digital menu, combos are clearly badged as <strong>Combo 1</strong>, <strong>Combo 2</strong>, etc., with the checklist of bundled items.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Combo Label Input */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Combo Display Badge Label
+                    </Label>
+                    <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                      Auto: Combo 1, Combo 2...
+                    </span>
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Combo 1, Combo 2, Deluxe Thali Combo (leave empty for auto)"
+                    value={comboLabel}
+                    onChange={(e) => setComboLabel(e.target.value)}
+                    maxLength={40}
+                    className="rounded-xl border-slate-200 text-xs sm:text-sm h-10 focus:ring-amber-500/20 focus:border-amber-500"
+                  />
+                  <p className="text-[11px] text-slate-400">
+                    Leave blank to automatically number as <strong>Combo 1, Combo 2, Combo 3...</strong> across your menu.
+                  </p>
+                </div>
+
+                {/* Dynamic Included Items List */}
+                <div className="space-y-2.5 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Dishes Included in this Combo
+                    </Label>
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full">
+                      {comboItems.filter((i) => i.name.trim()).length} dish{comboItems.filter((i) => i.name.trim()).length !== 1 ? 'es' : ''} added
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {comboItems.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:border-amber-300 transition-colors"
+                      >
+                        <div className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          {index + 1}
+                        </div>
+
+                        {/* Dish Name Input */}
+                        <div className="flex-1 min-w-0">
+                          <Input
+                            type="text"
+                            placeholder="Dish name (e.g. Butter Naan, Paneer Butter Masala)"
+                            value={item.name}
+                            onChange={(e) => {
+                              const newItems = [...comboItems];
+                              newItems[index] = { ...newItems[index], name: e.target.value };
+                              setComboItems(newItems);
+                            }}
+                            className="h-9 text-xs sm:text-sm rounded-lg border-slate-200 focus:ring-amber-500/20 focus:border-amber-500"
+                          />
+                        </div>
+
+                        {/* Quantity / Serving Input */}
+                        <div className="w-28 sm:w-36 shrink-0">
+                          <Input
+                            type="text"
+                            placeholder="Qty (e.g. 2 pcs, 1 Portion)"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newItems = [...comboItems];
+                              newItems[index] = { ...newItems[index], quantity: e.target.value };
+                              setComboItems(newItems);
+                            }}
+                            className="h-9 text-xs sm:text-sm rounded-lg border-slate-200 focus:ring-amber-500/20 focus:border-amber-500"
+                          />
+                        </div>
+
+                        {/* Remove Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (comboItems.length <= 1) {
+                              setComboItems([{ name: '', quantity: '1 Portion' }]);
+                            } else {
+                              setComboItems(comboItems.filter((_, i) => i !== index));
+                            }
+                          }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer shrink-0"
+                          title="Remove dish"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Another Dish Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboItems([...comboItems, { name: '', quantity: '1 Portion' }]);
+                    }}
+                    className="w-full py-2.5 px-3 border-2 border-dashed border-amber-300 hover:border-amber-500 hover:bg-amber-50/50 text-amber-900 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 text-amber-700" />
+                    <span>+ Add Another Dish to this Combo</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Card 2: Stock & Live Availability */}
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs flex items-center justify-between gap-4">
             <div className="min-w-0 flex-1">
@@ -1744,6 +1992,12 @@ export default function FoodItemForm({
                       </span>
                     )}
 
+                    {isCombo && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-2xs">
+                        🍱 {comboLabel.trim() || 'Combo 1'}
+                      </span>
+                    )}
+
                     {/* Dual photo indicator badge */}
                     {(livePreviewUrl && liveTopPreviewUrl) && (
                       <span className="rounded-full bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.2 text-[9px] font-bold">
@@ -1978,6 +2232,38 @@ export default function FoodItemForm({
                       </span>
                     )}
                   </div>
+
+                  {/* Bundled Dishes in Live Diner Preview */}
+                  {isCombo && (
+                    <div className="mt-2.5 p-2 rounded-xl bg-amber-50/90 border border-amber-200/90 space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-amber-900 uppercase tracking-wide">
+                        <span className="flex items-center gap-1">
+                          <span>🍱</span>
+                          <span>Included in Combo:</span>
+                        </span>
+                        <span className="text-amber-700 bg-amber-200/60 px-1.5 py-0.2 rounded font-mono">
+                          {comboItems.filter((i) => i.name.trim()).length} dishes
+                        </span>
+                      </div>
+                      <div className="space-y-0.5 max-h-24 overflow-y-auto">
+                        {comboItems.filter((i) => i.name.trim()).length > 0 ? (
+                          comboItems.filter((i) => i.name.trim()).map((it, idx) => (
+                            <div key={idx} className="flex items-center gap-1.5 text-[10px] text-slate-800">
+                              <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span className="font-bold text-amber-950 font-mono text-[9px] bg-amber-100 px-1 py-0.2 rounded">
+                                {it.quantity || '1x'}
+                              </span>
+                              <span className="truncate font-medium">{it.name}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-[10px] text-amber-700 italic">
+                            No bundled dishes added yet
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Photo Thumbnail with active angle preview */}
