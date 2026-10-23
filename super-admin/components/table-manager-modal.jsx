@@ -300,7 +300,12 @@ export default function TableManagerModal({
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs" title="Total customer QR views for this table">
                         <Eye className="w-3 h-3 text-blue-600" />
-                        <span>{t.views ?? t.scansTotal ?? t.qrCode?.scansTotal ?? 0} views</span>
+                        <span>
+                          {(() => {
+                            const v = t.views ?? t.scansTotal ?? t.scansCount ?? t.qrCode?.scansTotal ?? 0
+                            return `${v} ${v === 1 ? 'view' : 'views'}`
+                          })()}
+                        </span>
                       </span>
 
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">

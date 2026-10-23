@@ -126,8 +126,8 @@ const listRestaurants = async (req, res) => {
       ])
 
       const tableScans = tableAgg._sum.scansCount || 0
-      const totalScans = allQr + tableScans
-      const totalMenuViews = allMenu + tableScans
+      const totalScans = Math.max(allQr, tableScans)
+      const totalMenuViews = allMenu
 
       return {
         id: r.id,
@@ -528,8 +528,8 @@ const getAnalytics = async (req, res) => {
   ])
 
   const tableScansTotal = tableAgg?._sum?.scansCount || 0
-  const totalAllQr = allQr + tableScansTotal
-  const totalAllMenu = allMenu + tableScansTotal
+  const totalAllQr = Math.max(allQr, tableScansTotal)
+  const totalAllMenu = allMenu
 
   // Resolve top item names
   const topItemsWithNames = await Promise.all(
@@ -750,7 +750,6 @@ const listRestaurantTables = async (req, res) => {
 
   let tables = await prisma.diningTable.findMany({
     where: { restaurantId: targetRestaurantId },
-    orderBy: { label: 'asc' },
   })
 
   // Auto-provision initial tables if restaurant has initialTableCount configured but 0 tables in DB
@@ -768,9 +767,13 @@ const listRestaurantTables = async (req, res) => {
     }
     tables = await prisma.diningTable.findMany({
       where: { restaurantId: targetRestaurantId },
-      orderBy: { label: 'asc' },
     })
   }
+
+  // Sort tables using natural numeric ordering (e.g. Table 1, Table 2 ... Table 10, Table 11)
+  tables.sort((a, b) =>
+    (a.label || '').localeCompare(b.label || '', undefined, { numeric: true, sensitivity: 'base' })
+  )
 
   const baseCustomerUrl = getCustomerBaseUrl()
   const result = tables.map((t) => ({
@@ -778,6 +781,7 @@ const listRestaurantTables = async (req, res) => {
     label: t.label,
     views: t.scansCount || 0,
     scansTotal: t.scansCount || 0,
+    scansCount: t.scansCount || 0,
     qrCode: {
       token: t.qrToken || t.id,
       status: 'ACTIVE',
@@ -828,6 +832,7 @@ const createRestaurantTable = async (req, res) => {
     label: table.label,
     views: 0,
     scansTotal: 0,
+    scansCount: 0,
     qrCode: {
       token: table.qrToken,
       status: 'ACTIVE',
@@ -873,9 +878,17 @@ const getTableQR = async (req, res) => {
       status: 'ACTIVE',
       dataUrl: qrDataUrl,
       url,
+      scansTotal: table.scansCount || 0,
     },
     url,
-    table: { id: table.id, label: table.label, qrToken: table.qrToken },
+    table: {
+      id: table.id,
+      label: table.label,
+      qrToken: table.qrToken,
+      views: table.scansCount || 0,
+      scansTotal: table.scansCount || 0,
+      scansCount: table.scansCount || 0,
+    },
     restaurant: { id: table.restaurant.id, name: table.restaurant.name, slug: table.restaurant.slug },
   })
 }

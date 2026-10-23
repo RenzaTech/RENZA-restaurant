@@ -158,8 +158,8 @@ const getDashboard = async (req, res) => {
   ])
 
   const tableScansTotal = tableAgg?._sum?.scansCount || 0
-  const finalTotalMenuViews = totalMenuViews + tableScansTotal
-  const finalTotalQrScans = totalQrScans + tableScansTotal
+  const finalTotalMenuViews = totalMenuViews
+  const finalTotalQrScans = Math.max(totalQrScans, tableScansTotal)
 
   // Top 3 food items today by item_view
   const topRaw = await prisma.analyticsEvent.groupBy({

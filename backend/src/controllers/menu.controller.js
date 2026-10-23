@@ -115,33 +115,6 @@ const getMenu = async (req, res) => {
         })
       }
     }
-
-    // 5. Track table scans count & analytics event when restaurant is active
-    if (restaurant && restaurant.status === 'active') {
-      if (matchedTable) {
-        await prisma.diningTable.update({
-          where: { id: matchedTable.id },
-          data: { scansCount: { increment: 1 } },
-        }).catch(() => {})
-      }
-
-      const rawIp =
-        req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-        req.socket?.remoteAddress ||
-        'unknown'
-      const ipHash = crypto.createHash('sha256').update(rawIp).digest('hex')
-      const sessionId = req.headers['x-session-id'] || `scan_${matchedTable?.id || slug}_${Date.now()}`
-
-      await prisma.analyticsEvent.create({
-        data: {
-          restaurantId: restaurant.id,
-          eventType: 'qr_scan',
-          sessionId,
-          deviceType: 'mobile',
-          ipHash,
-        },
-      }).catch(() => {})
-    }
   } catch (dbErr) {
     console.error('[Menu Error]', dbErr)
     const candidates = [
@@ -297,27 +270,36 @@ const trackEvent = async (req, res) => {
 
   if (restaurant && !matchedTable) {
     const tableNumMatch = slug.match(/-t(\d+)$/i)
+    const reqTable = req.body?.table || req.query?.table || req.query?.t
+    const candidates = []
+
     if (tableNumMatch) {
       const num = parseInt(tableNumMatch[1], 10)
+      candidates.push({ qrToken: slug })
+      candidates.push({ label: `Table ${num}` })
+      candidates.push({ label: `Table ${String(num).padStart(2, '0')}` })
+    }
+    if (reqTable) {
+      const qStr = reqTable.toString().trim()
+      const qNum = parseInt(qStr.replace(/\D+/g, ''), 10)
+      candidates.push({ label: qStr })
+      candidates.push({ label: `Table ${qStr}` })
+      if (!isNaN(qNum)) {
+        candidates.push({ label: `Table ${qNum}` })
+        candidates.push({ label: `Table ${String(qNum).padStart(2, '0')}` })
+      }
+    }
+
+    if (candidates.length > 0) {
       matchedTable = await prisma.diningTable.findFirst({
         where: {
           restaurantId: restaurant.id,
-          OR: [
-            { qrToken: slug },
-            { label: `Table ${num}` },
-            { label: `Table ${String(num).padStart(2, '0')}` },
-          ],
+          OR: candidates,
         },
       })
     }
   }
 
-  if (matchedTable && restaurant?.status === 'active' && (eventType === 'qr_scan' || eventType === 'menu_view')) {
-    await prisma.diningTable.update({
-      where: { id: matchedTable.id },
-      data: { scansCount: { increment: 1 } },
-    }).catch(() => {})
-  }
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
@@ -326,6 +308,32 @@ const trackEvent = async (req, res) => {
   // Counting officially starts only once Super Admin sets the restaurant to Live Mode ('active')
   if (restaurant.status !== 'active') {
     return res.json({ ok: true, tracked: false, reason: 'Restaurant is in setup mode' })
+  }
+
+  // Session deduplication:
+  // For 'qr_scan' and 'menu_view', only count once per session to prevent refresh spam
+  if (eventType === 'qr_scan' || eventType === 'menu_view') {
+    const existing = await prisma.analyticsEvent.findFirst({
+      where: {
+        restaurantId: restaurant.id,
+        eventType,
+        sessionId: String(sessionId),
+      },
+      select: { id: true },
+    })
+
+    if (existing) {
+      return res.json({ ok: true, deduplicated: true })
+    }
+  }
+
+  // If this is a genuine new qr_scan event for this session and a dining table is matched,
+  // accurately increment the table's scansCount by exactly 1
+  if (matchedTable && eventType === 'qr_scan') {
+    await prisma.diningTable.update({
+      where: { id: matchedTable.id },
+      data: { scansCount: { increment: 1 } },
+    }).catch(() => {})
   }
 
   // Hash the client IP for privacy

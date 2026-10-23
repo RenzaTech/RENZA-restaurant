@@ -3,18 +3,43 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 /**
  * Get or create a persistent session ID for this slug.
  * Stored in localStorage so the same user doesn't re-count on refresh.
+ * Sessions expire after 2 hours of inactivity.
  */
 function getSessionId(slug) {
   if (typeof window === 'undefined' || !window.localStorage) {
     return 'ssr_session';
   }
   const key = `renza_session_${slug}`;
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-    localStorage.setItem(key, id);
+  const SESSION_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours dining session window
+  const now = Date.now();
+  let stored = null;
+  try {
+    stored = localStorage.getItem(key);
+  } catch (_) {}
+
+  let session = null;
+  if (stored) {
+    try {
+      session = JSON.parse(stored);
+    } catch (_) {
+      session = { id: stored, ts: now };
+    }
   }
-  return id;
+
+  if (!session || !session.id || !session.ts || (now - session.ts > SESSION_TTL_MS)) {
+    const id = Math.random().toString(36).substr(2, 9) + now.toString(36);
+    session = { id, ts: now };
+    try {
+      localStorage.setItem(key, JSON.stringify(session));
+    } catch (_) {}
+  } else {
+    // Keep active session alive during browsing
+    session.ts = now;
+    try {
+      localStorage.setItem(key, JSON.stringify(session));
+    } catch (_) {}
+  }
+  return session.id;
 }
 
 /**
