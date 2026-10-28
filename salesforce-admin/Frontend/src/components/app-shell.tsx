@@ -1820,16 +1820,6 @@ function Metric({
       <div className="metric-change"><ArrowUpRight size={13} />{change}</div>
       <div className="metric-value">{value}</div>
       <div className="metric-label">{label}</div>
-      <div className="metric-spark">
-        <span style={{ height: '32%' }} />
-        <span style={{ height: '54%' }} />
-        <span style={{ height: '45%' }} />
-        <span style={{ height: '70%' }} />
-        <span style={{ height: '62%' }} />
-        <span style={{ height: '86%' }} />
-        <span style={{ height: '72%' }} />
-        <span style={{ height: '100%' }} />
-      </div>
     </article>
   );
 }
