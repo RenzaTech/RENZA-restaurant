@@ -56,18 +56,32 @@ const monthStart = () => {
   return d
 }
 
+/**
+ * Helper: Check if user is authorized to view/manage the restaurant (owner or superadmin)
+ */
+const isRestaurantOwner = (restaurant, user) => {
+  if (!user) return false
+  if (user.role === 'superadmin') return true
+  if (!restaurant) return false
+  return Boolean(
+    (restaurant.createdById && restaurant.createdById === user.id) ||
+    (user.employeeId && restaurant.salesExecutiveCode && restaurant.salesExecutiveCode.toLowerCase() === user.employeeId.toLowerCase()) ||
+    (user.email && restaurant.salesExecutiveEmail && restaurant.salesExecutiveEmail.toLowerCase() === user.email.toLowerCase())
+  )
+}
+
 // ─── Controllers ──────────────────────────────────────────────────────────────
 
 /**
  * GET /api/admin/restaurants
  * List restaurants with admin info, food counts, analytics summary.
- * If requested by a Sales Executive, only their onboarded restaurants are returned.
+ * If requested by a non-superadmin (sales executive, COO, employee, etc.), strictly ONLY their onboarded restaurants are returned.
  */
 const listRestaurants = async (req, res) => {
   const where = {}
 
-  // If requester is a sales executive, strictly filter to their onboarded restaurants
-  if (req.user && req.user.role === 'sales_executive') {
+  // If requester is not superadmin, strictly filter to their onboarded restaurants
+  if (req.user && req.user.role !== 'superadmin') {
     const userOr = [{ createdById: req.user.id }]
     if (req.user.employeeId) {
       userOr.push({ salesExecutiveCode: req.user.employeeId })
@@ -76,7 +90,7 @@ const listRestaurants = async (req, res) => {
       userOr.push({ salesExecutiveEmail: req.user.email })
     }
     where.OR = userOr
-  } else if (req.query.employeeId) {
+  } else if (req.query.employeeId && req.user && req.user.role === 'superadmin') {
     // If super admin wants to filter by a specific employee
     where.OR = [
       { salesExecutiveCode: req.query.employeeId },
@@ -330,6 +344,11 @@ const getRestaurant = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
+  // Non-superadmin users can only view their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only view restaurants you onboarded' })
+  }
+
   return res.json({
     ...restaurant,
     adminEmail: restaurant.adminUsers?.[0]?.email || null,
@@ -350,15 +369,9 @@ const updateRestaurant = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  // If requester is a sales executive, verify ownership
-  if (req.user && req.user.role === 'sales_executive') {
-    const isOwner =
-      restaurant.createdById === req.user.id ||
-      (req.user.employeeId && restaurant.salesExecutiveCode === req.user.employeeId) ||
-      (req.user.email && restaurant.salesExecutiveEmail === req.user.email)
-    if (!isOwner) {
-      return res.status(403).json({ error: 'You can only edit restaurants you onboarded' })
-    }
+  // Non-superadmin users can only edit their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only edit restaurants you onboarded' })
   }
 
   const updateData = {}
@@ -425,15 +438,9 @@ const toggleStatus = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
-  // If requester is a sales executive, verify ownership
-  if (req.user && req.user.role === 'sales_executive') {
-    const isOwner =
-      restaurant.createdById === req.user.id ||
-      (req.user.employeeId && restaurant.salesExecutiveCode === req.user.employeeId) ||
-      (req.user.email && restaurant.salesExecutiveEmail === req.user.email)
-    if (!isOwner) {
-      return res.status(403).json({ error: 'You can only change the status of restaurants you onboarded' })
-    }
+  // Non-superadmin users can only change the status of their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only change the status of restaurants you onboarded' })
   }
 
   let targetStatus = req.body?.status
@@ -643,6 +650,11 @@ const getQRCode = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
+  // Non-superadmin users can only view QR codes for their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only view QR codes for restaurants you onboarded' })
+  }
+
   const baseCustomerUrl = getCustomerBaseUrl()
   const defaultUrl = `${baseCustomerUrl}/menu/${restaurant.slug}`
   const rawCustomUrl = restaurant.customMenuUrl && !restaurant.customMenuUrl.includes('vercel.app') ? restaurant.customMenuUrl : null
@@ -722,6 +734,11 @@ const deleteRestaurant = async (req, res) => {
     return res.status(404).json({ error: 'Restaurant not found' })
   }
 
+  // Non-superadmin users can only delete their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only delete restaurants you onboarded' })
+  }
+
   await prisma.$transaction(async (tx) => {
     // Delete any users associated with this restaurant first
     await tx.user.deleteMany({ where: { restaurantId: req.params.id } })
@@ -742,10 +759,16 @@ const listRestaurantTables = async (req, res) => {
   let targetRestaurantId = id
   const restaurant = await prisma.restaurant.findFirst({
     where: { OR: [{ id }, { slug: id }] },
-    select: { id: true, slug: true, initialTableCount: true },
+    select: { id: true, slug: true, initialTableCount: true, createdById: true, salesExecutiveCode: true, salesExecutiveEmail: true },
   })
-  if (restaurant) {
-    targetRestaurantId = restaurant.id
+  if (!restaurant) {
+    return res.status(404).json({ error: 'Restaurant not found' })
+  }
+  targetRestaurantId = restaurant.id
+
+  // Non-superadmin users can only view tables for their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only view tables for restaurants you onboarded' })
   }
 
   let tables = await prisma.diningTable.findMany({
@@ -801,9 +824,15 @@ const createRestaurantTable = async (req, res) => {
   const { label } = req.body
   const restaurant = await prisma.restaurant.findFirst({
     where: { OR: [{ id }, { slug: id }] },
+    select: { id: true, slug: true, createdById: true, salesExecutiveCode: true, salesExecutiveEmail: true },
   })
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  // Non-superadmin users can only create tables for their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only create tables for restaurants you onboarded' })
   }
   const restaurantId = restaurant.id
 
@@ -854,6 +883,11 @@ const getTableQR = async (req, res) => {
     return res.status(404).json({ error: 'Table not found' })
   }
 
+  // Non-superadmin users can only view or manage QR codes for their own onboarded restaurant
+  if (!isRestaurantOwner(table.restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only view or manage QR codes for restaurants you onboarded' })
+  }
+
   // If POST request to regenerate, generate a fresh unique qrToken
   if (req.method === 'POST') {
     const newToken = `${table.restaurant.slug}-t${Math.random().toString(36).slice(2, 7)}`
@@ -900,9 +934,17 @@ const deleteRestaurantTable = async (req, res) => {
   const { id, tableId } = req.params
   const restaurant = await prisma.restaurant.findFirst({
     where: { OR: [{ id }, { slug: id }] },
-    select: { id: true },
+    select: { id: true, createdById: true, salesExecutiveCode: true, salesExecutiveEmail: true },
   })
-  const restaurantId = restaurant ? restaurant.id : id
+  if (!restaurant) {
+    return res.status(404).json({ error: 'Restaurant not found' })
+  }
+  const restaurantId = restaurant.id
+
+  // Non-superadmin users can only delete tables for their own onboarded restaurant
+  if (!isRestaurantOwner(restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only delete tables for restaurants you onboarded' })
+  }
 
   const table = await prisma.diningTable.findFirst({
     where: { id: tableId, restaurantId },
