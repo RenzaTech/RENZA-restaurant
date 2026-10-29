@@ -168,7 +168,7 @@ export function OnboardRestaurantPage({
   };
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 0 40px' }}>
+    <div className="onboard-container" style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 0 40px' }}>
       {/* ── BREADCRUMB & HEADER ── */}
       <div style={{ marginBottom: 24 }}>
         <button
@@ -275,14 +275,14 @@ export function OnboardRestaurantPage({
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* ── 2-CARD GRID (MATCHING ACTUAL SUPER ADMIN PORTAL) ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 24 }}>
+        <div className="onboard-cards-grid">
           {/* CARD 1: RESTAURANT PROFILE */}
           <div
+            className="onboard-card"
             style={{
               background: '#ffffff',
               border: '1px solid #e2e8f0',
               borderRadius: 20,
-              padding: 28,
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
               display: 'flex',
               flexDirection: 'column',
@@ -425,7 +425,7 @@ export function OnboardRestaurantPage({
               </div>
 
               {/* City and Contact Phone row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div className="form-row-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     <MapPin size={14} color="#94a3b8" />
@@ -536,11 +536,11 @@ export function OnboardRestaurantPage({
 
           {/* CARD 2: PARTNER ADMIN CREDENTIALS */}
           <div
+            className="onboard-card"
             style={{
               background: '#ffffff',
               border: '1px solid #e2e8f0',
               borderRadius: 20,
-              padding: 28,
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
               display: 'flex',
               flexDirection: 'column',
@@ -802,11 +802,11 @@ export function OnboardRestaurantPage({
 
         {/* ── CARD 3: SALES EXECUTIVE ATTRIBUTION & FIELD AUDIT (FULL WIDTH) ── */}
         <div
+          className="onboard-card"
           style={{
             background: 'linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%)',
             border: '1px solid #99f6e4',
             borderRadius: 20,
-            padding: 26,
             boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             display: 'flex',
             flexDirection: 'column',
@@ -869,7 +869,7 @@ export function OnboardRestaurantPage({
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 18 }}>
+          <div className="form-row-split" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 18 }}>
             {/* Lead Source */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -928,6 +928,7 @@ export function OnboardRestaurantPage({
 
         {/* ── ACTION FOOTER BAR ── */}
         <div
+          className="onboard-footer-bar"
           style={{
             background: '#ffffff',
             border: '1px solid #e2e8f0',

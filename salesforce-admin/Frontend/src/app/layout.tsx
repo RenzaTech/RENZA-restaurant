@@ -1,10 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppShell } from '@/components/app-shell';
 
 export const metadata: Metadata = {
   title: 'Scanzaa Sales Executive · Powered by Renza',
   description: 'Sales executive restaurant onboarding terminal, instant table QR studio, and partner management.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

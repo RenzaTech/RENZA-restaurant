@@ -792,6 +792,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)} aria-label="Collapse sidebar">
             <ChevronLeft size={16} />
           </button>
+          <button className="drawer-close-btn" onClick={() => setDrawer(false)} aria-label="Close navigation drawer">
+            <X size={18} />
+          </button>
         </div>
 
         <div className="sidebar-scroll">
@@ -885,27 +888,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Menu size={20} />
           </button>
           <div className="breadcrumbs">
-            <span>{isSalesExecutive ? 'Sales Executive Terminal' : 'Super Admin Portal'}</span>
-            <ChevronRight size={14} />
+            <span className="breadcrumb-root">{isSalesExecutive ? 'Sales Executive Terminal' : 'Super Admin Portal'}</span>
+            <ChevronRight size={14} className="breadcrumb-separator" />
             <strong>{section === 'onboard' ? 'Onboard New Restaurant' : navItems.find((n) => n.id === section)?.label || 'Overview'}</strong>
           </div>
 
           <div className="top-actions">
             {/* Active Executive Badge */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                padding: '7px 16px',
-                borderRadius: 12,
-                fontSize: 13,
-              }}
-            >
-              <Briefcase size={16} color="#0891b2" />
-              <span style={{ fontWeight: 700, color: '#1e293b' }}>
+            <div className="executive-badge">
+              <Briefcase size={16} color="#0891b2" className="executive-badge-icon" />
+              <span className="executive-badge-name">
                 {currentAccess?.name || 'Signed In'}
               </span>
               {currentAccess?.employeeId && (
@@ -914,7 +906,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </span>
               )}
               {currentAccess?.territory && (
-                <span style={{ color: '#64748b', fontSize: 12, fontWeight: 500 }}>
+                <span className="executive-badge-territory">
                   ({currentAccess.territory})
                 </span>
               )}
@@ -1385,7 +1377,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 12 }}>
+              <div className="dossier-grid-3">
                 <div>
                   <small style={{ fontSize: 11, color: '#64748b', display: 'block', textTransform: 'uppercase', fontWeight: 700 }}>Added by Employee</small>
                   <strong style={{ fontSize: 15, color: '#0f172a' }}>{inspectRestaurant.salesExecutiveName || '—'}</strong>
@@ -1415,7 +1407,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
 
             {/* Restaurant Profile Details */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+            <div className="dossier-grid-2">
               <div style={{ background: '#f8fafc', padding: '18px 20px', borderRadius: 14, border: '1px solid #e2e8f0' }}>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: 12 }}>Restaurant Profile</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
@@ -1580,12 +1572,12 @@ function Overview({
     <>
       {/* HERO BANNER */}
       <div
+        className="hero-banner"
         style={{
           background: isSales
             ? 'linear-gradient(135deg, #030d1e 0%, #0c2340 50%, #041226 100%)'
             : 'linear-gradient(135deg, #040914 0%, #0d1e38 50%, #040914 100%)',
           borderRadius: 24,
-          padding: '36px 44px',
           color: '#fff',
           border: '1px solid rgba(255,255,255,0.08)',
           boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
@@ -1628,7 +1620,7 @@ function Overview({
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div className="hero-actions" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <button
             className="button secondary"
             onClick={() => notice('Syncing live data from cloud…')}
@@ -1664,7 +1656,7 @@ function Overview({
         <span className="live-pill"><i /> REALTIME ATTRIBUTION</span>
       </div>
 
-      <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
+      <div className="metrics-grid">
         <Metric
           label={isSales ? 'My Onboarded Restaurants' : 'Total Restaurants'}
           value={String(isSales ? myRestaurants.length : restaurants.length).padStart(2, '0')}
