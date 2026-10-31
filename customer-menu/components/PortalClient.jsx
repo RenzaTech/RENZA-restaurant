@@ -259,6 +259,12 @@ export default function PortalClient({
 
   const restaurantName = restaurant?.name || "Anbu'de Cafe";
   const googleReviewUrl = resolveGoogleReviewUrl(restaurant);
+  const rawFeedbackUrl = (restaurant?.feedbackUrl || '').trim();
+  const feedbackUrl = rawFeedbackUrl
+    ? (rawFeedbackUrl.startsWith('http://') || rawFeedbackUrl.startsWith('https://')
+        ? rawFeedbackUrl
+        : `https://${rawFeedbackUrl}`)
+    : null;
 
   // Navigation handlers with mobile hardware back button support
   const handleOpenMenu = () => {
@@ -519,15 +525,17 @@ export default function PortalClient({
                   onClick={handleOpenMenu}
                 />
 
-                {/* Action Card 2: Leave Anonymous Feedback */}
-                <ActionCard
-                  icon={MessageSquareHeart}
-                  variant="blue"
-                  title="Leave Anonymous Feedback"
-                  subtitle="Direct & private note to the manager"
-                  illustration="/hub/card-notepad.png"
-                  onClick={handleOpenFeedback}
-                />
+                {/* Action Card 2: Customer Feedback (Displayed ONLY if restaurant admin provided feedback form link) */}
+                {feedbackUrl && (
+                  <ActionCard
+                    icon={MessageSquareHeart}
+                    variant="blue"
+                    title="Customer Feedback"
+                    subtitle="Share your dining feedback with us"
+                    illustration="/hub/card-notepad.png"
+                    href={feedbackUrl}
+                  />
+                )}
 
                 {/* Action Card 3: Leave a Google Review (Direct redirect on mobile) */}
                 <ActionCard
