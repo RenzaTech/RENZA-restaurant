@@ -9,24 +9,36 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['var(--font-display)', 'Cormorant Garamond', 'Georgia', 'serif'],
-        h: ['var(--font-h)', 'Cinzel', 'serif'],
-        sans: ['var(--font-sans)', 'Josefin Sans', 'sans-serif'],
-        body: ['var(--font-body)', 'Poppins', 'sans-serif'],
+        sans: ['var(--font-sans)', 'Aclonica', 'Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['var(--font-display)', 'Aclonica', 'Plus Jakarta Sans', 'sans-serif'],
+        h: ['var(--font-h)', 'Aclonica', 'Plus Jakarta Sans', 'sans-serif'],
+        body: ['var(--font-body)', 'Aclonica', 'Plus Jakarta Sans', 'sans-serif'],
+        serif: ['var(--font-sans)', 'Aclonica', 'Plus Jakarta Sans', 'sans-serif'],
+        aclonica: ['Aclonica', 'sans-serif'],
+        ancizar: ['var(--font-ancizar)', "'UNAL Ancizar Serif'", "'Ancizar Serif'", 'Georgia', 'serif'],
+        jakarta: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       colors: {
-        gold: {
-          DEFAULT: '#d4b15d',
-          lt: '#f5d98f',
-          dk: '#9a7428',
+        brand: {
+          DEFAULT: '#FFB800',
+          hover: '#E5A500',
+          light: '#FFF8E1',
+          tint: '#FEF3C7',
+          dark: '#8B4513',
         },
-        navy: {
-          dark: '#06090d',
-          mid: '#0d1219',
-          card: '#111821',
-          soft: '#1a2029',
+        coffee: {
+          DEFAULT: '#8B4513',
+          dark: '#582914',
+          light: '#FAF0E6',
         },
-        cream: '#f6f2eb',
+        ink: {
+          DEFAULT: '#101B35',
+          secondary: '#718096',
+          muted: '#718096',
+          light: '#94A3B8',
+        },
+        canvas: '#FFFCF7',
+        surface: '#FFFFFF',
       },
     },
   },

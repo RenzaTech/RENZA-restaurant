@@ -1,18 +1,20 @@
 /**
  * highlightMatch — wraps matched substrings in <mark> elements for search highlighting.
- * Returns an array of strings/React elements suitable for rendering inline.
+ * Returns an array of objects suitable for rendering inline.
  *
  * @param {string} text  - The source text to search within.
  * @param {string} query - The search query to highlight.
- * @returns {Array}      - Array of strings and <mark> JSX elements.
+ * @returns {Array<{type: 'text'|'mark', key: number, text: string}>}
  */
 export function highlightMatch(text = '', query = '') {
-  if (!query || !query.trim() || !text) return [text];
+  if (!text) return [];
+  if (!query || !query.trim()) {
+    return [{ type: 'text', key: 0, text: String(text) }];
+  }
 
-  // Escape special regex characters in the query
   const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
-  const parts = text.split(regex);
+  const parts = String(text).split(regex);
 
   return parts.map((part, i) =>
     regex.test(part)
@@ -25,22 +27,23 @@ export function highlightMatch(text = '', query = '') {
  * renderHighlight — renders the output of highlightMatch as React nodes.
  * Must be used inside JSX.
  *
- * Usage:
- *   {renderHighlight(item.name, searchQuery)}
- *
  * @param {string} text  - The source text.
  * @param {string} query - The search query.
- * @returns {React.ReactNode[]}
+ * @returns {React.ReactNode}
  */
 export function renderHighlight(text = '', query = '') {
+  if (!text) return null;
+  if (!query || !query.trim()) return text;
+
   const parts = highlightMatch(text, query);
-  return parts.map(({ type, key, text: t }) =>
-    type === 'mark' ? (
-      <mark key={key} className="search-highlight">
-        {t}
+  return parts.map((part, i) => {
+    if (typeof part === 'string') return <span key={i}>{part}</span>;
+    return part.type === 'mark' ? (
+      <mark key={part.key ?? i} className="bg-[#FFE082] text-[#8A5700] rounded-xs px-0.5 font-bold">
+        {part.text}
       </mark>
     ) : (
-      <span key={key}>{t}</span>
-    )
-  );
+      <span key={part.key ?? i}>{part.text}</span>
+    );
+  });
 }

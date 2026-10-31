@@ -103,14 +103,12 @@ export default function DishImageZoomModal({
   };
 
   const handleMouseMove = (e) => {
-    if (!isDragging || scale <= 1) return;
-    e.preventDefault();
+    if (!isDragging) return;
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
-    const maxOffset = (scale - 1) * 280;
     setPosition({
-      x: Math.max(-maxOffset, Math.min(maxOffset, posStartRef.current.x + dx)),
-      y: Math.max(-maxOffset, Math.min(maxOffset, posStartRef.current.y + dy)),
+      x: posStartRef.current.x + dx,
+      y: posStartRef.current.y + dy,
     });
   };
 
@@ -118,14 +116,9 @@ export default function DishImageZoomModal({
     setIsDragging(false);
   };
 
-  // Touch handlers (Pinch-to-zoom + Drag + Double-tap)
+  // Touch handlers
   const handleTouchStart = (e) => {
-    if (e.touches.length === 2) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const dist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-      lastTouchDistanceRef.current = dist;
-    } else if (e.touches.length === 1) {
+    if (e.touches.length === 1) {
       const now = Date.now();
       const touch = e.touches[0];
       if (now - lastTapRef.current < 300) {
@@ -140,158 +133,131 @@ export default function DishImageZoomModal({
         dragStartRef.current = { x: touch.clientX, y: touch.clientY };
         posStartRef.current = { ...position };
       }
+    } else if (e.touches.length === 2) {
+      setIsDragging(false);
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchDistanceRef.current = Math.hypot(dx, dy);
     }
   };
 
   const handleTouchMove = (e) => {
-    if (e.touches.length === 2 && lastTouchDistanceRef.current !== null) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const dist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-      const diff = dist - lastTouchDistanceRef.current;
-      if (Math.abs(diff) > 4) {
-        setScale((prev) => {
-          const next = Math.max(1, Math.min(3.5, prev + diff * 0.008));
-          if (next === 1) setPosition({ x: 0, y: 0 });
-          return Number(next.toFixed(2));
-        });
-        lastTouchDistanceRef.current = dist;
-      }
-    } else if (e.touches.length === 1 && isDragging && scale > 1) {
+    if (e.touches.length === 1 && isDragging) {
       const touch = e.touches[0];
       const dx = touch.clientX - dragStartRef.current.x;
       const dy = touch.clientY - dragStartRef.current.y;
-      const maxOffset = (scale - 1) * 320;
       setPosition({
-        x: Math.max(-maxOffset, Math.min(maxOffset, posStartRef.current.x + dx)),
-        y: Math.max(-maxOffset, Math.min(maxOffset, posStartRef.current.y + dy)),
+        x: posStartRef.current.x + dx,
+        y: posStartRef.current.y + dy,
       });
+    } else if (e.touches.length === 2 && lastTouchDistanceRef.current) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const delta = (dist - lastTouchDistanceRef.current) * 0.01;
+      setScale((prev) => Math.min(3.5, Math.max(1, Number((prev + delta).toFixed(2)))));
+      lastTouchDistanceRef.current = dist;
     }
   };
 
   const handleTouchEnd = () => {
-    lastTouchDistanceRef.current = null;
     setIsDragging(false);
+    lastTouchDistanceRef.current = null;
+    if (scale <= 1) setPosition({ x: 0, y: 0 });
   };
 
-  if (!isOpen || !imageUrl || !mounted) return null;
+  if (!isOpen || !mounted) return null;
 
-  return createPortal(
+  const modalContent = (
     <div
-      className="fixed inset-0 z-[99999] flex flex-col items-center justify-between bg-black/95 backdrop-blur-xl animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-black/92 backdrop-blur-md select-none touch-none animate-in fade-in duration-200"
       onWheel={handleWheel}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Zoom view for ${dishName || 'Dish'}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
     >
-      {/* ── Top Bar ── */}
-      <header className="relative z-20 flex w-full items-center justify-between px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex flex-col pr-4">
-          <span className="font-display text-lg sm:text-2xl font-bold tracking-wide text-[#f6f2eb] drop-shadow line-clamp-1">
+      {/* Top Bar: Title & Close Button */}
+      <div className="relative z-10 flex w-full items-center justify-between px-4 py-3 sm:px-6 bg-gradient-to-b from-black/80 to-transparent">
+        <div className="min-w-0 pr-4">
+          <h3 className="text-sm sm:text-base font-bold text-white truncate font-sans">
             {dishName}
-          </span>
+          </h3>
           {subtitle && (
-            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[#d4b15d]">
+            <p className="text-[11px] text-[#FFE082] font-medium font-sans">
               {subtitle}
-            </span>
+            </p>
           )}
         </div>
 
         <button
           type="button"
           onClick={onClose}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95 cursor-pointer shadow-lg"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/90 hover:bg-white/20 transition active:scale-95 cursor-pointer shrink-0"
           aria-label="Close zoom view"
         >
           <X className="h-5 w-5" />
         </button>
-      </header>
+      </div>
 
-      {/* ── Main Interactive Image Viewer ── */}
-      <main
-        className="relative flex-1 w-full flex items-center justify-center overflow-hidden touch-none"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onClick={(e) => {
-          if (scale === 1 && !isDragging) handleDoubleTap(e.clientX, e.clientY);
-        }}
+      {/* Main Image Viewport */}
+      <div
+        className="relative flex-1 w-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
         onDoubleClick={(e) => handleDoubleTap(e.clientX, e.clientY)}
-        style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in' }}
       >
-        <div
-          className="relative max-h-[82vh] max-w-[94vw] flex items-center justify-center transition-transform"
+        <img
+          src={imageUrl}
+          alt={dishName}
+          className="max-h-[82vh] max-w-[94vw] object-contain transition-transform duration-75 ease-out pointer-events-none drop-shadow-2xl rounded-xl"
           style={{
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-            transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            transform: `translate3d(${position.x}px, ${position.y}px, 0px) scale(${scale})`,
+            transformOrigin: 'center center',
           }}
+        />
+      </div>
+
+      {/* Bottom Floating Controls: Zoom in, Zoom out, Reset & Level */}
+      <div className="relative z-10 flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-black/70 border border-white/15 backdrop-blur-md shadow-2xl">
+        <button
+          type="button"
+          onClick={handleZoomOut}
+          disabled={scale <= 1}
+          className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition"
+          aria-label="Zoom out"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt={dishName || 'Dish food photo'}
-            className="max-h-[82vh] max-w-[94vw] w-auto h-auto object-contain select-none pointer-events-none drop-shadow-[0_10px_35px_rgba(0,0,0,0.8)]"
-          />
-        </div>
-      </main>
+          <ZoomOut className="w-4 h-4" />
+        </button>
 
-      {/* ── Bottom Controls & Hint Bar ── */}
-      <footer className="relative z-20 flex flex-col items-center gap-2 pb-5 pt-2 px-4 w-full bg-gradient-to-t from-black/90 to-transparent">
-        {/* Helper Hint */}
-        <p className="text-[11px] sm:text-xs text-slate-400 font-medium tracking-wide">
-          Double-tap or pinch to zoom · Drag to pan
-        </p>
+        <span className="text-xs font-mono font-bold text-[#FFE082] min-w-[40px] text-center">
+          {Math.round(scale * 100)}%
+        </span>
 
-        {/* Floating Controls Bar */}
-        <div className="flex items-center gap-2 rounded-full border border-[rgba(212,177,93,0.35)] bg-[rgba(13,18,25,0.92)] px-3 py-1.5 shadow-2xl backdrop-blur-md">
-          {/* Zoom Out Button */}
-          <button
-            type="button"
-            onClick={handleZoomOut}
-            disabled={scale <= 1}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent transition cursor-pointer"
-            aria-label="Zoom out"
-            title="Zoom Out (-)"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </button>
+        <button
+          type="button"
+          onClick={handleZoomIn}
+          disabled={scale >= 3.5}
+          className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition"
+          aria-label="Zoom in"
+        >
+          <ZoomIn className="w-4 h-4" />
+        </button>
 
-          {/* Scale Indicator */}
-          <span className="px-2 font-mono text-xs font-bold text-[#d4b15d] min-w-[50px] text-center">
-            {Math.round(scale * 100)}%
-          </span>
+        <div className="w-px h-4 bg-white/20 mx-1" />
 
-          {/* Zoom In Button */}
-          <button
-            type="button"
-            onClick={handleZoomIn}
-            disabled={scale >= 3.5}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent transition cursor-pointer"
-            aria-label="Zoom in"
-            title="Zoom In (+)"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </button>
-
-          <div className="h-4 w-[1px] bg-white/20 mx-1" />
-
-          {/* Reset Button */}
-          <button
-            type="button"
-            onClick={handleReset}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-300 hover:text-amber-200 hover:bg-white/10 transition cursor-pointer"
-            aria-label="Reset zoom"
-            title="Reset to 100%"
-          >
-            <RotateCcw className="h-3 w-3" />
-            <span>Reset</span>
-          </button>
-        </div>
-      </footer>
-    </div>,
-    document.body
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={scale === 1 && position.x === 0 && position.y === 0}
+          className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition"
+          aria-label="Reset zoom"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

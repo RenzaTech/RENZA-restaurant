@@ -7,7 +7,8 @@
     "address": "Vallal MGR Salai, Maraimalai Nagar, Tamil Nadu 603209",
     "phone": "088708 05287",
     "hours": "Open daily · closes 10:30 pm",
-    "rating": "5.0 (12 Google reviews)"
+    "rating": "5.0 (12 Google reviews)",
+    "googleReviewUrl": "https://maps.google.com/?q=Anbu+cafe+Maraimalai+Nagar"
   },
   "categories": [
     {
@@ -16,16 +17,25 @@
       "foodItems": [
         {
           "name": "Bread Omelette",
-          "price": 45.0,
+          "price": 45,
           "isVeg": false,
-          "description": null,
+          "description": "Fluffy eggs beaten with diced red onions, fresh green chillies, aromatic coriander, and served hot with golden toasted bread.",
           "isAvailable": true,
           "sortOrder": 0,
-          "imageUrl": null
+          "imageUrl": null,
+          "spicyLevel": 2,
+          "portionPrices": { "half": 45, "full": 75 },
+          "preparationPrices": { "dry": 45, "semiGravy": 55 },
+          "ingredients": ["Farm Fresh Eggs", "Toasted White Bread", "Green Chillies", "Onions", "Coriander", "Cafe Spices"],
+          "allergens": ["Eggs", "Gluten"],
+          "calories": 320,
+          "portionSize": "2 Slices / 2 Eggs",
+          "prepTime": "8-10 mins",
+          "spices": "Cracked Black Pepper, Green Chilli"
         },
         {
           "name": "Chicken Bread Omelette",
-          "price": 60.0,
+          "price": 60,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -34,7 +44,7 @@
         },
         {
           "name": "Cheese Bread Omelette",
-          "price": 55.0,
+          "price": 55,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -43,16 +53,24 @@
         },
         {
           "name": "Veg Sandwich",
-          "price": 45.0,
+          "price": 45,
           "isVeg": true,
-          "description": null,
+          "isVegan": true,
+          "description": "Crisp toasted bread layered with fresh garden vegetables, creamy spread, herbs, and toasted to golden perfection.",
           "isAvailable": true,
           "sortOrder": 3,
-          "imageUrl": null
+          "imageUrl": null,
+          "spicyLevel": 1,
+          "portionPrices": { "regular": 45, "special": 65 },
+          "ingredients": ["Toasted Bread", "Cucumber", "Tomato", "Green Chutney", "Butter"],
+          "allergens": ["Gluten", "Dairy"],
+          "calories": 240,
+          "portionSize": "4 Triangles",
+          "prepTime": "5-7 mins"
         },
         {
           "name": "Veg Cheese Sandwich",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -61,7 +79,7 @@
         },
         {
           "name": "Corn Sandwich",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -70,7 +88,7 @@
         },
         {
           "name": "Corn Cheese Sandwich",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -79,7 +97,7 @@
         },
         {
           "name": "Mushroom Sandwich",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -88,7 +106,7 @@
         },
         {
           "name": "Cheese Toast",
-          "price": 35.0,
+          "price": 35,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -97,7 +115,7 @@
         },
         {
           "name": "Chilli Cheese Sandwich",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -106,7 +124,7 @@
         },
         {
           "name": "Chilli Cheese Corn Sandwich",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -115,7 +133,7 @@
         },
         {
           "name": "Paneer Sandwich",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -124,7 +142,7 @@
         },
         {
           "name": "Egg Sandwich",
-          "price": 55.0,
+          "price": 55,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -133,7 +151,7 @@
         },
         {
           "name": "Egg Cheese Sandwich",
-          "price": 65.0,
+          "price": 65,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -142,7 +160,7 @@
         },
         {
           "name": "Chicken Sandwich",
-          "price": 65.0,
+          "price": 65,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -151,7 +169,7 @@
         },
         {
           "name": "Chicken Cheese Sandwich",
-          "price": 75.0,
+          "price": 75,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -166,7 +184,7 @@
       "foodItems": [
         {
           "name": "Veg Sandwich + French Fries + Lime",
-          "price": 110.0,
+          "price": 110,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -175,7 +193,7 @@
         },
         {
           "name": "Egg Sandwich + French Fries + Lime",
-          "price": 120.0,
+          "price": 120,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -184,7 +202,7 @@
         },
         {
           "name": "Paneer Sandwich + French Fries + Lime",
-          "price": 130.0,
+          "price": 130,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -193,7 +211,7 @@
         },
         {
           "name": "Chicken Sandwich + French Fries + Lime",
-          "price": 130.0,
+          "price": 130,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -202,7 +220,7 @@
         },
         {
           "name": "Veg Burger + French Fries + Lime",
-          "price": 120.0,
+          "price": 120,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -211,7 +229,7 @@
         },
         {
           "name": "Paneer Burger + French Fries + Lime",
-          "price": 140.0,
+          "price": 140,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -220,7 +238,7 @@
         },
         {
           "name": "Chicken Burger + French Fries + Lime",
-          "price": 150.0,
+          "price": 150,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -235,7 +253,7 @@
       "foodItems": [
         {
           "name": "Chicken Wrap",
-          "price": 80.0,
+          "price": 80,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -244,7 +262,7 @@
         },
         {
           "name": "Egg Wrap",
-          "price": 70.0,
+          "price": 70,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -253,7 +271,7 @@
         },
         {
           "name": "Veg Wrap",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -262,7 +280,7 @@
         },
         {
           "name": "Paneer Wrap",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -271,7 +289,7 @@
         },
         {
           "name": "Mushroom Wrap",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -286,7 +304,7 @@
       "foodItems": [
         {
           "name": "Chicken Roll",
-          "price": 60.0,
+          "price": 60,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -295,7 +313,7 @@
         },
         {
           "name": "Chicken Cutlet",
-          "price": 60.0,
+          "price": 60,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -304,7 +322,7 @@
         },
         {
           "name": "Paneer Roll",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -313,7 +331,7 @@
         },
         {
           "name": "Veg Nuggets (7 pcs)",
-          "price": 80.0,
+          "price": 80,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -322,7 +340,7 @@
         },
         {
           "name": "Chicken Nuggets (7 pcs)",
-          "price": 90.0,
+          "price": 90,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -337,7 +355,7 @@
       "foodItems": [
         {
           "name": "French Fries",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -346,7 +364,7 @@
         },
         {
           "name": "Masala Fries",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -355,7 +373,7 @@
         },
         {
           "name": "Peri Peri Fries",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -364,7 +382,7 @@
         },
         {
           "name": "Chicken Nuggets (7 pcs)",
-          "price": 90.0,
+          "price": 90,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -373,7 +391,7 @@
         },
         {
           "name": "Veg Nuggets (7 pcs)",
-          "price": 80.0,
+          "price": 80,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -382,7 +400,7 @@
         },
         {
           "name": "Crab Lollypop (5 pcs)",
-          "price": 150.0,
+          "price": 150,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -391,7 +409,7 @@
         },
         {
           "name": "Fish Finger (5 pcs)",
-          "price": 150.0,
+          "price": 150,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -400,7 +418,7 @@
         },
         {
           "name": "Smiles (5 pcs)",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -409,7 +427,7 @@
         },
         {
           "name": "Chicken Cheese Balls (5 pcs)",
-          "price": 50.0,
+          "price": 50,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -418,7 +436,7 @@
         },
         {
           "name": "Veg Roll (2 pcs)",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -433,7 +451,7 @@
       "foodItems": [
         {
           "name": "Plain Maggi",
-          "price": 40.0,
+          "price": 40,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -442,7 +460,7 @@
         },
         {
           "name": "Veg Maggi",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -451,7 +469,7 @@
         },
         {
           "name": "Egg Maggi",
-          "price": 55.0,
+          "price": 55,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -460,7 +478,7 @@
         },
         {
           "name": "Paneer Maggi",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -469,7 +487,7 @@
         },
         {
           "name": "Mushroom Maggi",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -478,7 +496,7 @@
         },
         {
           "name": "Chicken Maggi",
-          "price": 65.0,
+          "price": 65,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -487,7 +505,7 @@
         },
         {
           "name": "Cheese Maggi",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -502,7 +520,7 @@
       "foodItems": [
         {
           "name": "Veg Momos",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -511,7 +529,7 @@
         },
         {
           "name": "Paneer Momos",
-          "price": 90.0,
+          "price": 90,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -520,7 +538,7 @@
         },
         {
           "name": "Schezwan Momos",
-          "price": 110.0,
+          "price": 110,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -529,7 +547,7 @@
         },
         {
           "name": "Corn & Cheese Momos",
-          "price": 80.0,
+          "price": 80,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -538,7 +556,7 @@
         },
         {
           "name": "Chicken Momos",
-          "price": 80.0,
+          "price": 80,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -547,7 +565,7 @@
         },
         {
           "name": "Mushroom Momos",
-          "price": 90.0,
+          "price": 90,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -562,7 +580,7 @@
       "foodItems": [
         {
           "name": "Veg Puff",
-          "price": 20.0,
+          "price": 20,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -571,7 +589,7 @@
         },
         {
           "name": "Egg Puff",
-          "price": 25.0,
+          "price": 25,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -580,7 +598,7 @@
         },
         {
           "name": "Chicken Puff",
-          "price": 30.0,
+          "price": 30,
           "isVeg": false,
           "description": null,
           "isAvailable": true,
@@ -595,7 +613,7 @@
       "foodItems": [
         {
           "name": "Vanilla",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -604,7 +622,7 @@
         },
         {
           "name": "Strawberry",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -613,7 +631,7 @@
         },
         {
           "name": "Pista",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -622,7 +640,7 @@
         },
         {
           "name": "Butterscotch",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -631,7 +649,7 @@
         },
         {
           "name": "Chocolate",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -640,7 +658,7 @@
         },
         {
           "name": "Mango",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -649,7 +667,7 @@
         },
         {
           "name": "Blackcurrant",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -658,7 +676,7 @@
         },
         {
           "name": "Two in One",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -673,7 +691,7 @@
       "foodItems": [
         {
           "name": "Vanilla Shake",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -682,7 +700,7 @@
         },
         {
           "name": "Strawberry Shake",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -691,7 +709,7 @@
         },
         {
           "name": "Pista Shake",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -700,7 +718,7 @@
         },
         {
           "name": "Butterscotch Shake",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -709,7 +727,7 @@
         },
         {
           "name": "Chocolate Shake",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -718,7 +736,7 @@
         },
         {
           "name": "Blackcurrant Shake",
-          "price": 80.0,
+          "price": 80,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -733,7 +751,7 @@
       "foodItems": [
         {
           "name": "Fruit Salad",
-          "price": 45.0,
+          "price": 45,
           "isVeg": true,
           "description": "₹45–60 depending on size",
           "isAvailable": true,
@@ -742,7 +760,7 @@
         },
         {
           "name": "Mango Salad",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": "₹55–75 depending on size",
           "isAvailable": true,
@@ -751,7 +769,7 @@
         },
         {
           "name": "Apple Salad",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": "₹55–75 depending on size",
           "isAvailable": true,
@@ -760,7 +778,7 @@
         },
         {
           "name": "Pineapple Salad",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": "₹50–65 depending on size",
           "isAvailable": true,
@@ -769,7 +787,7 @@
         },
         {
           "name": "Watermelon Salad",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": "₹50–65 depending on size",
           "isAvailable": true,
@@ -784,7 +802,7 @@
       "foodItems": [
         {
           "name": "Lassi",
-          "price": 40.0,
+          "price": 40,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -793,7 +811,7 @@
         },
         {
           "name": "Mango Lassi",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -802,7 +820,7 @@
         },
         {
           "name": "Banana Lassi",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -811,7 +829,7 @@
         },
         {
           "name": "Chicku Lassi",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -820,7 +838,7 @@
         },
         {
           "name": "Pineapple Lassi",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -829,7 +847,7 @@
         },
         {
           "name": "Mint Lassi",
-          "price": 55.0,
+          "price": 55,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -838,7 +856,7 @@
         },
         {
           "name": "Strawberry Lassi",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -847,7 +865,7 @@
         },
         {
           "name": "Grape Lassi",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -862,7 +880,7 @@
       "foodItems": [
         {
           "name": "Fresh Lime",
-          "price": 20.0,
+          "price": 20,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -871,7 +889,7 @@
         },
         {
           "name": "Pineapple Juice",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -880,7 +898,7 @@
         },
         {
           "name": "Grape Juice",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -889,7 +907,7 @@
         },
         {
           "name": "Orange Juice",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -898,7 +916,7 @@
         },
         {
           "name": "Watermelon Juice",
-          "price": 40.0,
+          "price": 40,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -907,7 +925,7 @@
         },
         {
           "name": "Amla Juice",
-          "price": 45.0,
+          "price": 45,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -916,7 +934,7 @@
         },
         {
           "name": "Beetroot Juice",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -925,7 +943,7 @@
         },
         {
           "name": "Papaya Juice",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -934,7 +952,7 @@
         },
         {
           "name": "Carrot Juice",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -943,7 +961,7 @@
         },
         {
           "name": "Musk Melon Juice",
-          "price": 45.0,
+          "price": 45,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -952,7 +970,7 @@
         },
         {
           "name": "Cucumber Lime",
-          "price": 40.0,
+          "price": 40,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -961,7 +979,7 @@
         },
         {
           "name": "Sweet Lime",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -970,7 +988,7 @@
         },
         {
           "name": "Lime O Honey",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -979,7 +997,7 @@
         },
         {
           "name": "Grape Lime",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -988,7 +1006,7 @@
         },
         {
           "name": "Pineapple Lime",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -997,7 +1015,7 @@
         },
         {
           "name": "Ginger Lime",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1006,7 +1024,7 @@
         },
         {
           "name": "Cucumber Lime Mint",
-          "price": 40.0,
+          "price": 40,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1015,7 +1033,7 @@
         },
         {
           "name": "Lemon Soda",
-          "price": 25.0,
+          "price": 25,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1024,7 +1042,7 @@
         },
         {
           "name": "Jaljeera Soda",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1033,7 +1051,7 @@
         },
         {
           "name": "Mint Lime Soda",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1042,7 +1060,7 @@
         },
         {
           "name": "Mint Lime Salt",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1051,7 +1069,7 @@
         },
         {
           "name": "Nannari Soda",
-          "price": 35.0,
+          "price": 35,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1060,7 +1078,7 @@
         },
         {
           "name": "Nannari Lemon",
-          "price": 30.0,
+          "price": 30,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1069,7 +1087,7 @@
         },
         {
           "name": "Milk Sarbat",
-          "price": 35.0,
+          "price": 35,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1078,7 +1096,7 @@
         },
         {
           "name": "ABC Juice",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1087,7 +1105,7 @@
         },
         {
           "name": "Beetroot Special",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1102,7 +1120,7 @@
       "foodItems": [
         {
           "name": "Mini Falooda",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1111,7 +1129,7 @@
         },
         {
           "name": "Royal Falooda",
-          "price": 90.0,
+          "price": 90,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1120,7 +1138,7 @@
         },
         {
           "name": "Kiwi Falooda",
-          "price": 110.0,
+          "price": 110,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1129,7 +1147,7 @@
         },
         {
           "name": "Dry Fruit Falooda",
-          "price": 130.0,
+          "price": 130,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1144,7 +1162,7 @@
       "foodItems": [
         {
           "name": "Blueberry Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1153,7 +1171,7 @@
         },
         {
           "name": "Ocean Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1162,7 +1180,7 @@
         },
         {
           "name": "Lemon Mint Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1171,7 +1189,7 @@
         },
         {
           "name": "Mint Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1180,7 +1198,7 @@
         },
         {
           "name": "Mango Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1189,7 +1207,7 @@
         },
         {
           "name": "Guava Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1198,7 +1216,7 @@
         },
         {
           "name": "Kiwi Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1207,7 +1225,7 @@
         },
         {
           "name": "Orange Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1216,7 +1234,7 @@
         },
         {
           "name": "Green Apple Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1225,7 +1243,7 @@
         },
         {
           "name": "Strawberry Mojito",
-          "price": 50.0,
+          "price": 50,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1240,7 +1258,7 @@
       "foodItems": [
         {
           "name": "Cold Horlicks",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1249,7 +1267,7 @@
         },
         {
           "name": "Cold Boost",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1258,7 +1276,7 @@
         },
         {
           "name": "Cold Coffee",
-          "price": 60.0,
+          "price": 60,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1267,7 +1285,7 @@
         },
         {
           "name": "Avil Milk",
-          "price": 70.0,
+          "price": 70,
           "isVeg": true,
           "description": null,
           "isAvailable": true,
@@ -1276,7 +1294,7 @@
         },
         {
           "name": "Special Avil Milk",
-          "price": 90.0,
+          "price": 90,
           "isVeg": true,
           "description": null,
           "isAvailable": true,

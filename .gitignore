@@ -18,6 +18,7 @@ out/
 # Uploads & Temp files
 **/uploads
 uploads/
+customer-menu-backup*
 *.log
 *.tmp
 npm-debug.log*

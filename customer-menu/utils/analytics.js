@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { getApiUrl } from './api';
 
 /**
  * Get or create a persistent session ID for this slug.
@@ -55,15 +55,20 @@ function getDeviceType() {
  * @param {string} slug - Restaurant slug
  * @param {string} eventType - e.g. 'qr_scan', 'menu_view', 'item_view'
  * @param {string|null} foodItemId - Optional food item ID for item_view events
+ * @param {string|null} table - Optional table name/number to attribute scan counts
  */
-export async function trackEvent(slug, eventType, foodItemId = null) {
+export async function trackEvent(slug, eventType, foodItemId = null, table = null) {
   try {
     const sessionId = getSessionId(slug);
     const deviceType = getDeviceType();
-    await fetch(`${API_URL}/api/menu/${slug}/track`, {
+    const payload = { eventType, sessionId, deviceType, foodItemId };
+    if (table) payload.table = table;
+
+    const apiUrl = getApiUrl();
+    await fetch(`${apiUrl}/api/menu/${slug}/track`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventType, sessionId, deviceType, foodItemId }),
+      body: JSON.stringify(payload),
     });
   } catch (e) {
     // Silent fail — analytics must never affect UX

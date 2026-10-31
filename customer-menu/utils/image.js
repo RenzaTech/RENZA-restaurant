@@ -1,4 +1,17 @@
+import { getApiUrl } from './api';
+
 const blurColours = ['#5B4636', '#6B5745', '#536653', '#765A43', '#4A505B', '#8A6248'];
+
+export function resolveImageUrl(url) {
+  if (!url) return null;
+  let resolved = url;
+  if (resolved.startsWith('http://') || resolved.startsWith('https://')) return resolved;
+  if (resolved.startsWith('/uploads') || resolved.startsWith('/api/uploads')) {
+    const apiUrl = getApiUrl();
+    return `${apiUrl}${resolved}`;
+  }
+  return resolved;
+}
 
 export function getDishBlurDataUrl(name = '') {
   let hash = 0;
