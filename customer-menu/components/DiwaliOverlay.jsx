@@ -73,7 +73,7 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
 
     // --- ROCKET CLASS ---
     class RealisticSlowRocket {
-      constructor(startX, targetX, targetY, delayMs) {
+      constructor(startX, targetX, targetY, delayMs, onExplode) {
         this.x = startX;
         this.y = (canvas.getBoundingClientRect().height || 800) + 10;
         this.targetX = targetX;
@@ -82,6 +82,7 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
         this.exploded = false;
         this.trail = [];
         this.speed = 6.4;
+        this.onExplode = onExplode;
       }
 
       update(elapsed) {
@@ -125,7 +126,10 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
       }
 
       explode() {
-        triggerFlash(0.28);
+        triggerFlash(0.35);
+        if (typeof this.onExplode === 'function') {
+          this.onExplode();
+        }
         for (let i = 0; i < 110; i++) {
           const angle = Math.random() * Math.PI * 2;
           const spd = 1.1 + Math.random() * 3.4;
@@ -252,22 +256,27 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
       const w = canvas.getBoundingClientRect().width || 430;
       const h = canvas.getBoundingClientRect().height || 800;
 
-      // Launch 3 staggered slow rockets
-      rockets.push(new RealisticSlowRocket(w * 0.3, w * 0.32, h * 0.22, 100));
-      rockets.push(new RealisticSlowRocket(w * 0.7, w * 0.68, h * 0.26, 500));
-      rockets.push(new RealisticSlowRocket(w * 0.5, w * 0.5, h * 0.17, 950));
+      let greetingTriggered = false;
+      const triggerGreetingAtBlast = () => {
+        if (greetingTriggered) return;
+        greetingTriggered = true;
 
-      // Show "Happy Diwali" golden text right when crackers burst (~1.3s)
-      textShowTimeout = setTimeout(() => {
+        // 1. Instantly display 'Happy Diwali' at the exact moment of cracker blast
         setGreetingVisible(true);
         setGreetingOpacity(1);
 
-        // Disappear strictly after 1.8 seconds (between 1 and 2 seconds as requested)
+        // 2. Keep it visible for strictly 2 seconds, then smoothly vanish
+        if (textHideTimeout) clearTimeout(textHideTimeout);
         textHideTimeout = setTimeout(() => {
           setGreetingOpacity(0);
-          setTimeout(() => setGreetingVisible(false), 600);
-        }, 1800);
-      }, 1300);
+          setTimeout(() => setGreetingVisible(false), 450);
+        }, 2000);
+      };
+
+      // Launch 3 staggered slow rockets (each passing triggerGreetingAtBlast)
+      rockets.push(new RealisticSlowRocket(w * 0.3, w * 0.32, h * 0.22, 100, triggerGreetingAtBlast));
+      rockets.push(new RealisticSlowRocket(w * 0.7, w * 0.68, h * 0.26, 500, triggerGreetingAtBlast));
+      rockets.push(new RealisticSlowRocket(w * 0.5, w * 0.5, h * 0.17, 950, triggerGreetingAtBlast));
     }
 
     // --- RENDER LOOP ---
@@ -357,9 +366,9 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
       aria-hidden="true"
       className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none z-50 overflow-hidden select-none"
     >
-      {/* Google Font for Refined Festive Typography */}
+      {/* Google Font for Stylish & Clean Festive Typography */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600;1,700&family=Cinzel:wght@500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap');
       `}</style>
 
       {/* Sky Flash Layer */}
@@ -374,26 +383,29 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
         className="absolute inset-0 w-full h-full pointer-events-none z-20"
       />
 
-      {/* Pure Floating 'Happy Diwali' Typography (Crisp, High-Contrast & Clearly Visible) */}
+      {/* Pure Floating 'Happy Diwali' Typography (Stylish, Clean & Vibrant Festive Colors) */}
       {greetingVisible && (
         <div
           style={{
             opacity: greetingOpacity,
-            transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-            transform: greetingOpacity === 1 ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(-8px)',
+            transition: 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            transform: greetingOpacity === 1 ? 'scale(1) translateY(0)' : 'scale(0.92) translateY(-8px)',
           }}
-          className="absolute top-32 left-0 right-0 z-30 flex items-center justify-center text-center pointer-events-none px-6"
+          className="absolute top-28 sm:top-32 left-0 right-0 z-30 flex items-center justify-center text-center pointer-events-none px-4"
         >
           <h2
             style={{
-              fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif",
-              fontStyle: 'italic',
-              fontWeight: 600,
-              color: '#FFF9E6',
-              textShadow:
-                '0 2px 4px rgba(0, 0, 0, 0.95), 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 16px rgba(251, 191, 36, 0.9), 0 0 32px rgba(245, 158, 11, 0.65)',
+              fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif",
+              fontWeight: 700,
+              letterSpacing: '0.07em',
+              backgroundImage:
+                'linear-gradient(180deg, #FFFFFF 0%, #FFF3B0 16%, #FFD000 40%, #FF8000 70%, #E63946 95%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              filter:
+                'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 16px rgba(255, 140, 0, 0.85)) drop-shadow(0 0 32px rgba(230, 57, 70, 0.5))',
             }}
-            className="text-3xl sm:text-[34px] tracking-wide select-none m-0"
+            className="text-3xl sm:text-[36px] select-none m-0 inline-block text-center leading-tight"
           >
             Happy Diwali
           </h2>

@@ -83,7 +83,7 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
     }
 
     class RealisticSlowRocket {
-      constructor(startX, targetX, targetY, delayMs) {
+      constructor(startX, targetX, targetY, delayMs, onExplode) {
         this.x = startX
         this.y = h + 10
         this.targetX = targetX
@@ -92,6 +92,7 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
         this.exploded = false
         this.trail = []
         this.speed = 5.2
+        this.onExplode = onExplode
       }
 
       update(elapsed) {
@@ -135,7 +136,10 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
       }
 
       explode() {
-        triggerFlash(0.25)
+        triggerFlash(0.3)
+        if (typeof this.onExplode === 'function') {
+          this.onExplode()
+        }
         for (let i = 0; i < 90; i++) {
           const angle = Math.random() * Math.PI * 2
           const spd = 0.9 + Math.random() * 2.8
@@ -249,25 +253,30 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
       })
     }
 
-    // Launch 3 staggered slow rockets
-    rockets.push(new RealisticSlowRocket(w * 0.3, w * 0.32, h * 0.22, 100))
-    rockets.push(new RealisticSlowRocket(w * 0.7, w * 0.68, h * 0.26, 450))
-    rockets.push(new RealisticSlowRocket(w * 0.5, w * 0.5, h * 0.17, 850))
+    let greetingTriggered = false
+    const triggerGreetingAtBlast = () => {
+      if (greetingTriggered) return
+      greetingTriggered = true
 
-    // Reveal "Happy Diwali" neatly at burst (~1.3s)
-    textShowTimeout = setTimeout(() => {
+      // 1. Instantly display 'Happy Diwali' at the exact moment of cracker blast
       setGreetingVisible(true)
       setGreetingOpacity(1)
 
-      // Disappear strictly after 1.8 seconds (between 1 and 2 seconds as requested)
+      // 2. Keep it visible for strictly 2 seconds, then smoothly vanish
+      if (textHideTimeout) clearTimeout(textHideTimeout)
       textHideTimeout = setTimeout(() => {
         setGreetingOpacity(0)
         setTimeout(() => {
           setGreetingVisible(false)
           setIsPlaying(false)
-        }, 500)
-      }, 1800)
-    }, 1300)
+        }, 450)
+      }, 2000)
+    }
+
+    // Launch 3 staggered slow rockets (each passing triggerGreetingAtBlast)
+    rockets.push(new RealisticSlowRocket(w * 0.3, w * 0.32, h * 0.22, 100, triggerGreetingAtBlast))
+    rockets.push(new RealisticSlowRocket(w * 0.7, w * 0.68, h * 0.26, 450, triggerGreetingAtBlast))
+    rockets.push(new RealisticSlowRocket(w * 0.5, w * 0.5, h * 0.17, 850, triggerGreetingAtBlast))
 
     const renderLoop = (timestamp) => {
       if (!animStartTime) animStartTime = timestamp
@@ -347,9 +356,9 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
 
   return (
     <div className="relative w-full max-w-[340px] mx-auto">
-      {/* Import Refined Google Fonts */}
+      {/* Import Stylish & Clean Google Fonts */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600;1,700&family=Cinzel:wght@500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap');
       `}</style>
 
       {/* Realistic Mobile Phone Mockup Frame */}
@@ -375,26 +384,29 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
             {/* Canvas for Hanging Lamps & Fireworks */}
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-20" />
 
-            {/* Pure Floating 'Happy Diwali' Typography (Crisp, High-Contrast & Clearly Visible) */}
+            {/* Pure Floating 'Happy Diwali' Typography (Stylish, Clean & Vibrant Festive Colors) */}
             {greetingVisible && (
               <div
                 style={{
                   opacity: greetingOpacity,
-                  transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                  transform: greetingOpacity === 1 ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(-8px)',
+                  transition: 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                  transform: greetingOpacity === 1 ? 'scale(1) translateY(0)' : 'scale(0.92) translateY(-8px)',
                 }}
-                className="absolute top-28 left-0 right-0 z-30 flex items-center justify-center text-center pointer-events-none px-4"
+                className="absolute top-26 sm:top-28 left-0 right-0 z-30 flex items-center justify-center text-center pointer-events-none px-3"
               >
                 <h2
                   style={{
-                    fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif",
-                    fontStyle: 'italic',
-                    fontWeight: 600,
-                    color: '#FFF9E6',
-                    textShadow:
-                      '0 2px 4px rgba(0, 0, 0, 0.95), 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 16px rgba(251, 191, 36, 0.9), 0 0 32px rgba(245, 158, 11, 0.65)',
+                    fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif",
+                    fontWeight: 700,
+                    letterSpacing: '0.07em',
+                    backgroundImage:
+                      'linear-gradient(180deg, #FFFFFF 0%, #FFF3B0 16%, #FFD000 40%, #FF8000 70%, #E63946 95%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter:
+                      'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 16px rgba(255, 140, 0, 0.85)) drop-shadow(0 0 32px rgba(230, 57, 70, 0.5))',
                   }}
-                  className="text-2xl sm:text-[28px] tracking-wide select-none m-0"
+                  className="text-2xl sm:text-[30px] select-none m-0 inline-block text-center leading-tight"
                 >
                   Happy Diwali
                 </h2>
@@ -780,7 +792,7 @@ export default function FestiveThemesPage() {
               <Sparkles className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
               <div>
                 <strong className="text-white block font-semibold mb-0.5">Timed &quot;Happy Diwali&quot; Greeting</strong>
-                <span>Appears at cracker burst in elegant Playfair Display typography, stays for 1.8 seconds, then gracefully fades out with zero ordering lag.</span>
+                <span>Appears the exact instant crackers blast in stylish Cinzel typography, stays for strictly 2 seconds, then cleanly vanishes.</span>
               </div>
             </div>
           </div>
