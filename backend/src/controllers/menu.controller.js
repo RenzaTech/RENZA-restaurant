@@ -230,6 +230,16 @@ const getMenu = async (req, res) => {
       feedbackUrl: diningFeedbackUrl,
       superAdminFeedbackUrl: renzaFeedbackUrl,
       table: tableInfo,
+      festiveTheme: {
+        enabled: Boolean(restaurant.festiveThemeEnabled),
+        theme: restaurant.festiveThemeName || 'diwali',
+        durationSeconds: restaurant.festiveAnimationDuration || 5,
+      },
+    },
+    festiveTheme: {
+      enabled: Boolean(restaurant.festiveThemeEnabled),
+      theme: restaurant.festiveThemeName || 'diwali',
+      durationSeconds: restaurant.festiveAnimationDuration || 5,
     },
     table: tableInfo,
     categories: categoriesWithItems,

@@ -17,6 +17,7 @@ import {
   Activity,
   ExternalLink,
   UserCheck,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +31,12 @@ const navItems = [
     href: '/restaurants',
     label: 'Restaurants & QRs',
     icon: Building2,
+  },
+  {
+    href: '/festive-themes',
+    label: 'Festival Theme',
+    icon: Sparkles,
+    badge: 'Diwali',
   },
   {
     href: '/employees',
@@ -87,7 +94,7 @@ function Sidebar({ onClose, user }) {
         <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
           Management
         </p>
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, icon: Icon, badge }) => {
           const isActive =
             pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
           return (
@@ -104,6 +111,16 @@ function Sidebar({ onClose, user }) {
             >
               <Icon className={cn('w-4 h-4 flex-shrink-0', isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200')} />
               <span className="flex-1">{label}</span>
+              {badge && (
+                <span className={cn(
+                  'text-[10px] font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider',
+                  isActive
+                    ? 'bg-white/20 text-white'
+                    : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                )}>
+                  {badge}
+                </span>
+              )}
               {isActive ? (
                 <ChevronRight className="w-4 h-4 opacity-80" />
               ) : null}

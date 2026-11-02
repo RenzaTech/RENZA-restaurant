@@ -11,6 +11,7 @@ import CategoryList from './CategoryList';
 import CategoryDishes from './CategoryDishes';
 import DishDetailModal from './DishDetailModal';
 import SplashScreen from './SplashScreen';
+import DiwaliOverlay from './DiwaliOverlay';
 import { trackEvent } from '../utils/analytics';
 import fallbackMenuData from '../data/anbude-cafe-menu.json';
 import { getApiUrl } from '../utils/api';
@@ -222,6 +223,9 @@ export default function PortalClient({
             const resolvedTable = resolveTableInfo(data.table || rData.table, initialTable, slug);
             if (resolvedTable) {
               rData.table = resolvedTable;
+            }
+            if (data.festiveTheme) {
+              rData.festiveTheme = data.festiveTheme;
             }
             setRestaurant(rData);
             const sortedCategories = (data.categories || []).sort(
@@ -489,6 +493,17 @@ export default function PortalClient({
         className="w-full max-w-[430px] min-w-0 mx-auto bg-[#FFFCF7] min-h-screen sm:min-h-[850px] sm:rounded-[32px] sm:shadow-[0_16px_50px_rgba(0,0,0,0.08)] overflow-hidden border-0 sm:border sm:border-[#E8EAF0] flex flex-col justify-between transition-all relative"
         style={{ maxWidth: '430px' }}
       >
+        {/* Dedicated Festive Theme Overlay (Diwali Pilot) */}
+        {Boolean(
+          (restaurant?.festiveTheme?.enabled ?? fallbackMenuData?.restaurant?.festiveTheme?.enabled) &&
+          (restaurant?.festiveTheme?.theme ?? fallbackMenuData?.restaurant?.festiveTheme?.theme ?? 'diwali') === 'diwali'
+        ) && (
+          <DiwaliOverlay
+            active={!showSplash}
+            durationSeconds={restaurant?.festiveTheme?.durationSeconds ?? 5}
+          />
+        )}
+
         <div className="w-full">
           {/* Owner Setup Mode Banner */}
           {(restaurant?.isSetupMode || restaurant?.status === 'setup') && (

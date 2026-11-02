@@ -7,7 +7,12 @@
     "address": "Vallal MGR Salai, Maraimalai Nagar, Tamil Nadu 603209",
     "phone": "088708 05287",
     "hours": "Open daily · closes 10:30 pm",
-    "rating": "5.0 (12 Google reviews)"
+    "rating": "5.0 (12 Google reviews)",
+    "festiveTheme": {
+      "enabled": true,
+      "theme": "diwali",
+      "durationSeconds": 5
+    }
   },
   "categories": [
     {

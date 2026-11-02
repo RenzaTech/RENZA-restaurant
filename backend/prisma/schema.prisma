@@ -60,6 +60,11 @@ model Restaurant {
   superAdminFeedbackUrl String?          @map("super_admin_feedback_url")
   overrideFeedbackUrl   Boolean          @default(false) @map("override_feedback_url")
 
+  // Festive Theme Configuration (Pilot: Diwali)
+  festiveThemeEnabled      Boolean          @default(false) @map("festive_theme_enabled")
+  festiveThemeName         String?          @default("diwali") @map("festive_theme_name")
+  festiveAnimationDuration Int              @default(5) @map("festive_animation_duration")
+
   // Sales Executive Attribution
   createdById           String?          @map("created_by_id")
   createdBy             User?            @relation("SalesAttribution", fields: [createdById], references: [id])
