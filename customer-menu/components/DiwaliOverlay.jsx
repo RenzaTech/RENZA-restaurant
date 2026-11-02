@@ -257,17 +257,17 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
       rockets.push(new RealisticSlowRocket(w * 0.7, w * 0.68, h * 0.26, 500));
       rockets.push(new RealisticSlowRocket(w * 0.5, w * 0.5, h * 0.17, 950));
 
-      // Show "Happy Diwali" golden text right when crackers burst (~1.6s)
+      // Show "Happy Diwali" golden text right when crackers burst (~1.3s)
       textShowTimeout = setTimeout(() => {
         setGreetingVisible(true);
         setGreetingOpacity(1);
 
-        // Disappear after the configured durationSeconds
+        // Disappear strictly after 1.8 seconds (between 1 and 2 seconds as requested)
         textHideTimeout = setTimeout(() => {
           setGreetingOpacity(0);
-          setTimeout(() => setGreetingVisible(false), 800);
-        }, Math.max(1500, durationSeconds * 1000));
-      }, 1500);
+          setTimeout(() => setGreetingVisible(false), 600);
+        }, 1800);
+      }, 1300);
     }
 
     // --- RENDER LOOP ---
@@ -357,6 +357,11 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
       aria-hidden="true"
       className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none z-50 overflow-hidden select-none"
     >
+      {/* Google Font for Royal Festive Calligraphy */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Playfair+Display:ital,wght@1,700;1,900&display=swap');
+      `}</style>
+
       {/* Sky Flash Layer */}
       <div
         ref={flashRef}
@@ -369,21 +374,22 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
         className="absolute inset-0 w-full h-full pointer-events-none z-20"
       />
 
-      {/* Pure Floating 'Happy Diwali' Typography (No Card, No Subtitles, No Dialog Box) */}
+      {/* Pure Floating 'Happy Diwali' Typography (Placed neatly with Cinzel Decorative) */}
       {greetingVisible && (
         <div
           style={{
             opacity: greetingOpacity,
-            transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-            transform: greetingOpacity === 1 ? 'scale(1) translateY(0)' : 'scale(0.92) translateY(-6px)',
+            transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            transform: greetingOpacity === 1 ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(-8px)',
           }}
-          className="absolute top-28 left-0 right-0 z-30 flex items-center justify-center text-center pointer-events-none px-4"
+          className="absolute top-32 left-0 right-0 z-30 flex items-center justify-center text-center pointer-events-none px-6"
         >
           <h2
             style={{
-              fontFamily: "'Georgia', 'Playfair Display', 'Baskerville', serif",
+              fontFamily: "'Cinzel Decorative', 'Playfair Display', Georgia, serif",
+              textShadow: '0 0 25px rgba(251, 191, 36, 0.9), 0 3px 10px rgba(0, 0, 0, 0.85)',
             }}
-            className="italic text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-yellow-400 to-amber-600 drop-shadow-[0_0_25px_rgba(251,191,36,0.95)] drop-shadow-[0_3px_8px_rgba(0,0,0,0.85)] tracking-wide"
+            className="text-3xl sm:text-[34px] font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#FFFDF0] via-[#FDE047] to-[#EAB308] select-none"
           >
             Happy Diwali
           </h2>
