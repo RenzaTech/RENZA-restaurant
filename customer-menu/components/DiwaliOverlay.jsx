@@ -357,9 +357,9 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
       aria-hidden="true"
       className="fixed inset-0 max-w-[430px] mx-auto pointer-events-none z-50 overflow-hidden select-none"
     >
-      {/* Google Font for Royal Festive Calligraphy */}
+      {/* Google Font for Refined Festive Typography */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Playfair+Display:ital,wght@1,700;1,900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600;1,700&family=Cinzel:wght@500;600&display=swap');
       `}</style>
 
       {/* Sky Flash Layer */}
@@ -374,7 +374,7 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
         className="absolute inset-0 w-full h-full pointer-events-none z-20"
       />
 
-      {/* Pure Floating 'Happy Diwali' Typography (Placed neatly with Cinzel Decorative) */}
+      {/* Pure Floating 'Happy Diwali' Typography (Crisp, High-Contrast & Clearly Visible) */}
       {greetingVisible && (
         <div
           style={{
@@ -386,10 +386,14 @@ export default function DiwaliOverlay({ active = true, durationSeconds = 5, forc
         >
           <h2
             style={{
-              fontFamily: "'Cinzel Decorative', 'Playfair Display', Georgia, serif",
-              textShadow: '0 0 25px rgba(251, 191, 36, 0.9), 0 3px 10px rgba(0, 0, 0, 0.85)',
+              fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif",
+              fontStyle: 'italic',
+              fontWeight: 600,
+              color: '#FFF9E6',
+              textShadow:
+                '0 2px 4px rgba(0, 0, 0, 0.95), 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 16px rgba(251, 191, 36, 0.9), 0 0 32px rgba(245, 158, 11, 0.65)',
             }}
-            className="text-3xl sm:text-[34px] font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#FFFDF0] via-[#FDE047] to-[#EAB308] select-none"
+            className="text-3xl sm:text-[34px] tracking-wide select-none m-0"
           >
             Happy Diwali
           </h2>

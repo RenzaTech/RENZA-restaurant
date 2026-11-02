@@ -347,9 +347,9 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
 
   return (
     <div className="relative w-full max-w-[340px] mx-auto">
-      {/* Import Royal Google Fonts */}
+      {/* Import Refined Google Fonts */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Playfair+Display:ital,wght@1,700;1,900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600;1,700&family=Cinzel:wght@500;600&display=swap');
       `}</style>
 
       {/* Realistic Mobile Phone Mockup Frame */}
@@ -375,7 +375,7 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
             {/* Canvas for Hanging Lamps & Fireworks */}
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-20" />
 
-            {/* Pure Floating 'Happy Diwali' Typography in Cinzel Decorative */}
+            {/* Pure Floating 'Happy Diwali' Typography (Crisp, High-Contrast & Clearly Visible) */}
             {greetingVisible && (
               <div
                 style={{
@@ -387,10 +387,14 @@ function RealCustomerMenuPreview({ durationSeconds = 5 }) {
               >
                 <h2
                   style={{
-                    fontFamily: "'Cinzel Decorative', 'Playfair Display', Georgia, serif",
-                    textShadow: '0 0 22px rgba(251, 191, 36, 0.95), 0 3px 8px rgba(0, 0, 0, 0.85)',
+                    fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontWeight: 600,
+                    color: '#FFF9E6',
+                    textShadow:
+                      '0 2px 4px rgba(0, 0, 0, 0.95), 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 16px rgba(251, 191, 36, 0.9), 0 0 32px rgba(245, 158, 11, 0.65)',
                   }}
-                  className="text-2xl sm:text-[26px] font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#FFFDF0] via-[#FDE047] to-[#EAB308] select-none"
+                  className="text-2xl sm:text-[28px] tracking-wide select-none m-0"
                 >
                   Happy Diwali
                 </h2>
@@ -776,7 +780,7 @@ export default function FestiveThemesPage() {
               <Sparkles className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
               <div>
                 <strong className="text-white block font-semibold mb-0.5">Timed &quot;Happy Diwali&quot; Greeting</strong>
-                <span>Appears at cracker burst in Cinzel Decorative typography, stays for 1.8 seconds, then gracefully fades out with zero ordering lag.</span>
+                <span>Appears at cracker burst in elegant Playfair Display typography, stays for 1.8 seconds, then gracefully fades out with zero ordering lag.</span>
               </div>
             </div>
           </div>
