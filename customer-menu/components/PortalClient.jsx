@@ -493,8 +493,8 @@ export default function PortalClient({
         className="w-full max-w-[430px] min-w-0 mx-auto bg-[#FFFCF7] min-h-screen sm:min-h-[850px] sm:rounded-[32px] sm:shadow-[0_16px_50px_rgba(0,0,0,0.08)] overflow-hidden border-0 sm:border sm:border-[#E8EAF0] flex flex-col justify-between transition-all relative"
         style={{ maxWidth: '430px' }}
       >
-        {/* Dedicated Festive Theme Overlay (Diwali Pilot) */}
-        {Boolean(
+        {/* Dedicated Festive Theme Overlay (Diwali Pilot) - Main Page (Hub) Only */}
+        {currentView === 'hub' && Boolean(
           (restaurant?.festiveTheme?.enabled ?? fallbackMenuData?.restaurant?.festiveTheme?.enabled) &&
           (restaurant?.festiveTheme?.theme ?? fallbackMenuData?.restaurant?.festiveTheme?.theme ?? 'diwali') === 'diwali'
         ) && (

@@ -784,7 +784,7 @@ export default function FestiveThemesPage() {
               <Flame className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <strong className="text-white block font-semibold mb-0.5">Fixed Hanging Side Lamps</strong>
-                <span>Authentic brass oil lamps (*Agal Vilakku*) sway continuously along the left and right margins as diners scroll through categories and dishes.</span>
+                <span>Authentic brass oil lamps (*Agal Vilakku*) sway continuously along the left and right margins of the main landing page, keeping internal menu pages clean and uncluttered.</span>
               </div>
             </div>
 
