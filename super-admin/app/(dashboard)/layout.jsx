@@ -203,6 +203,7 @@ export default function DashboardLayout({ children }) {
   }
 
   const getPageTitle = () => {
+    if (pathname.startsWith('/nfc-cards')) return 'Smart NFC Review Cards'
     if (pathname.startsWith('/employees')) return 'Sales Executives & Field Team'
     if (pathname.startsWith('/reports')) return 'Restaurant Reports & Excel Exports'
     if (pathname.startsWith('/restaurants/new')) return 'Monitoring & Governance'
