@@ -16,6 +16,7 @@ import {
   Store,
   Sparkles,
   QrCode,
+  MessageSquareQuote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
@@ -25,6 +26,7 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Menu & Stock', href: '/menu', icon: UtensilsCrossed },
   { label: 'Categories', href: '/categories', icon: LayoutList },
+  { label: 'Feedback', href: '/feedback', icon: MessageSquareQuote },
   { label: 'Profile', href: '/profile', icon: User },
 ];
 
@@ -94,6 +96,7 @@ export default function AppLayout({ children }) {
   const getActiveNav = () => {
     if (pathname.startsWith('/menu')) return '/menu';
     if (pathname.startsWith('/categories')) return '/categories';
+    if (pathname.startsWith('/feedback')) return '/feedback';
     if (pathname.startsWith('/profile')) return '/profile';
     return '/dashboard';
   };
@@ -107,6 +110,7 @@ export default function AppLayout({ children }) {
     if (pathname.includes('/edit')) return 'Edit Dish';
     if (pathname.startsWith('/menu')) return 'Menu & Stock';
     if (pathname.startsWith('/categories')) return 'Categories';
+    if (pathname.startsWith('/feedback')) return 'Customer Feedback';
     if (pathname.startsWith('/profile')) return 'Profile';
     return 'Dashboard';
   };

@@ -1049,6 +1049,264 @@ const getMyQRCode = async (req, res) => {
   })
 }
 
+/**
+ * GET /api/restaurant/feedbacks
+ * List feedbacks with pagination, filters, and summary stats
+ */
+const listFeedbacks = async (req, res) => {
+  const restaurantId = req.user.restaurantId
+  if (!restaurantId) return res.status(403).json({ error: 'No restaurant associated with this user.' })
+
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1)
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20))
+  const skip = (page - 1) * limit
+
+  const { rating, startDate, endDate, search } = req.query
+
+  const where = { restaurantId }
+
+  if (rating) {
+    const r = parseInt(rating, 10)
+    if (!isNaN(r)) where.overallRating = r
+  }
+
+  if (startDate || endDate) {
+    where.createdAt = {}
+    if (startDate) {
+      const s = new Date(startDate)
+      if (!isNaN(s.getTime())) where.createdAt.gte = s
+    }
+    if (endDate) {
+      const e = new Date(endDate)
+      if (!isNaN(e.getTime())) {
+        e.setHours(23, 59, 59, 999)
+        where.createdAt.lte = e
+      }
+    }
+  }
+
+  if (search && search.trim()) {
+    const term = search.trim()
+    where.OR = [
+      { comment: { contains: term, mode: 'insensitive' } },
+      { tableNumber: { contains: term, mode: 'insensitive' } },
+      { customerName: { contains: term, mode: 'insensitive' } },
+      { customerPhone: { contains: term, mode: 'insensitive' } },
+    ]
+  }
+
+  const [feedbacks, totalCount, allFeedbacksForStats] = await Promise.all([
+    prisma.feedback.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      include: {
+        diningTable: {
+          select: { id: true, label: true },
+        },
+      },
+    }),
+    prisma.feedback.count({ where }),
+    prisma.feedback.findMany({
+      where: { restaurantId },
+      select: {
+        overallRating: true,
+        foodRating: true,
+        serviceRating: true,
+        cleanlinessRating: true,
+        highlights: true,
+        improvements: true,
+      },
+    }),
+  ])
+
+  // Compute summary stats across all feedbacks for this restaurant
+  const totalAll = allFeedbacksForStats.length
+  let sumOverall = 0
+  let sumFood = 0
+  let countFood = 0
+  let sumService = 0
+  let countService = 0
+  let sumCleanliness = 0
+  let countCleanliness = 0
+
+  const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  const highlightFreq = {}
+  const improvementFreq = {}
+
+  for (const item of allFeedbacksForStats) {
+    sumOverall += item.overallRating
+    if (ratingCounts[item.overallRating] !== undefined) {
+      ratingCounts[item.overallRating]++
+    }
+    if (item.foodRating) {
+      sumFood += item.foodRating
+      countFood++
+    }
+    if (item.serviceRating) {
+      sumService += item.serviceRating
+      countService++
+    }
+    if (item.cleanlinessRating) {
+      sumCleanliness += item.cleanlinessRating
+      countCleanliness++
+    }
+    if (Array.isArray(item.highlights)) {
+      item.highlights.forEach((h) => {
+        highlightFreq[h] = (highlightFreq[h] || 0) + 1
+      })
+    }
+    if (Array.isArray(item.improvements)) {
+      item.improvements.forEach((i) => {
+        improvementFreq[i] = (improvementFreq[i] || 0) + 1
+      })
+    }
+  }
+
+  const topHighlights = Object.entries(highlightFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([tag, count]) => ({ tag, count }))
+
+  const topImprovements = Object.entries(improvementFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([tag, count]) => ({ tag, count }))
+
+  const summary = {
+    totalFeedbacks: totalAll,
+    averageRating: totalAll > 0 ? Number((sumOverall / totalAll).toFixed(1)) : 0,
+    averageFoodRating: countFood > 0 ? Number((sumFood / countFood).toFixed(1)) : 0,
+    averageServiceRating: countService > 0 ? Number((sumService / countService).toFixed(1)) : 0,
+    averageCleanlinessRating: countCleanliness > 0 ? Number((sumCleanliness / countCleanliness).toFixed(1)) : 0,
+    ratingCounts,
+    topHighlights,
+    topImprovements,
+  }
+
+  return res.json({
+    feedbacks,
+    pagination: {
+      page,
+      limit,
+      total: totalCount,
+      totalPages: Math.ceil(totalCount / limit) || 1,
+    },
+    summary,
+  })
+}
+
+/**
+ * GET /api/restaurant/feedbacks/export
+ * Download feedbacks as CSV
+ */
+const exportFeedbacks = async (req, res) => {
+  const restaurantId = req.user.restaurantId
+  if (!restaurantId) return res.status(403).json({ error: 'No restaurant associated with this user.' })
+
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { name: true, slug: true },
+  })
+
+  const { rating, startDate, endDate, search } = req.query
+  const where = { restaurantId }
+
+  if (rating) {
+    const r = parseInt(rating, 10)
+    if (!isNaN(r)) where.overallRating = r
+  }
+
+  if (startDate || endDate) {
+    where.createdAt = {}
+    if (startDate) {
+      const s = new Date(startDate)
+      if (!isNaN(s.getTime())) where.createdAt.gte = s
+    }
+    if (endDate) {
+      const e = new Date(endDate)
+      if (!isNaN(e.getTime())) {
+        e.setHours(23, 59, 59, 999)
+        where.createdAt.lte = e
+      }
+    }
+  }
+
+  if (search && search.trim()) {
+    const term = search.trim()
+    where.OR = [
+      { comment: { contains: term, mode: 'insensitive' } },
+      { tableNumber: { contains: term, mode: 'insensitive' } },
+      { customerName: { contains: term, mode: 'insensitive' } },
+      { customerPhone: { contains: term, mode: 'insensitive' } },
+    ]
+  }
+
+  const feedbacks = await prisma.feedback.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: 10000,
+  })
+
+  // Escape helper for CSV cells
+  const csvEscape = (field) => {
+    if (field === undefined || field === null) return '""'
+    const str = String(field)
+    return `"${str.replace(/"/g, '""')}"`
+  }
+
+  const headers = [
+    'Feedback ID',
+    'Date (IST)',
+    'Time (IST)',
+    'Table Number',
+    'Overall Rating (1-5)',
+    'Food Quality (1-5)',
+    'Service Speed (1-5)',
+    'Cleanliness (1-5)',
+    'Highlights',
+    'Improvement Areas',
+    'Comments & Suggestions',
+    'Customer Name',
+    'Customer Phone',
+  ]
+
+  const rows = feedbacks.map((fb) => {
+    // Format timestamp in IST (UTC+5:30)
+    const istDate = new Date(fb.createdAt.getTime() + 5.5 * 60 * 60 * 1000)
+    const dateStr = istDate.toISOString().slice(0, 10)
+    const timeStr = istDate.toISOString().slice(11, 19)
+
+    return [
+      csvEscape(fb.id),
+      csvEscape(dateStr),
+      csvEscape(timeStr),
+      csvEscape(fb.tableNumber || 'Unspecified'),
+      csvEscape(fb.overallRating),
+      csvEscape(fb.foodRating || '-'),
+      csvEscape(fb.serviceRating || '-'),
+      csvEscape(fb.cleanlinessRating || '-'),
+      csvEscape(Array.isArray(fb.highlights) ? fb.highlights.join('; ') : ''),
+      csvEscape(Array.isArray(fb.improvements) ? fb.improvements.join('; ') : ''),
+      csvEscape(fb.comment || ''),
+      csvEscape(fb.customerName || ''),
+      csvEscape(fb.customerPhone || ''),
+    ].join(',')
+  })
+
+  // Add UTF-8 BOM so Excel opens special characters and Indian formatting seamlessly
+  const csvContent = '\uFEFF' + [headers.map(csvEscape).join(','), ...rows].join('\r\n')
+
+  const safeSlug = (restaurant?.slug || 'restaurant').replace(/[^a-zA-Z0-9_-]/g, '_')
+  const dateStamp = new Date().toISOString().slice(0, 10)
+  const filename = `feedback-${safeSlug}-${dateStamp}.csv`
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+  return res.status(200).send(csvContent)
+}
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -1064,4 +1322,6 @@ module.exports = {
   updateFood,
   deleteFood,
   toggleAvailability,
+  listFeedbacks,
+  exportFeedbacks,
 }

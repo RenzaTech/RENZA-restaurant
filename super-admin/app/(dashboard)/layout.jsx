@@ -18,6 +18,7 @@ import {
   ExternalLink,
   UserCheck,
   Sparkles,
+  Radio,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,11 @@ const navItems = [
     href: '/restaurants',
     label: 'Restaurants & QRs',
     icon: Building2,
+  },
+  {
+    href: '/nfc-cards',
+    label: 'NFC Review Cards',
+    icon: Radio,
   },
   {
     href: '/festive-themes',

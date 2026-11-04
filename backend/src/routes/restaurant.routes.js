@@ -29,4 +29,8 @@ router.put('/foods/:id', uploadSingle, restaurantController.updateFood)
 router.delete('/foods/:id', restaurantController.deleteFood)
 router.patch('/foods/:id/availability', restaurantController.toggleAvailability)
 
+// Feedbacks & Export
+router.get('/feedbacks', restaurantController.listFeedbacks)
+router.get('/feedbacks/export', restaurantController.exportFeedbacks)
+
 module.exports = router

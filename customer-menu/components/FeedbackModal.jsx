@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Star, CheckCircle2, MessageSquare, ThumbsUp } from 'lucide-react';
+import { X, Star, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
+import { getApiUrl } from '../utils/api';
 
 const QUICK_TAGS = [
   'Delicious Food',
@@ -12,12 +13,13 @@ const QUICK_TAGS = [
   'Fair Pricing',
 ];
 
-export default function FeedbackModal({ isOpen, onClose, restaurantName }) {
+export default function FeedbackModal({ isOpen, onClose, restaurantName, slug }) {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [comment, setComment] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Mobile hardware/gesture back button support
   useEffect(() => {
@@ -50,18 +52,37 @@ export default function FeedbackModal({ isOpen, onClose, restaurantName }) {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => {
-      // Auto close after 2 seconds
+    setIsSubmitting(true);
+
+    const resolvedSlug = slug || 'anbude-cafe';
+    try {
+      const apiUrl = getApiUrl();
+      await fetch(`${apiUrl}/api/menu/${resolvedSlug}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          overallRating: rating,
+          highlights: selectedTags,
+          comment: comment.trim(),
+          tableNumber: 'Unspecified',
+        }),
+      });
+    } catch (err) {
+      console.error('Modal feedback submit error:', err);
+    } finally {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
       setTimeout(() => {
-        setIsSubmitted(false);
-        setComment('');
-        setSelectedTags([]);
-        onClose();
-      }, 1500);
-    }, 500);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setComment('');
+          setSelectedTags([]);
+          onClose();
+        }, 1500);
+      }, 500);
+    }
   };
 
   return (
@@ -184,9 +205,17 @@ export default function FeedbackModal({ isOpen, onClose, restaurantName }) {
               </button>
               <button
                 type="submit"
-                className="flex-1 py-3 px-4 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition shadow-sm"
+                disabled={isSubmitting}
+                className="flex-1 py-3 px-4 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition shadow-sm disabled:opacity-60 flex items-center justify-center gap-1.5"
               >
-                Submit Anonymously
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <span>Submit Anonymously</span>
+                )}
               </button>
             </div>
           </form>

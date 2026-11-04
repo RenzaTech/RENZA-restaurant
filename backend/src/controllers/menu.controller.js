@@ -376,4 +376,104 @@ const trackEvent = async (req, res) => {
   return res.json({ ok: true })
 }
 
-module.exports = { getMenu, trackEvent }
+/**
+ * POST /api/menu/:slug/feedback
+ * Public — records customer feedback into database
+ */
+const submitFeedback = async (req, res) => {
+  const { slug } = req.params
+  const {
+    overallRating,
+    foodRating,
+    serviceRating,
+    cleanlinessRating,
+    highlights,
+    improvements,
+    comment,
+    tableNumber,
+    diningTableId,
+    customerName,
+    customerPhone,
+    sessionId,
+    deviceType,
+  } = req.body
+
+  if (!overallRating || Number(overallRating) < 1 || Number(overallRating) > 5) {
+    return res.status(400).json({ error: 'Valid overall rating between 1 and 5 is required.' })
+  }
+
+  // 1. Resolve restaurant and table
+  let restaurant = null
+  let matchedTableId = diningTableId || null
+  let derivedTableNumber = tableNumber ? String(tableNumber).trim() : null
+
+  // Check if slug is table token/id
+  const tableMatch = await prisma.diningTable.findFirst({
+    where: {
+      OR: [{ qrToken: slug }, { id: slug }],
+    },
+    include: { restaurant: true },
+  })
+
+  if (tableMatch?.restaurant) {
+    restaurant = tableMatch.restaurant
+    matchedTableId = tableMatch.id
+    if (!derivedTableNumber) {
+      derivedTableNumber = tableMatch.label
+    }
+  } else {
+    restaurant = await prisma.restaurant.findUnique({
+      where: { slug },
+    })
+  }
+
+  if (!restaurant) {
+    return res.status(404).json({ error: 'Restaurant not found' })
+  }
+
+  // Sanitize helper
+  const toIntOrNull = (val) => {
+    if (val === undefined || val === null || val === '') return null
+    const num = parseInt(val, 10)
+    return isNaN(num) ? null : Math.min(Math.max(num, 1), 5)
+  }
+
+  const sanitizedHighlights = Array.isArray(highlights)
+    ? highlights.map((h) => String(h).trim()).filter(Boolean).slice(0, 20)
+    : []
+
+  const sanitizedImprovements = Array.isArray(improvements)
+    ? improvements.map((i) => String(i).trim()).filter(Boolean).slice(0, 20)
+    : []
+
+  const trimmedComment = comment ? String(comment).trim().slice(0, 3000) : null
+  const trimmedName = customerName ? String(customerName).trim().slice(0, 100) : null
+  const trimmedPhone = customerPhone ? String(customerPhone).trim().slice(0, 30) : null
+
+  const feedback = await prisma.feedback.create({
+    data: {
+      restaurantId: restaurant.id,
+      diningTableId: matchedTableId,
+      tableNumber: derivedTableNumber || 'Unspecified',
+      overallRating: parseInt(overallRating, 10),
+      foodRating: toIntOrNull(foodRating),
+      serviceRating: toIntOrNull(serviceRating),
+      cleanlinessRating: toIntOrNull(cleanlinessRating),
+      highlights: sanitizedHighlights,
+      improvements: sanitizedImprovements,
+      comment: trimmedComment,
+      customerName: trimmedName,
+      customerPhone: trimmedPhone,
+      deviceType: deviceType ? String(deviceType).trim().slice(0, 50) : null,
+      sessionId: sessionId ? String(sessionId).trim().slice(0, 100) : null,
+    },
+  })
+
+  return res.status(201).json({
+    success: true,
+    message: 'Feedback submitted successfully',
+    feedbackId: feedback.id,
+  })
+}
+
+module.exports = { getMenu, trackEvent, submitFeedback }

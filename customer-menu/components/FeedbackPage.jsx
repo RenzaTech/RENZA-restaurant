@@ -6,7 +6,10 @@ import {
   Star,
   CheckCircle2,
   ShieldCheck,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
+import { getApiUrl } from '../utils/api';
 
 const HIGHLIGHT_TAGS = [
   'Delicious Food',
@@ -63,6 +66,8 @@ export default function FeedbackPage({
   const [comment, setComment] = useState('');
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const toggleHighlight = (tag) => {
     setSelectedHighlights((prev) =>
@@ -76,15 +81,15 @@ export default function FeedbackPage({
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage('');
 
-    const newFeedback = {
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-      restaurantName,
-      slug,
-      tableNumber: tableNumber.trim() || 'Unspecified',
+    const resolvedTable = tableNumber.trim() || restaurant?.table?.label || 'Unspecified';
+    const payload = {
+      tableNumber: resolvedTable,
+      diningTableId: restaurant?.table?.id || null,
       overallRating,
       foodRating,
       serviceRating,
@@ -92,20 +97,38 @@ export default function FeedbackPage({
       highlights: selectedHighlights,
       improvements: selectedImprovements,
       comment: comment.trim(),
+      deviceType: typeof window !== 'undefined' && window.innerWidth < 768 ? 'Mobile' : 'Desktop',
     };
 
-    // Silently store in background
     try {
-      const existing = localStorage.getItem(`renza_feedback_${slug}`);
-      const list = existing ? JSON.parse(existing) : [];
-      list.unshift(newFeedback);
-      localStorage.setItem(`renza_feedback_${slug}`, JSON.stringify(list));
-    } catch (err) {
-      // Ignore storage error
-    }
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/api/menu/${slug}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    setIsSubmitted(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to submit feedback');
+      }
+
+      // Backup to local storage silently
+      try {
+        const existing = localStorage.getItem(`renza_feedback_${slug}`);
+        const list = existing ? JSON.parse(existing) : [];
+        list.unshift({ ...payload, id: Date.now().toString(), timestamp: new Date().toISOString() });
+        localStorage.setItem(`renza_feedback_${slug}`, JSON.stringify(list));
+      } catch (_) {}
+
+      setIsSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error('Feedback submit error:', err);
+      setErrorMessage(err.message || 'Unable to submit feedback right now. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // SUCCESS SCREEN
@@ -410,6 +433,13 @@ export default function FeedbackPage({
 
         {/* Anonymous Guarantee & Submit */}
         <div className="pt-2 space-y-3">
+          {errorMessage && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-xs animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 font-sans">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>100% Anonymous. No phone number or email stored.</span>
@@ -417,9 +447,21 @@ export default function FeedbackPage({
 
           <button
             type="submit"
-            className="w-full py-3.5 px-4 rounded-xl bg-[#FFBB17] hover:bg-[#E5A710] text-gray-950 text-xs font-bold uppercase tracking-wider transition shadow-sm active:scale-[0.99]"
+            disabled={isSubmitting}
+            className={`w-full py-3.5 px-4 rounded-xl text-gray-950 text-xs font-bold uppercase tracking-wider transition shadow-sm active:scale-[0.99] flex items-center justify-center gap-2 ${
+              isSubmitting
+                ? 'bg-amber-300 cursor-not-allowed opacity-80'
+                : 'bg-[#FFBB17] hover:bg-[#E5A710]'
+            }`}
           >
-            Submit Feedback
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-gray-950" />
+                <span>Recording Feedback...</span>
+              </>
+            ) : (
+              <span>Submit Feedback</span>
+            )}
           </button>
         </div>
       </form>

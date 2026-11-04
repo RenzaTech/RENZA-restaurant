@@ -82,6 +82,8 @@ model Restaurant {
   foodItems             FoodItem[]
   tables                DiningTable[]
   analytics             AnalyticsEvent[]
+  nfcCards              NfcReviewCard[]
+  feedbacks             Feedback[]
   createdAt             DateTime         @default(now()) @map("created_at")
 
   @@map("restaurants")
@@ -94,6 +96,7 @@ model DiningTable {
   label        String
   qrToken      String?    @unique @map("qr_token")
   scansCount   Int        @default(0) @map("scans_count")
+  feedbacks    Feedback[]
   createdAt    DateTime   @default(now()) @map("created_at")
 
   @@map("dining_tables")
@@ -163,3 +166,45 @@ model AnalyticsEvent {
 
   @@map("analytics_events")
 }
+
+model NfcReviewCard {
+  id              String      @id @default(cuid())
+  restaurantId    String      @map("restaurant_id")
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  uniqueCode      String      @unique @map("unique_code")
+  targetGoogleUrl String      @map("target_google_url")
+  label           String?     @default("Counter Card") @map("label")
+  isActive        Boolean     @default(true) @map("is_active")
+  totalTaps       Int         @default(0) @map("total_taps")
+  lastTappedAt    DateTime?   @map("last_tapped_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@map("nfc_review_cards")
+}
+
+model Feedback {
+  id                String       @id @default(cuid())
+  restaurantId      String       @map("restaurant_id")
+  restaurant        Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  diningTableId     String?      @map("dining_table_id")
+  diningTable       DiningTable? @relation(fields: [diningTableId], references: [id], onDelete: SetNull)
+  tableNumber       String?      @map("table_number")
+  overallRating     Int          @map("overall_rating")
+  foodRating        Int?         @map("food_rating")
+  serviceRating     Int?         @map("service_rating")
+  cleanlinessRating Int?         @map("cleanliness_rating")
+  highlights        String[]     @default([])
+  improvements      String[]     @default([])
+  comment           String?      @db.Text
+  customerName      String?      @map("customer_name")
+  customerPhone     String?      @map("customer_phone")
+  deviceType        String?      @map("device_type")
+  sessionId         String?      @map("session_id")
+  createdAt         DateTime     @default(now()) @map("created_at")
+
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, overallRating])
+  @@map("feedbacks")
+}
+

@@ -21,6 +21,7 @@ import {
   Globe,
   Store,
   Flame,
+  MessageSquareQuote,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -299,6 +300,27 @@ export default function DashboardPage() {
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                   Arrange sections like Starters, Main Course, Biryani, and Beverages.
+                </p>
+              </div>
+            </div>
+
+            {/* Tile 5: Customer Dining Feedback & Reports */}
+            <div
+              onClick={() => router.push('/feedback')}
+              className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group flex items-start gap-3.5 sm:gap-4 sm:col-span-2"
+            >
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <MessageSquareQuote className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors text-sm">
+                    Customer Dining Feedback & Reports
+                  </h3>
+                  <span className="text-xs text-orange-600 font-bold group-hover:underline">View & Download CSV →</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Real-time auto-updating guest reviews, 5-star ratings, food/service feedback, and 1-click CSV download for Excel.
                 </p>
               </div>
             </div>
