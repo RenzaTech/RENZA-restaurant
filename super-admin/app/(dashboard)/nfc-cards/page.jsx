@@ -18,6 +18,7 @@ import {
   Plus,
   Store,
   MapPin,
+  Trash2,
 } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -30,6 +31,8 @@ export default function NfcCardsPage() {
   const [search, setSearch] = useState('')
   const [restaurantFilter, setRestaurantFilter] = useState('ALL')
   const [copiedCode, setCopiedCode] = useState(null)
+  const [cardToDelete, setCardToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Direct production URL requested
   const NFC_PORTAL_URL = 'https://nfc.scanzaa.in/'
@@ -91,6 +94,26 @@ export default function NfcCardsPage() {
     setCopiedCode(code)
     toast.success('Tap URL copied to clipboard!')
     setTimeout(() => setCopiedCode(null), 2500)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!cardToDelete) return
+    setIsDeleting(true)
+    try {
+      const res = await api.delete(`/api/nfc/cards/${cardToDelete.id}`)
+      if (res.data?.success) {
+        toast.success(`Card ${cardToDelete.uniqueCode} deleted successfully`, {
+          icon: '🗑️',
+        })
+        setCards((prev) => prev.filter((c) => c.id !== cardToDelete.id))
+        setCardToDelete(null)
+      }
+    } catch (err) {
+      console.error('[Super Admin] Error deleting card:', err)
+      toast.error(err.response?.data?.message || 'Failed to delete card')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const totalCards = cards.length
@@ -421,6 +444,15 @@ export default function NfcCardsPage() {
                             <span>Test Tap</span>
                             <ExternalLink className="w-3 h-3" />
                           </a>
+
+                          <button
+                            type="button"
+                            onClick={() => setCardToDelete(card)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            title="Delete Card"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -460,6 +492,55 @@ export default function NfcCardsPage() {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {cardToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => !isDeleting && setCardToDelete(null)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-slate-100 z-10 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-4 border border-rose-100">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 mb-1">
+              Delete NFC Review Card?
+            </h3>
+            <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+              Are you sure you want to permanently delete card{' '}
+              <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">
+                {cardToDelete.uniqueCode}
+              </span>{' '}
+              for{' '}
+              <strong className="text-slate-800">
+                {cardToDelete.restaurant?.name || 'this restaurant'}
+              </strong>?
+            </p>
+            <p className="text-[11px] text-rose-700 bg-rose-50 p-3 rounded-xl border border-rose-200/60 mb-6 font-medium leading-relaxed">
+              ⚠️ Anyone tapping this physical card or scanning its QR code will immediately be blocked and shown the offline screen.
+            </p>
+            <div className="flex gap-2.5 justify-end">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setCardToDelete(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Card'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
