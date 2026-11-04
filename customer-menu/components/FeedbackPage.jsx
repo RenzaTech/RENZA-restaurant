@@ -40,11 +40,12 @@ const RATING_LABELS = {
 
 export default function FeedbackPage({
   restaurant,
+  restaurantSlug,
   onBackToHub,
   onViewMenu,
 }) {
   const restaurantName = restaurant?.name || "Anbu'de Cafe";
-  const slug = restaurant?.slug || 'anbude-cafe';
+  const slug = restaurant?.slug || restaurantSlug || 'anbude-cafe';
 
   const [tableNumber, setTableNumber] = useState(restaurant?.table?.label || '');
 

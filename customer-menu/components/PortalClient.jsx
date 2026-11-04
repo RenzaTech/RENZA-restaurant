@@ -585,6 +585,7 @@ export default function PortalClient({
           {/* VIEW 4: Dedicated Anonymous Feedback Page */}
           {currentView === 'feedback' && (
             <FeedbackPage
+              restaurantSlug={slug}
               restaurant={restaurant}
               onBackToHub={handleBackToHub}
               onViewMenu={handleOpenMenu}
