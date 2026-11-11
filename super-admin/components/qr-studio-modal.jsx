@@ -397,31 +397,15 @@ export default function QRStudioModal({
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/70">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleRegenerate}
-              className="px-3 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors disabled:opacity-50 inline-flex items-center gap-1.5 shadow-2xs"
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${busy ? 'animate-spin' : ''}`} />
-              <span>{busy ? 'Regenerating...' : 'Regenerate'}</span>
-            </button>
-
-            {!isEditingUrl && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomUrlInput(menuUrl)
-                  setIsEditingUrl(true)
-                }}
-                className="px-3 py-2 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 hover:bg-teal-100 rounded-xl transition-colors inline-flex items-center gap-1.5 shadow-2xs"
-              >
-                <Pencil className="w-3.5 h-3.5 text-teal-600" />
-                <span>Edit URL</span>
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleRegenerate}
+            className="px-3.5 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors disabled:opacity-50 inline-flex items-center gap-1.5 shadow-2xs"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${busy ? 'animate-spin' : ''}`} />
+            <span>{busy ? 'Regenerating...' : 'Regenerate'}</span>
+          </button>
 
           <div className="flex items-center gap-2">
             <button

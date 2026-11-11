@@ -1073,12 +1073,12 @@ export default function RestaurantDetailPage() {
         onClose={() => setIsTableManagerOpen(false)}
         restaurants={restaurant ? [restaurant] : []}
         initialRestaurantId={id}
-        onOpenQr={(t, r, editMode = false) => {
+        onOpenQr={(t, r) => {
           setQrModalData({
             isOpen: true,
             table: t,
             restaurant: r || restaurant,
-            initialEditMode: Boolean(editMode),
+            initialEditMode: false,
           })
         }}
         onTableCountChange={(restId, newCount) => {

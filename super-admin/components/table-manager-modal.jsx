@@ -327,7 +327,7 @@ export default function TableManagerModal({
                         type="button"
                         onClick={() => {
                           if (onOpenQr) {
-                            onOpenQr(t, selectedRestaurant, false)
+                            onOpenQr(t, selectedRestaurant)
                           }
                         }}
                         className="px-2.5 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors border border-teal-200 inline-flex items-center gap-1"
@@ -335,20 +335,6 @@ export default function TableManagerModal({
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>View QR</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (onOpenQr) {
-                            onOpenQr(t, selectedRestaurant, true)
-                          }
-                        }}
-                        className="px-2.5 py-1.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 rounded-lg transition-colors border border-slate-200 inline-flex items-center gap-1 shadow-2xs"
-                        title="Edit Target Customer URL for this Table"
-                      >
-                        <Pencil className="w-3.5 h-3.5 text-teal-600" />
-                        <span>Edit URL</span>
                       </button>
 
                       <button

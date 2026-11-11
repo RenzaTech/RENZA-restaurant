@@ -618,12 +618,12 @@ export default function RestaurantsPage() {
         }}
         restaurants={restaurants}
         initialRestaurantId={tableManagerRestId}
-        onOpenQr={(table, rest, editMode = false) => {
+        onOpenQr={(table, rest) => {
           setQrModalData({
             isOpen: true,
             table,
             restaurant: rest || restaurants.find((r) => (r._id || r.id) === tableManagerRestId),
-            initialEditMode: Boolean(editMode),
+            initialEditMode: false,
           })
         }}
         onTableCountChange={(restId, newCount) => {

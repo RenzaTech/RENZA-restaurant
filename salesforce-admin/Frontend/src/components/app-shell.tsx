@@ -1484,7 +1484,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             if (selected) setSelectedRestaurant(selected.name);
           }}
           close={() => setModal(null)}
-          openQr={(table, editMode = false) => {
+          openQr={(table) => {
             if (!table.qrCode) return;
             const qr = table.qrCode;
             setQrTable(table.label);
@@ -1492,7 +1492,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             setQrToken(qr.token);
             setQrStatus(qr.status);
             setQrCustomUrl(table.customUrl || qr.customUrl || null);
-            setQrEditMode(Boolean(editMode));
+            setQrEditMode(false);
             setModal('qr');
           }}
           notice={notice}
@@ -2231,7 +2231,7 @@ function TableManagerModal({
   restaurant: string;
   onRestaurantChange: (id: string) => void;
   close: () => void;
-  openQr: (table: ManagedTable, editMode?: boolean) => void;
+  openQr: (table: ManagedTable) => void;
   notice: (m: string) => void;
 }) {
   const [tables, setTables] = useState<ManagedTable[]>([]);
@@ -2333,23 +2333,13 @@ function TableManagerModal({
               <span className={`status ${table.qrCode?.status === 'ACTIVE' ? 'status-active' : 'status-suspended'}`}>
                 <i />{table.qrCode?.status || 'Missing QR'}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <button
-                  className="button secondary"
-                  disabled={!table.qrCode}
-                  onClick={() => table.qrCode && openQr(table, false)}
-                >
-                  <QrCode size={16} /> View QR
-                </button>
-                <button
-                  className="button secondary"
-                  disabled={!table.qrCode}
-                  onClick={() => table.qrCode && openQr(table, true)}
-                  title="Edit Target Customer URL for this Table"
-                >
-                  <Pencil size={15} style={{ color: '#0bb8ae' }} /> Edit URL
-                </button>
-              </div>
+              <button
+                className="button secondary"
+                disabled={!table.qrCode}
+                onClick={() => table.qrCode && openQr(table)}
+              >
+                <QrCode size={16} /> View QR
+              </button>
             </div>
           ))
         )}
@@ -2656,17 +2646,6 @@ function QrModal({
         <button className="button secondary" disabled={busy} onClick={() => void regenerate()}>
           <RotateCcw size={16} />{busy ? 'Regenerating…' : 'Regenerate'}
         </button>
-        {!isEditingUrl && (
-          <button
-            className="button secondary"
-            onClick={() => {
-              setUrlInput(url);
-              setIsEditingUrl(true);
-            }}
-          >
-            <Pencil size={15} style={{ color: '#0bb8ae' }} /> Edit URL
-          </button>
-        )}
         <Button disabled={!data} onClick={download} icon={<Download size={16} />}>
           Download PNG
         </Button>
