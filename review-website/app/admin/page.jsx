@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { fetchRestaurants, fetchCards, createCard, toggleCard } from '@/lib/api';
+import { fetchRestaurants, fetchCards, createCard, toggleCard, deleteCard } from '@/lib/api';
 import NfcWriter from '@/components/NfcWriter';
 import QrCodeViewer from '@/components/QrCodeViewer';
 import {
@@ -15,6 +15,7 @@ import {
   ExternalLink,
   RefreshCw,
   Search,
+  Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -33,6 +34,8 @@ export default function AdminGeneratorPage() {
   // Card inventory list
   const [cards, setCards] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cardToDelete, setCardToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Base URL for cards
   const [originUrl, setOriginUrl] = useState('');
@@ -123,6 +126,31 @@ export default function AdminGeneratorPage() {
       }
     } catch (err) {
       toast.error('Failed to toggle card status');
+    }
+  };
+
+  const handleDeleteCardConfirm = async () => {
+    if (!cardToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteCard(cardToDelete.id);
+      if (res.success) {
+        toast.success(`Card ${cardToDelete.uniqueCode} deleted successfully`, {
+          icon: '🗑️',
+        });
+        setCards((prev) => prev.filter((c) => c.id !== cardToDelete.id));
+        if (generatedCard && generatedCard.id === cardToDelete.id) {
+          setGeneratedCard(null);
+        }
+        setCardToDelete(null);
+      } else {
+        toast.error(res.message || 'Failed to delete card');
+      }
+    } catch (err) {
+      console.error('[Admin] Delete error:', err);
+      toast.error(err.response?.data?.message || 'Failed to delete card');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -428,10 +456,19 @@ export default function AdminGeneratorPage() {
                             href={cUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-slate-400 hover:text-white"
+                            className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors inline-flex items-center mr-1"
+                            title="Test Tap"
                           >
                             <ExternalLink className="w-3.5 h-3.5 inline" />
                           </a>
+                          <button
+                            type="button"
+                            onClick={() => setCardToDelete(card)}
+                            className="text-slate-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors inline-flex items-center ml-1"
+                            title="Delete Card"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -447,6 +484,55 @@ export default function AdminGeneratorPage() {
             </table>
           </div>
         </section>
+
+        {/* Delete Confirmation Modal */}
+        {cardToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => !isDeleting && setCardToDelete(null)}
+            />
+            <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-150 text-slate-100">
+              <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-center mb-4 text-rose-400">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1">
+                Delete NFC Review Card?
+              </h3>
+              <p className="text-xs text-slate-400 mb-3 leading-relaxed">
+                Are you sure you want to permanently delete card{' '}
+                <span className="font-mono font-bold text-teal-300 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+                  {cardToDelete.uniqueCode}
+                </span>{' '}
+                for{' '}
+                <strong className="text-white">
+                  {cardToDelete.restaurant?.name || 'this restaurant'}
+                </strong>?
+              </p>
+              <p className="text-[11px] text-rose-400 bg-rose-500/10 p-3 rounded-2xl border border-rose-500/20 mb-6 font-medium leading-relaxed">
+                ⚠️ Anyone tapping this physical card or scanning its QR code will immediately be blocked and shown the offline screen.
+              </p>
+              <div className="flex gap-2.5 justify-end">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setCardToDelete(null)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleDeleteCardConfirm}
+                  className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl transition-colors shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Card'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

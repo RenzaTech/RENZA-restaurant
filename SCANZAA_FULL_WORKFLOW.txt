@@ -1,0 +1,718 @@
+================================================================================
+                    SCANZAA PLATFORM — COMPLETE WORKFLOW SPECIFICATION
+================================================================================
+Document Version  : 1.0.0
+Product Name      : SCANZAA (Smart Dining, QR & NFC Review Ecosystem)
+Architecture      : Micro-Frontend & Modular REST Services (Monorepo)
+Database          : Neon Serverless PostgreSQL (Prisma ORM)
+Media Engine      : Cloudinary CDN / Secure Local Storage
+Production Domains:
+  - Customer Dining Menu : https://customermenu.scanzaa.in
+  - Smart NFC Review Hub : https://nfc.scanzaa.in
+  - Super Admin Portal   : https://admin.scanzaa.in (or configured domain)
+================================================================================
+
+
+TABLE OF CONTENTS:
+--------------------------------------------------------------------------------
+ 1. SYSTEM ARCHITECTURE & COMPONENT OVERVIEW
+ 2. ACTOR ROLES & PERMISSIONS MATRIX
+ 3. DATA MODEL & ENTITY RELATIONSHIPS
+ 4. RESTAURANT LIFECYCLE & STATUS STATE MACHINE
+ 5. END-TO-END OPERATIONAL WORKFLOWS
+    5.1. Workflow 1: Restaurant Onboarding & Sales Attribution
+    5.2. Workflow 2: Restaurant Menu, Category & Dish Engineering
+    5.3. Workflow 3: Table QR Code Generation & Dining Table Studio
+    5.4. Workflow 4: Customer In-Store Dining Experience (Scan to Order)
+    5.5. Workflow 5: Smart Review NFC & Dynamic QR Gateway
+    5.6. Workflow 6: Customer In-Dining Feedback & Rating System
+    5.7. Workflow 7: Central Festive Themes & Holiday Animation Engine
+    5.8. Workflow 8: Super Admin Platform Governance & Excel Reporting
+    5.9. Workflow 9: Salesforce CRM Enterprise Data Synchronization
+ 6. COMPLETE API ENDPOINTS SPECIFICATION
+ 7. DATA PRIVACY, DE-DUPLICATION & METRICS PROTECTION
+ 8. HARDWARE & DEPLOYMENT CONSIDERATIONS
+================================================================================
+
+
+================================================================================
+1. SYSTEM ARCHITECTURE & COMPONENT OVERVIEW
+================================================================================
+
+SCANZAA is a unified digital dining and customer engagement suite designed for
+restaurants, cafes, hotels, and dining franchises. The ecosystem consists of
+six integrated subsystems:
+
+  +-------------------------------------------------------------------------+
+  |                             SCANZAA BACKEND                             |
+  |               (Node.js / Express / Prisma ORM / PostgreSQL)             |
+  +----+---------------+-----------------+----------------+-----------------+
+       |               |                 |                |
+       v               v                 v                v
++--------------+ +---------------+ +---------------+ +---------------+
+| CUSTOMER     | | RESTAURANT    | | SUPER ADMIN   | | SMART REVIEW  |
+| MENU APP     | | ADMIN PORTAL  | | COMMAND HUB   | | NFC GATEWAY   |
+| (Next.js 14) | | (Next.js 14)  | | (Next.js 14)  | | (Next.js 14)  |
++--------------+ +---------------+ +---------------+ +---------------+
+       ^                                                  ^
+       |                                                  |
+  [Customer Phone]                                   [NFC Card Tap /
+  Table QR Scan                                      Counter QR Scan]
+
+1. BACKEND API (`backend`)
+   - Technology: Node.js, Express.js, Prisma ORM, Neon PostgreSQL.
+   - Core Services: JWT auth, role authorization, table management, multi-tier
+     pricing, feedback collection, Cloudinary CDN asset pipeline, session
+     deduplicated analytics, and dynamic QR generation.
+
+2. CUSTOMER DINING MENU (`customer-menu`)
+   - Technology: Next.js 14 (App Router), Tailwind CSS, Lucide React.
+   - Purpose: Zero-friction guest experience accessed via QR scan without
+     installing any mobile app. Provides dual-angle photography, real-time
+     cart, dietary filtering, waiter notification, and feedback submission.
+
+3. RESTAURANT ADMIN PORTAL (`restaurant-admin`)
+   - Technology: Next.js 14, Tailwind CSS, Axios, js-cookie.
+   - Purpose: Single-tenant restaurant dashboard for owners/managers to edit
+     menus, toggle live dish availability (In Stock / Sold Out), adjust
+     portion pricing, download table QR tents, and inspect customer feedbacks.
+
+4. SUPER ADMIN PORTAL (`super-admin`)
+   - Technology: Next.js 14, Recharts, XLSX Export Engine.
+   - Purpose: Master control center for the SCANZAA founding team. Governs
+     all onboarded restaurants, manages field sales executives, activates
+     festive themes (Diwali, etc.), controls NFC cards, and generates audits.
+
+5. SMART REVIEW NFC GATEWAY (`review-website`)
+   - Technology: Next.js 14, Web-NFC API (`window.NDEFReader`), QRCode generator.
+   - Purpose: High-speed dynamic redirect service for physical NFC review
+     cards. Instantly routes active cards to Google Review URL (302 redirect),
+     blocks suspended/unpaid accounts to an inactive page, and burns NFC cards.
+
+6. SALESFORCE INTEGRATION (`salesforce-admin`)
+   - Technology: Next.js App Router, TypeScript, Prisma.
+   - Purpose: Idempotent bidirectional connector syncing external CRM leads,
+     franchise accounts, and menu datasets into SCANZAA.
+
+
+================================================================================
+2. ACTOR ROLES & PERMISSIONS MATRIX
+================================================================================
+
+SCANZAA enforces strict Role-Based Access Control (RBAC):
+
++-------------------+---------------------------------------------------------+
+| ROLE              | PERMISSIONS & CAPABILITIES                              |
++-------------------+---------------------------------------------------------+
+| Super Admin       | - Full governance over all restaurants across platform  |
+| (superadmin)      | - Toggle restaurant status: Setup -> Active -> Suspended|
+|                   | - Reset passwords and override customer feedback links  |
+|                   | - Create, edit, and audit Sales Executive accounts      |
+|                   | - Global festive themes toggle and duration controls   |
+|                   | - NFC Smart Card inventory and activation switches      |
+|                   | - Platform-wide cross-restaurant analytics & XLSX export|
++-------------------+---------------------------------------------------------+
+| Sales Executive   | - Field agent account with unique Employee Code & Region|
+| (sales_executive) | - Onboard new restaurant partners during on-site visits |
+|                   | - Provision initial table counts and table QR codes     |
+|                   | - Setup initial restaurant admin credentials            |
+|                   | - Strictly scoped: Only sees restaurants they onboarded |
++-------------------+---------------------------------------------------------+
+| Restaurant Admin  | - Scoped to their own single restaurant establishment   |
+| (restaurant_admin)| - Category CRUD and sorting order                       |
+|                   | - Food item CRUD, portion pricing, combo definitions   |
+|                   | - Instant 1-tap dish availability toggle (Sold Out)     |
+|                   | - View, print, and download individual Table QR codes   |
+|                   | - View live dashboard scan analytics & item popularity  |
+|                   | - Review customer feedbacks, star ratings, export CSV   |
+|                   | - Update restaurant profile, banner, and logo           |
++-------------------+---------------------------------------------------------+
+| End Customer      | - No authentication or app installation required        |
+| (Diner / Guest)   | - Instant access by scanning table QR or NFC card       |
+|                   | - Browse categories, search dishes with suggestions     |
+|                   | - Filter by Veg, Non-Veg, Jain, Vegan, Specials, Combos |
+|                   | - View multi-angle dish photos (Side View & Top View)   |
+|                   | - Build cart, select portions/preparations, notify staff|
+|                   | - Submit detailed ratings & highlights for the meal     |
+|                   | - One-tap redirect to write a verified Google Review    |
++-------------------+---------------------------------------------------------+
+
+
+================================================================================
+3. DATA MODEL & ENTITY RELATIONSHIPS
+================================================================================
+
+The relational schema is maintained via Prisma (`backend/prisma/schema.prisma`):
+
+  [User]
+    | (1:N Sales Attribution)
+    +---> [Restaurant] <----+ (1:1 Admin User)
+             |
+             +---> [DiningTable] (1:N) ---> [Feedback]
+             +---> [Category] (1:N)
+             |       |
+             |       +---> [FoodItem] (1:N) <---> [AnalyticsEvent]
+             +---> [NfcReviewCard] (1:N)
+             +---> [AnalyticsEvent] (1:N)
+             +---> [Feedback] (1:N)
+
+KEY MODELS:
+
+1. User
+   - Fields: id, email, passwordHash, name, role (superadmin, restaurant_admin,
+     sales_executive), restaurantId, employeeId, department, territory, phone.
+
+2. Restaurant
+   - Fields: id, name, slug (unique), description, cuisineType, logoUrl, address,
+     city, phone, status (setup, active, suspended), customMenuUrl,
+     googleReviewUrl, feedbackUrl, superAdminFeedbackUrl, overrideFeedbackUrl.
+   - Festive Theme Fields: festiveThemeEnabled, festiveThemeName,
+     festiveAnimationDuration (seconds).
+   - Sales Attribution Fields: createdById, salesExecutiveName, salesExecutiveEmail,
+     salesExecutiveCode, salesExecutivePhone, salesNotes, leadSource,
+     onboardingSource, initialTableCount.
+
+3. DiningTable
+   - Fields: id, restaurantId, label ("Table 01"), qrToken (unique, e.g. "cafe-t1"),
+     scansCount, createdAt.
+
+4. Category
+   - Fields: id, restaurantId, name, sortOrder, createdAt.
+
+5. FoodItem
+   - Fields: id, restaurantId, categoryId, name, price, portionPrices (JSON),
+     portionImages (JSON), preparationType, preparationPrices (JSON), isCombo,
+     comboItems (JSON), comboLabel, imageUrl, topViewImageUrl, isVeg,
+     description, ingredients, spices, allergens, portionSize, prepTime,
+     calories, isJain, isVegan, isGlutenFree, spicyLevel (0-3), specialTags,
+     isAvailable (boolean), sortOrder.
+
+6. AnalyticsEvent
+   - Fields: id, restaurantId, eventType (qr_scan, menu_view, item_view),
+     foodItemId, sessionId, deviceType, ipHash (SHA-256), createdAt.
+
+7. NfcReviewCard
+   - Fields: id, restaurantId, uniqueCode (e.g. "RC-9K2P"), targetGoogleUrl,
+     label, isActive (boolean), totalTaps, lastTappedAt, createdAt, updatedAt.
+
+8. Feedback
+   - Fields: id, restaurantId, diningTableId, tableNumber, overallRating (1-5),
+     foodRating (1-5), serviceRating (1-5), cleanlinessRating (1-5),
+     highlights (array of strings), improvements (array of strings), comment,
+     customerName, customerPhone, deviceType, sessionId, createdAt.
+
+
+================================================================================
+4. RESTAURANT LIFECYCLE & STATUS STATE MACHINE
+================================================================================
+
+Every restaurant account progresses through three distinct operational states:
+
+       [ Field Onboarding / Super Admin Creation ]
+                           |
+                           v
+                   +---------------+
+                   |  SETUP MODE   | <--- Menu build & table staging
+                   +---------------+
+                     |           ^
+      Go-Live review |           | Corrections / testing
+                     v           |
+                   +---------------+
+                   |  ACTIVE MODE  | <--- Live dining operations
+                   +---------------+
+                     |           ^
+        Non-payment/ |           | Account reinstatement
+        pause order  v           |
+                   +---------------+
+                   | SUSPENDED MODE| <--- Blocked customer menu
+                   +---------------+
+
+1. SETUP MODE (`status = "setup"`)
+   - Purpose: Initial staging period. Restaurant owners and sales staff input
+     categories, upload dish photos, verify pricing, and print table QR codes.
+   - PROTECTION MECHANISM: All analytics tracking (`qr_scan`, `menu_view`) is
+     explicitly ignored/suppressed by the backend so testing by staff does not
+     corrupt commercial operational analytics.
+
+2. ACTIVE MODE (`status = "active"`)
+   - Purpose: Fully operational live restaurant.
+   - Behavior: Public menu serves at `https://customermenu.scanzaa.in/menu/:slug`.
+     QR scans increment table counters and populate daily scan charts.
+     Diners can submit orders, notify waiters, and submit feedback.
+     NFC review cards redirect diners to Google Reviews.
+
+3. SUSPENDED MODE (`status = "suspended"`)
+   - Purpose: Account temporarily frozen (e.g. billing arrears, seasonal closure).
+   - Behavior: Access to public customer menu returns HTTP 403 Forbidden with
+     a polite message ("This restaurant menu is currently unavailable").
+     NFC taps automatically route to the `/inactive` explanation page.
+
+
+================================================================================
+5. END-TO-END OPERATIONAL WORKFLOWS
+================================================================================
+
+--------------------------------------------------------------------------------
+5.1. WORKFLOW 1: RESTAURANT ONBOARDING & SALES ATTRIBUTION
+--------------------------------------------------------------------------------
+Actor: Sales Executive (Field Agent) or Super Admin
+Interface: Super Admin Portal -> `/restaurants/new`
+
+Step 1: Initiation & Form Completion
+  - Agent enters restaurant profile: Name, Cuisine, Address, City, Phone.
+  - Agent inputs initial administrator credentials: Admin Name, Email, Password.
+  - Agent specifies Table Count (e.g., 10 tables).
+  - Agent adds optional Sales Notes and Lead Source ("Field Visit", "Referral").
+
+Step 2: Transactional Execution (`POST /api/admin/restaurants`)
+  - Slug Generator creates clean unique slug from restaurant name (e.g., "anbu-cafe").
+  - Password hashed using bcrypt (12 rounds).
+  - Atomic database transaction executes:
+    a) Inserts `Restaurant` with status = `setup`.
+    b) Inserts `User` with role = `restaurant_admin` tied to restaurant.
+    c) Provisions `N` `DiningTable` records with pre-formatted tokens
+       (`anbu-cafe-t1`, `anbu-cafe-t2` ... `anbu-cafe-tN`).
+    d) Stamps Sales Executive ID and Attribution Code onto the restaurant record.
+
+Step 3: Handover
+  - System generates printable credentials slip for the restaurant owner.
+  - Restaurant owner receives instant access to the Restaurant Admin Portal.
+
+
+--------------------------------------------------------------------------------
+5.2. WORKFLOW 2: RESTAURANT MENU, CATEGORY & DISH ENGINEERING
+--------------------------------------------------------------------------------
+Actor: Restaurant Owner / Chef
+Interface: Restaurant Admin Portal -> `/categories` & `/menu`
+
+Step 1: Category Architecture
+  - Admin creates menu categories (e.g. Starters, Tandoor, Main Course, Shakes).
+  - Drag or specify numeric `sortOrder` to govern customer display order.
+
+Step 2: Food Item Creation (`POST /api/restaurant/foods`)
+  - Form Fields: Dish Name, Category, Base Price, Description.
+  - Dietary Flags:
+    * Veg / Non-Veg toggle
+    * Jain-Friendly checkbox
+    * Vegan checkbox
+    * Gluten-Free checkbox
+  - Sensory & Nutritional Metadata:
+    * Spice Level (0 = Mild, 1 = Medium, 2 = Hot, 3 = Extra Spicy)
+    * Calories count (kCal), Prep time (mins), Portion size (e.g., "Serves 2")
+    * Allergens list (e.g., Dairy, Nuts), Key ingredients, Spice notes
+
+Step 3: Multi-Portion & Preparation Pricing
+  - Portion Matrix: Admin can define variations (e.g., Half @ Rs.150, Full @ Rs.280)
+    with optional portion-specific images.
+  - Preparation Types: Add customization styles (e.g., Gravy / Dry / Butter Fry)
+    with relative price add-ons.
+
+Step 4: Combo Meal Engine
+  - Toggle `isCombo = true`.
+  - Input list of combo items (e.g., "1 Butter Naan + 1 Dal Makhani + Gulab Jamun").
+  - System assigns auto-enumerated combo badge ("Combo 01", "Combo 02").
+
+Step 5: Dual-Angle Photography & Cloud Optimization
+  - Admin uploads Front/Side View Image and Top-Down (Bird's-Eye) View Image.
+  - Backend `upload.js` intercepts multipart form data via Multer.
+  - Uploaded directly to Cloudinary CDN with automatic WebP compression.
+  - Permanent public URLs stored in `imageUrl` and `topViewImageUrl`.
+
+Step 6: Live 1-Tap Availability Switch
+  - During live rush hours, if an ingredient runs out:
+  - Admin taps the switch on `/menu` -> dispatches `PATCH /api/restaurant/foods/:id/availability`.
+  - Marked "Sold Out" instantly on customer phones; prevents kitchen backlogs.
+
+
+--------------------------------------------------------------------------------
+5.3. WORKFLOW 3: TABLE QR CODE GENERATION & DINING TABLE STUDIO
+--------------------------------------------------------------------------------
+Actor: Restaurant Admin or Super Admin
+Interface: Restaurant Admin -> `/dashboard` or Super Admin -> `/restaurants/[id]`
+
+Step 1: Token Generation
+  - Each physical table has an immutable token: `<slug>-t<number>`
+    (Example: `anbude-cafe-t01`).
+
+Step 2: Vector & High-Res QR Rendering (`GET /api/admin/restaurants/:id/tables/:tableId/qr`)
+  - Backend utilizes `qrcode` library with Error Correction Level 'H' (30% damage tolerance).
+  - Target URL encoded: `https://customermenu.scanzaa.in/menu/<token>?source=qr`.
+  - Generates 500px high-contrast PNG base64 data URL.
+
+Step 3: Physical Standee Manufacturing
+  - Admin downloads QR code assets.
+  - Printed on acrylic table stands, wooden blocks, or bill presentation folders.
+  - Scannable under low ambient restaurant lighting.
+
+
+--------------------------------------------------------------------------------
+5.4. WORKFLOW 4: CUSTOMER IN-STORE DINING EXPERIENCE (SCAN TO ORDER)
+--------------------------------------------------------------------------------
+Actor: Diner / Guest
+Interface: Customer Smartphone (Safari / Chrome / Any Browser)
+
+Step 1: Tabletop QR Scan
+  - Customer sits at Table 04, opens smartphone camera, and points at the QR code.
+  - Browser visits: `https://customermenu.scanzaa.in/menu/anbude-cafe-t04?source=qr`.
+
+Step 2: Table Resolution & Festive Intro
+  - Next.js extracts `-t04` suffix, verifying DiningTable ID and Label ("Table 04").
+  - If a Festive Theme (e.g., Diwali) is active:
+    * Screen displays `DiwaliOverlay` featuring golden diyas, palace lamps, and
+      gentle fireworks for the configured duration (5s) with a "Skip" option.
+  - Displays high-resolution restaurant branding splash screen.
+
+Step 3: Dining Hub & Action Cards
+  - Persistent header locks the verified table badge ("Table 04") and restaurant logo.
+  - Hub presents 3 primary action cards:
+    a) "Browse Menu" -> Launches full category and dish catalogue.
+    b) "Share Feedback" -> Opens in-dining rating form.
+    c) "Review on Google" -> Prompts instant 5-star Google Review.
+
+Step 4: Browsing & Interactive Discovery
+  - Filter categories via horizontal icon pills (Burgers, Beverages, Biryani, etc.).
+  - Instant live search bar with real-time dish suggestions.
+  - Dietary toggle: Instantly switch between All, Veg Only, Non-Veg, Jain, Vegan.
+  - Interactive Dish Card:
+    * Displays Veg/Non-Veg dot indicator.
+    * Dual-Angle View Switch: Customer toggles between Front View and Top View.
+    * Tapping dish opens `DishDetailModal`: full ingredient list, calories,
+      preparation time, allergens, and portion options.
+
+Step 5: Cart Building & Waiter Notification
+  - Customer selects portions (Half/Full) and taps "+ Add to Order".
+  - Bottom sticky bar reflects item count and running total.
+  - Tapping opens `CartDrawer`:
+    * Lists chosen items and customizable quantity controls (+ / -).
+    * Calculates item subtotal, 5% GST, and grand total.
+    * Allows typing custom cooking instructions (e.g. "Make it extra crispy").
+    * Customer taps "Notify Waiter": triggers an animated confirmation alerting
+      staff to Table 04 to take the order.
+
+Step 6: Background Analytics Recording
+  - If restaurant status is `active`, browser dispatches `POST /api/menu/:slug/track`.
+  - Logs `qr_scan` (deduplicated by session ID).
+  - Increments `scansCount` on the matching `DiningTable` record in database.
+
+
+--------------------------------------------------------------------------------
+5.5. WORKFLOW 5: SMART REVIEW NFC & DYNAMIC QR GATEWAY
+--------------------------------------------------------------------------------
+Actor: Diner (Tapping NFC card) / Restaurant Staff / Super Admin
+Interface: `review-website` at `https://nfc.scanzaa.in`
+
+Step 1: NFC Review Card Creation (`POST /api/nfc/cards`)
+  - In Super Admin / NFC Portal, admin selects restaurant and enters its
+    official Google Place Review URL (`search.google.com/local/writereview?placeid=...`).
+  - System generates an unambiguous short code (e.g. `RC-7K4W`).
+  - Dynamic Gateway URL formed: `https://nfc.scanzaa.in/c/RC-7K4W`.
+
+Step 2: In-Browser Web-NFC Burning (`NfcWriter.jsx`)
+  - Using Android Chrome, admin taps "Burn to NFC Card" inside the portal.
+  - Utilizes native `window.NDEFReader` to encode the dynamic URL onto blank
+    NTAG213 / NTAG215 cards in 1 second. No external hardware writer required.
+
+Step 3: Customer Tap Experience (`GET /c/:code`)
+  - At billing, waiter presents the physical acrylic NFC card or standee.
+  - Customer taps their iPhone or Android phone against the card.
+  - Phone opens `https://nfc.scanzaa.in/c/RC-7K4W`.
+
+Step 4: Real-Time Dynamic Redirection Logic
+  - Next.js server queries backend `GET /api/nfc/cards/lookup/RC-7K4W`:
+    a) Asynchronously increments card `totalTaps` and updates `lastTappedAt`.
+    b) EVALUATES STATUS:
+       - IF card `isActive == true` AND Restaurant status != 'suspended':
+         --> INSTANT HTTP 302 REDIRECT directly into Google Maps Review dialogue!
+       - IF card `isActive == false` OR Restaurant is suspended:
+         --> Redirects to polite fallback: `https://nfc.scanzaa.in/inactive?r=CafeName`.
+  - ADVANTAGE: If a restaurant pauses their subscription, NFC cards are deactivated
+    remotely from Super Admin without touching physical hardware.
+
+
+--------------------------------------------------------------------------------
+5.6. WORKFLOW 6: CUSTOMER IN-DINING FEEDBACK & RATING SYSTEM
+--------------------------------------------------------------------------------
+Actor: Diner & Restaurant Manager
+Interface: Customer Menu -> `/feedback` & Restaurant Admin -> `/feedback`
+
+Step 1: Feedback Submission (`POST /api/menu/:slug/feedback`)
+  - Diner provides 1 to 5 star ratings across four categories:
+    * Overall Experience
+    * Food Quality & Taste
+    * Service Speed & Staff Courtesy
+    * Hygiene & Cleanliness
+  - Diner selects Highlight Pills ("Quick Service", "Great Ambiance", "Tasty Food").
+  - Diner selects Improvement Areas ("Waiting Time", "Music Volume").
+  - Free text comment box for detailed suggestions.
+  - Optional Customer Name and Phone Number (builds diner CRM list for restaurant).
+  - Submission auto-tags `tableNumber` ("Table 04") and `diningTableId`.
+
+Step 2: Real-Time Restaurant Inbox
+  - Restaurant Manager visits `/feedback` in Restaurant Admin Portal.
+  - Dashboard calculates live Satisfaction Score and category rating breakdown.
+  - Low ratings (1-2 stars) highlighted with alert badges for immediate management
+    follow-up while the diner is still in the restaurant.
+  - Manager can export feedback history to Excel/CSV for team performance reviews.
+
+
+--------------------------------------------------------------------------------
+5.7. WORKFLOW 7: CENTRAL FESTIVE THEMES & HOLIDAY ANIMATION ENGINE
+--------------------------------------------------------------------------------
+Actor: Super Admin
+Interface: Super Admin Portal -> `/festive-themes`
+
+Step 1: Configuration
+  - Super Admin selects active festival theme (e.g. "Diwali Festival 2026").
+  - Sets animation duration (e.g., 5 seconds).
+
+Step 2: Target Selection
+  - Super Admin can choose:
+    * "Select All" -> Enables festive overlay across every restaurant on platform.
+    * Granular checkboxes -> Enables only for specific restaurants or regions.
+  - Dispatches `POST /api/admin/festive/save`.
+
+Step 3: Customer Rendering (`DiwaliOverlay.jsx`)
+  - When customer opens any enabled restaurant menu, the frontend checks
+    `restaurant.festiveThemeEnabled`.
+  - Canvas renders hanging glowing palace lamps, swaying animations, soft
+    firework bursts, and "Happy Diwali" wishes.
+  - Fades smoothly into the menu after the configured duration.
+  - Built-in Interactive Phone Simulator in Super Admin allows live previewing.
+
+
+--------------------------------------------------------------------------------
+5.8. WORKFLOW 8: SUPER ADMIN PLATFORM GOVERNANCE & EXCEL REPORTING
+--------------------------------------------------------------------------------
+Actor: Super Admin (Founder / Platform Executive)
+Interface: Super Admin Portal -> `/dashboard`, `/employees`, `/reports`
+
+Step 1: Global Health Monitoring
+  - View total active establishments, setup accounts, and suspended restaurants.
+  - Track aggregate daily scans, hourly scan velocity, and unique dining sessions.
+
+Step 2: Field Sales Force Governance
+  - Create and manage Sales Executives (`/employees`).
+  - View leaderboards showing restaurants onboarded per executive, territory
+    coverage, and contact information.
+
+Step 3: Audit & Excel Export Engine (`/reports`)
+  - One-click XLSX download powered by `excelExport.js`.
+  - Generates comprehensive multi-tab workbooks containing:
+    * Restaurant summary and operational status
+    * Individual dining table performance and scan volume
+    * Menu item views and top performing dishes
+    * Feedback ratings and customer contact logs
+
+
+--------------------------------------------------------------------------------
+5.9. WORKFLOW 9: SALESFORCE CRM ENTERPRISE DATA SYNCHRONIZATION
+--------------------------------------------------------------------------------
+Actor: Enterprise Integration Service
+Interface: `salesforce-admin` microservice
+
+Step 1: Incoming CRM Webhooks (`POST /api/integrations/salesforce/restaurants`)
+  - Receives restaurant account creations or updates from Salesforce CRM.
+  - Validates `X-Scanzaa-Signature` (HMAC-SHA256) against `SALESFORCE_WEBHOOK_SECRET`.
+
+Step 2: Idempotent Upsert
+  - Matches records using unique `externalId` (never by mutable display name).
+  - Uses `eventId` de-duplication: replayed webhook events return safe HTTP 200
+    without duplicating database records.
+  - Synchronizes brand accounts, territory assignments, and enterprise menu data.
+
+
+================================================================================
+6. COMPLETE API ENDPOINTS SPECIFICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+AUTHENTICATION & IDENTITY (`/api/auth`)
+--------------------------------------------------------------------------------
+POST /api/auth/login
+  - Body: { email, password }
+  - Returns: { token, user: { id, email, name, role, restaurantId } }
+
+GET  /api/auth/me
+  - Headers: Authorization: Bearer <token>
+  - Returns: Current verified user profile and role permissions.
+
+--------------------------------------------------------------------------------
+SUPER ADMIN & SALES MANAGEMENT (`/api/admin`)
+--------------------------------------------------------------------------------
+GET    /api/admin/restaurants
+  - Lists restaurants. (If called by Sales Executive, filtered strictly to their own).
+POST   /api/admin/restaurants
+  - Onboards restaurant, provisions dining tables, creates restaurant admin account.
+GET    /api/admin/restaurants/:id
+  - Detailed restaurant dossier including menu, categories, and table list.
+PUT    /api/admin/restaurants/:id
+  - Updates restaurant profile and operational settings.
+PATCH  /api/admin/restaurants/:id/status
+  - Toggles restaurant status: "setup" <--> "active" <--> "suspended".
+GET    /api/admin/restaurants/:id/analytics
+  - Comprehensive analytics: hourly scans, all-time views, top dishes.
+GET    /api/admin/restaurants/:id/qr
+  - Generates high-res QR code base64 PNG data URL for restaurant.
+PATCH  /api/admin/restaurants/:id/admin-password
+  - Administrative override to reset restaurant admin password.
+DELETE /api/admin/restaurants/:id
+  - Permanently purges restaurant and cascades associated data.
+
+GET    /api/admin/restaurants/:id/tables
+  - Returns all dining tables, scan counts, and individual QR URLs.
+POST   /api/admin/restaurants/:id/tables
+  - Creates a new dining table with unique QR token.
+GET    /api/admin/restaurants/:id/tables/:tableId/qr
+  - Generates high-res QR code for a specific dining table.
+POST   /api/admin/restaurants/:id/tables/:tableId/qr
+  - Regenerates a fresh, randomized QR token for a table.
+DELETE /api/admin/restaurants/:id/tables/:tableId
+  - Deletes a dining table.
+
+GET    /api/admin/employees
+  - Lists all sales executives with onboarded restaurant counts.
+POST   /api/admin/employees
+  - Creates new Sales Executive account.
+PUT    /api/admin/employees/:id
+  - Updates employee territory, name, or phone.
+DELETE /api/admin/employees/:id
+  - Deletes employee account.
+
+--------------------------------------------------------------------------------
+RESTAURANT ADMIN MANAGEMENT (`/api/restaurant`)
+--------------------------------------------------------------------------------
+GET    /api/restaurant/profile
+  - Retrieves profile of authenticated restaurant.
+PUT    /api/restaurant/profile
+  - Updates profile, address, phone, and uploads logo (multipart/form-data).
+GET    /api/restaurant/dashboard
+  - Live restaurant stats: today's scans, total items, top viewed dishes.
+GET    /api/restaurant/qr
+  - Retrieves own restaurant QR code.
+
+GET    /api/restaurant/categories
+  - Lists restaurant categories sorted by sortOrder.
+POST   /api/restaurant/categories
+  - Creates new category.
+PUT    /api/restaurant/categories/:id
+  - Updates category name or sortOrder.
+DELETE /api/restaurant/categories/:id
+  - Deletes category.
+
+GET    /api/restaurant/foods
+  - Lists all food items with portion prices and availability status.
+POST   /api/restaurant/foods
+  - Creates food item with image upload (multipart/form-data).
+GET    /api/restaurant/foods/:id
+  - Retrieves single food item details.
+PUT    /api/restaurant/foods/:id
+  - Updates food item details and replaces images.
+DELETE /api/restaurant/foods/:id
+  - Deletes food item.
+PATCH  /api/restaurant/foods/:id/availability
+  - 1-tap toggle for food item availability (In Stock / Sold Out).
+
+GET    /api/restaurant/feedbacks
+  - Lists customer feedbacks with ratings, tags, and pagination.
+GET    /api/restaurant/feedbacks/export
+  - Exports customer feedbacks as CSV / Excel data.
+
+--------------------------------------------------------------------------------
+PUBLIC CUSTOMER MENU (`/api/menu`) — No Auth Required
+--------------------------------------------------------------------------------
+GET    /api/menu/:slug
+  - Public menu lookup by restaurant slug or table token.
+  - Automatically identifies table from slug suffix (e.g. `-t01`).
+  - Returns active categories, food items, portion pricing, and festive theme.
+  - Returns HTTP 403 if restaurant is suspended.
+
+POST   /api/menu/:slug/track
+  - Records analytics event (`qr_scan`, `menu_view`, `item_view`).
+  - Automatically deduplicates scans per session to prevent spam.
+  - Increments table scan count.
+  - Suppressed if restaurant is in "setup" mode.
+
+POST   /api/menu/:slug/feedback
+  - Submits diner ratings (1-5 stars), highlight tags, comment, and contact info.
+
+--------------------------------------------------------------------------------
+SMART NFC REVIEW GATEWAY (`/api/nfc`)
+--------------------------------------------------------------------------------
+GET    /api/nfc/cards/lookup/:code
+  - Fast lookup for NFC card / QR tap.
+  - Asynchronously increments totalTaps.
+  - Returns target Google Review URL and real-time active status.
+
+GET    /api/nfc/cards
+  - Lists all NFC review cards across restaurants.
+POST   /api/nfc/cards
+  - Creates a new NFC review card with auto-generated code (e.g. `RC-XXXX`).
+PATCH  /api/nfc/cards/:id/toggle
+  - Remote ON / OFF kill switch for any NFC card.
+PATCH  /api/nfc/cards/:id
+  - Updates target Google URL or card label.
+DELETE /api/nfc/cards/:id
+  - Deletes NFC card record.
+
+--------------------------------------------------------------------------------
+FESTIVE THEMES ENGINE (`/api/admin/festive`)
+--------------------------------------------------------------------------------
+GET    /api/admin/festive/config
+  - Retrieves global festive status, active theme, and restaurant states.
+POST   /api/admin/festive/save
+  - Batch saves theme activations, durations, and restaurant selections.
+PATCH  /api/admin/festive/restaurants/:id/toggle
+  - Toggles festive theme for a single individual restaurant.
+
+
+================================================================================
+7. DATA PRIVACY, DE-DUPLICATION & METRICS PROTECTION
+================================================================================
+
+SCANZAA incorporates enterprise safeguards to ensure metrics accuracy and privacy:
+
+1. Session Deduplication
+   - When a diner scans a table QR code or browses the menu, a unique `sessionId`
+     is created on the client device.
+   - For `qr_scan` and `menu_view` events, the backend checks if an event with
+     the same `(restaurantId, eventType, sessionId)` exists.
+   - Subsequent page reloads or refreshes within the same dining session DO NOT
+     falsely inflate scan counts.
+
+2. Table Counter Natural Ordering & Increments
+   - Dining tables are sorted naturally using numeric collation (Table 1, Table 2,
+     Table 10 instead of Table 1, Table 10, Table 2).
+   - Only genuine first-time session scans increment the table's `scansCount`.
+
+3. IP Anonymization
+   - Diner client IP addresses are immediately hashed using SHA-256 with a salt
+     before writing to the `AnalyticsEvent` table. Raw IP addresses are never
+     persisted, complying with global privacy regulations (GDPR / DPDP).
+
+4. Setup Mode Isolation
+   - Restaurants in `setup` status do NOT log analytics. Restaurant managers and
+     sales executives can freely test menus, take dish photos, and preview
+     tabletop QR codes without polluting operational metrics.
+
+
+================================================================================
+8. HARDWARE & DEPLOYMENT CONSIDERATIONS
+================================================================================
+
+1. NFC Chip Specifications:
+   - Compatible Chips : NXP NTAG213, NTAG215, NTAG216 (144 to 888 bytes memory).
+   - Dynamic URL format: `https://nfc.scanzaa.in/c/<CODE>` (requires under 30 bytes).
+   - Fast encoding directly via Android Chrome Web-NFC (`NfcWriter.jsx`).
+
+2. QR Code Physical Specifications:
+   - Error Correction Level: High ('H') - permits 30% obscuration/scratching.
+   - Recommended Acrylic Tent Size: 4x6 inches or 5x7 inches.
+   - Contrast: Black (#000000) on pure white (#FFFFFF) background.
+
+3. Live Operations Safety Guarantee:
+   - All components are loosely coupled and independently scalable.
+   - Neon serverless database auto-scales connections.
+   - Media assets are distributed over Cloudinary's global edge network.
+================================================================================
+                         END OF WORKFLOW SPECIFICATION
+================================================================================

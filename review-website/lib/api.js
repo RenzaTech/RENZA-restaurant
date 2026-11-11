@@ -38,4 +38,9 @@ export const toggleCard = async (id, isActive) => {
   return res.data;
 };
 
+export const deleteCard = async (id) => {
+  const res = await api.delete(`/nfc/cards/${id}`);
+  return res.data;
+};
+
 export default api;
