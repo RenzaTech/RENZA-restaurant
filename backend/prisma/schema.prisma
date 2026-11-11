@@ -95,6 +95,7 @@ model DiningTable {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   label        String
   qrToken      String?    @unique @map("qr_token")
+  customUrl    String?    @map("custom_url")
   scansCount   Int        @default(0) @map("scans_count")
   feedbacks    Feedback[]
   createdAt    DateTime   @default(now()) @map("created_at")

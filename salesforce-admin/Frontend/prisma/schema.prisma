@@ -178,6 +178,7 @@ model DiningTable {
   externalId   String? @unique
   restaurantId String
   label        String
+  customUrl    String? @map("custom_url")
   isActive     Boolean @default(true)
   createdAt    DateTime @default(now())
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])

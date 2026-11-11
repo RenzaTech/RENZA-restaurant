@@ -799,19 +799,28 @@ const listRestaurantTables = async (req, res) => {
   )
 
   const baseCustomerUrl = getCustomerBaseUrl()
-  const result = tables.map((t) => ({
-    id: t.id,
-    label: t.label,
-    views: t.scansCount || 0,
-    scansTotal: t.scansCount || 0,
-    scansCount: t.scansCount || 0,
-    qrCode: {
-      token: t.qrToken || t.id,
-      status: 'ACTIVE',
-      url: `${baseCustomerUrl}/menu/${t.qrToken || t.id}`,
+  const result = tables.map((t) => {
+    const defaultUrl = `${baseCustomerUrl}/menu/${t.qrToken || t.id}`
+    const rawCustomUrl = t.customUrl && !t.customUrl.includes('vercel.app') ? t.customUrl : null
+    const rawUrl = rawCustomUrl || defaultUrl
+    const url = rawUrl.replace(/https?:\/\/[^/]*vercel\.app/, baseCustomerUrl)
+    return {
+      id: t.id,
+      label: t.label,
+      views: t.scansCount || 0,
       scansTotal: t.scansCount || 0,
-    },
-  }))
+      scansCount: t.scansCount || 0,
+      customUrl: t.customUrl || null,
+      qrToken: t.qrToken || t.id,
+      qrCode: {
+        token: t.qrToken || t.id,
+        status: 'ACTIVE',
+        url,
+        customUrl: t.customUrl || null,
+        scansTotal: t.scansCount || 0,
+      },
+    }
+  })
   return res.json(result)
 }
 
@@ -899,7 +908,10 @@ const getTableQR = async (req, res) => {
   }
 
   const baseCustomerUrl = getCustomerBaseUrl()
-  const url = `${baseCustomerUrl}/menu/${table.qrToken || table.id}`
+  const defaultUrl = `${baseCustomerUrl}/menu/${table.qrToken || table.id}`
+  const rawCustomUrl = table.customUrl && !table.customUrl.includes('vercel.app') ? table.customUrl : null
+  const rawUrl = rawCustomUrl || defaultUrl
+  const url = rawUrl.replace(/https?:\/\/[^/]*vercel\.app/, baseCustomerUrl)
   const qrDataUrl = await QRCode.toDataURL(url, {
     errorCorrectionLevel: 'H',
     margin: 2,
@@ -912,18 +924,110 @@ const getTableQR = async (req, res) => {
       status: 'ACTIVE',
       dataUrl: qrDataUrl,
       url,
+      customUrl: table.customUrl || null,
       scansTotal: table.scansCount || 0,
     },
     url,
+    menuUrl: url,
+    defaultUrl,
+    customUrl: table.customUrl || null,
     table: {
       id: table.id,
       label: table.label,
       qrToken: table.qrToken,
+      customUrl: table.customUrl || null,
       views: table.scansCount || 0,
       scansTotal: table.scansCount || 0,
       scansCount: table.scansCount || 0,
     },
     restaurant: { id: table.restaurant.id, name: table.restaurant.name, slug: table.restaurant.slug },
+  })
+}
+
+/**
+ * PATCH or PUT /api/admin/restaurants/:id/tables/:tableId/qr-url
+ * Save custom menu URL for a specific table and regenerate QR code
+ */
+const updateTableQRUrl = async (req, res) => {
+  const { tableId } = req.params
+  const { customUrl, label } = req.body
+
+  const table = await prisma.diningTable.findUnique({
+    where: { id: tableId },
+    include: { restaurant: true },
+  })
+  if (!table) {
+    return res.status(404).json({ error: 'Table not found' })
+  }
+
+  // Non-superadmin users can only manage tables for their own onboarded restaurant
+  if (!isRestaurantOwner(table.restaurant, req.user)) {
+    return res.status(403).json({ error: 'Access denied: You can only edit tables for restaurants you onboarded' })
+  }
+
+  const updateData = {}
+  if (customUrl !== undefined) {
+    let cleanUrl = customUrl ? String(customUrl).trim() : null
+    if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = `https://${cleanUrl}`
+    }
+    updateData.customUrl = cleanUrl
+  }
+  if (label !== undefined && String(label).trim()) {
+    updateData.label = String(label).trim()
+  }
+
+  const updatedTable = await prisma.diningTable.update({
+    where: { id: table.id },
+    data: updateData,
+    include: { restaurant: true },
+  })
+
+  const baseCustomerUrl = getCustomerBaseUrl()
+  const defaultUrl = `${baseCustomerUrl}/menu/${updatedTable.qrToken || updatedTable.id}`
+  const rawCustomUrl = updatedTable.customUrl && !updatedTable.customUrl.includes('vercel.app') ? updatedTable.customUrl : null
+  const rawUrl = rawCustomUrl || defaultUrl
+  const menuUrl = rawUrl.replace(/https?:\/\/[^/]*vercel\.app/, baseCustomerUrl)
+
+  const qrDataUrl = await QRCode.toDataURL(menuUrl, {
+    errorCorrectionLevel: 'H',
+    margin: 2,
+    width: 500,
+    color: { dark: '#000000', light: '#FFFFFF' },
+  })
+
+  return res.json({
+    success: true,
+    table: {
+      id: updatedTable.id,
+      label: updatedTable.label,
+      qrToken: updatedTable.qrToken,
+      customUrl: updatedTable.customUrl || null,
+      views: updatedTable.scansCount || 0,
+      scansTotal: updatedTable.scansCount || 0,
+      scansCount: updatedTable.scansCount || 0,
+      qrCode: {
+        token: updatedTable.qrToken || updatedTable.id,
+        status: 'ACTIVE',
+        url: menuUrl,
+        customUrl: updatedTable.customUrl || null,
+        dataUrl: qrDataUrl,
+        scansTotal: updatedTable.scansCount || 0,
+      },
+    },
+    qrCode: {
+      token: updatedTable.qrToken || updatedTable.id,
+      status: 'ACTIVE',
+      url: menuUrl,
+      customUrl: updatedTable.customUrl || null,
+      dataUrl: qrDataUrl,
+      scansTotal: updatedTable.scansCount || 0,
+    },
+    url: menuUrl,
+    menuUrl,
+    customUrl: updatedTable.customUrl || null,
+    defaultUrl,
+    qrDataUrl,
   })
 }
 
@@ -1249,6 +1353,7 @@ module.exports = {
   listRestaurantTables,
   createRestaurantTable,
   getTableQR,
+  updateTableQRUrl,
   deleteRestaurantTable,
   listEmployees,
   createEmployee,

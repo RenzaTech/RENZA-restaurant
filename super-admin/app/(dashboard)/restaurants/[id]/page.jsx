@@ -243,7 +243,7 @@ export default function RestaurantDetailPage() {
   const [exportingReport, setExportingReport] = useState(false)
   const [isTableManagerOpen, setIsTableManagerOpen] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
-  const [qrModalData, setQrModalData] = useState({ isOpen: false, table: null, restaurant: null })
+  const [qrModalData, setQrModalData] = useState({ isOpen: false, table: null, restaurant: null, initialEditMode: false })
   const analyticsLoadedRef = useRef(false)
 
   const handleExportReport = async () => {
@@ -1073,11 +1073,12 @@ export default function RestaurantDetailPage() {
         onClose={() => setIsTableManagerOpen(false)}
         restaurants={restaurant ? [restaurant] : []}
         initialRestaurantId={id}
-        onOpenQr={(t, r) => {
+        onOpenQr={(t, r, editMode = false) => {
           setQrModalData({
             isOpen: true,
             table: t,
             restaurant: r || restaurant,
+            initialEditMode: Boolean(editMode),
           })
         }}
         onTableCountChange={(restId, newCount) => {
@@ -1088,9 +1089,16 @@ export default function RestaurantDetailPage() {
       {/* ── TABLE QR STUDIO MODAL ── */}
       <QRStudioModal
         isOpen={qrModalData.isOpen}
-        onClose={() => setQrModalData({ isOpen: false, table: null, restaurant: null })}
+        onClose={() => setQrModalData({ isOpen: false, table: null, restaurant: null, initialEditMode: false })}
         table={qrModalData.table}
         restaurant={qrModalData.restaurant || restaurant}
+        initialEditMode={qrModalData.initialEditMode}
+        onTableUpdated={(updatedTable) => {
+          setQrModalData((prev) => ({
+            ...prev,
+            table: { ...(prev.table || {}), ...updatedTable },
+          }))
+        }}
       />
 
       {/* ── CHANGE ADMIN PASSWORD MODAL ── */}

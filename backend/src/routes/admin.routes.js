@@ -12,6 +12,10 @@ router.get('/restaurants/:id/tables', authenticate, requireSalesOrSuperAdmin, ad
 router.post('/restaurants/:id/tables', authenticate, requireSalesOrSuperAdmin, adminController.createRestaurantTable)
 router.get('/restaurants/:id/tables/:tableId/qr', authenticate, requireSalesOrSuperAdmin, adminController.getTableQR)
 router.post('/restaurants/:id/tables/:tableId/qr', authenticate, requireSalesOrSuperAdmin, adminController.getTableQR)
+router.patch('/restaurants/:id/tables/:tableId/qr-url', authenticate, requireSalesOrSuperAdmin, adminController.updateTableQRUrl)
+router.put('/restaurants/:id/tables/:tableId/qr-url', authenticate, requireSalesOrSuperAdmin, adminController.updateTableQRUrl)
+router.patch('/restaurants/:id/tables/:tableId', authenticate, requireSalesOrSuperAdmin, adminController.updateTableQRUrl)
+router.put('/restaurants/:id/tables/:tableId', authenticate, requireSalesOrSuperAdmin, adminController.updateTableQRUrl)
 router.delete('/restaurants/:id/tables/:tableId', authenticate, requireSalesOrSuperAdmin, adminController.deleteRestaurantTable)
 router.put('/restaurants/:id', authenticate, requireSalesOrSuperAdmin, adminController.updateRestaurant)
 

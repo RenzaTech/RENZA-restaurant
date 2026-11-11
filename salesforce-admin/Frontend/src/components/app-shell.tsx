@@ -187,6 +187,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [qrTableId, setQrTableId] = useState('');
   const [qrToken, setQrToken] = useState('');
   const [qrStatus, setQrStatus] = useState('ACTIVE');
+  const [qrCustomUrl, setQrCustomUrl] = useState<string | null>(null);
+  const [qrEditMode, setQrEditMode] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
 
@@ -477,6 +479,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       setQrTableId(table.id);
       setQrToken(table.qrCode.token);
       setQrStatus(table.qrCode.status || 'ACTIVE');
+      setQrCustomUrl(table.customUrl || table.qrCode.customUrl || null);
+      setQrEditMode(false);
       setModal('qr');
     } catch {
       notice('Could not load table QR codes');
@@ -1450,7 +1454,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           table={qrTable}
           token={qrToken}
           status={qrStatus}
-          close={() => setModal(null)}
+          customUrl={qrCustomUrl}
+          initialEditMode={qrEditMode}
+          close={() => {
+            setModal(null);
+            setQrEditMode(false);
+          }}
           notice={notice}
         />
       )}
@@ -1475,13 +1484,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             if (selected) setSelectedRestaurant(selected.name);
           }}
           close={() => setModal(null)}
-          openQr={(table) => {
+          openQr={(table, editMode = false) => {
             if (!table.qrCode) return;
             const qr = table.qrCode;
             setQrTable(table.label);
             setQrTableId(table.id);
             setQrToken(qr.token);
             setQrStatus(qr.status);
+            setQrCustomUrl(table.customUrl || qr.customUrl || null);
+            setQrEditMode(Boolean(editMode));
             setModal('qr');
           }}
           notice={notice}
@@ -2202,7 +2213,8 @@ type ManagedTable = {
   id: string;
   label: string;
   isActive: boolean;
-  qrCode: { token: string; status: string; scansTotal: number } | null;
+  customUrl?: string | null;
+  qrCode: { token: string; status: string; scansTotal: number; url?: string; customUrl?: string | null } | null;
 };
 
 function TableManagerModal({
@@ -2219,7 +2231,7 @@ function TableManagerModal({
   restaurant: string;
   onRestaurantChange: (id: string) => void;
   close: () => void;
-  openQr: (table: ManagedTable) => void;
+  openQr: (table: ManagedTable, editMode?: boolean) => void;
   notice: (m: string) => void;
 }) {
   const [tables, setTables] = useState<ManagedTable[]>([]);
@@ -2308,19 +2320,36 @@ function TableManagerModal({
             <div className="table-manager-row" key={table.id}>
               <span className="table-manager-icon"><QrCode size={18} /></span>
               <span className="table-manager-name">
-                <strong>{table.label}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <strong>{table.label}</strong>
+                  {table.customUrl && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', background: '#fef3c7', color: '#b45309', borderRadius: 4, border: '1px solid #fde68a' }} title={`Custom URL: ${table.customUrl}`}>
+                      Custom URL
+                    </span>
+                  )}
+                </div>
                 <small>{restaurant}</small>
               </span>
               <span className={`status ${table.qrCode?.status === 'ACTIVE' ? 'status-active' : 'status-suspended'}`}>
                 <i />{table.qrCode?.status || 'Missing QR'}
               </span>
-              <button
-                className="button secondary"
-                disabled={!table.qrCode}
-                onClick={() => table.qrCode && openQr(table)}
-              >
-                <QrCode size={16} /> View QR
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button
+                  className="button secondary"
+                  disabled={!table.qrCode}
+                  onClick={() => table.qrCode && openQr(table, false)}
+                >
+                  <QrCode size={16} /> View QR
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={!table.qrCode}
+                  onClick={() => table.qrCode && openQr(table, true)}
+                  title="Edit Target Customer URL for this Table"
+                >
+                  <Pencil size={15} style={{ color: '#0bb8ae' }} /> Edit URL
+                </button>
+              </div>
             </div>
           ))
         )}
@@ -2353,19 +2382,50 @@ function getCustomerMenuBaseUrl(): string {
 }
 
 function QrModal({
-  restaurantId, tableId, restaurant, table, token, status, close, notice
+  restaurantId,
+  tableId,
+  restaurant,
+  table,
+  token,
+  status,
+  customUrl,
+  initialEditMode = false,
+  close,
+  notice,
 }: {
-  restaurantId: string; tableId: string; restaurant: string; table: string; token: string; status: string; close: () => void; notice: (m: string) => void;
+  restaurantId: string;
+  tableId: string;
+  restaurant: string;
+  table: string;
+  token: string;
+  status: string;
+  customUrl?: string | null;
+  initialEditMode?: boolean;
+  close: () => void;
+  notice: (m: string) => void;
 }) {
   const [data, setData] = useState('');
   const [currentToken, setCurrentToken] = useState(token);
+  const [currentCustomUrl, setCurrentCustomUrl] = useState<string | null>(customUrl || null);
+  const [isEditingUrl, setIsEditingUrl] = useState(Boolean(initialEditMode));
+  const [savingUrl, setSavingUrl] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const customerBase = getCustomerMenuBaseUrl();
-  const url = `${customerBase}/menu/${currentToken}`;
+  const defaultUrl = currentToken ? `${customerBase}/menu/${currentToken}` : '';
+  const rawUrl = currentCustomUrl && !currentCustomUrl.includes('vercel.app') ? currentCustomUrl : defaultUrl;
+  const url = (rawUrl || defaultUrl).replace(/https?:\/\/[^/]*vercel\.app/, customerBase);
+  const [urlInput, setUrlInput] = useState(url);
 
   useEffect(() => {
     setCurrentToken(token);
-  }, [token]);
+    setCurrentCustomUrl(customUrl || null);
+    setIsEditingUrl(Boolean(initialEditMode));
+    const def = token ? `${customerBase}/menu/${token}` : '';
+    const initial = (customUrl || def).replace(/https?:\/\/[^/]*vercel\.app/, customerBase);
+    setUrlInput(initial);
+  }, [token, customUrl, initialEditMode, customerBase]);
 
   useEffect(() => {
     if (!url) return;
@@ -2383,11 +2443,73 @@ function QrModal({
     notice('QR downloaded as PNG');
   };
 
+  const handleCopyUrl = async () => {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      notice('Menu URL copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      notice('Failed to copy URL');
+    }
+  };
+
+  async function handleSaveUrl() {
+    if (!restaurantId || !tableId) {
+      notice('Missing restaurant or table information');
+      return;
+    }
+    const val = urlInput.trim();
+    if (!val) {
+      notice('Please enter a destination URL');
+      return;
+    }
+    setSavingUrl(true);
+    try {
+      const body = await salesFetch(`/api/admin/restaurants/${restaurantId}/tables/${tableId}/qr-url`, {
+        method: 'PATCH',
+        body: JSON.stringify({ customUrl: val }),
+      });
+      const saved = body?.table?.customUrl || body?.customUrl || val;
+      setCurrentCustomUrl(saved);
+      setIsEditingUrl(false);
+      notice(`Table QR URL updated for ${table}!`);
+    } catch (e) {
+      notice(e instanceof Error ? e.message : 'Could not update table QR URL');
+    } finally {
+      setSavingUrl(false);
+    }
+  }
+
+  async function handleResetUrl() {
+    if (!restaurantId || !tableId) return;
+    setSavingUrl(true);
+    try {
+      await salesFetch(`/api/admin/restaurants/${restaurantId}/tables/${tableId}/qr-url`, {
+        method: 'PATCH',
+        body: JSON.stringify({ customUrl: '' }),
+      });
+      setCurrentCustomUrl(null);
+      const def = defaultUrl || `${customerBase}/menu/${currentToken}`;
+      setUrlInput(def);
+      setIsEditingUrl(false);
+      notice(`Table QR URL reset to default!`);
+    } catch (e) {
+      notice(e instanceof Error ? e.message : 'Could not reset table QR URL');
+    } finally {
+      setSavingUrl(false);
+    }
+  }
+
   async function regenerate() {
     setBusy(true);
     try {
       const body = await salesFetch(`/api/admin/restaurants/${restaurantId}/tables/${tableId}/qr`, { method: 'POST' });
       setCurrentToken(body.qrCode.token);
+      if (!currentCustomUrl) {
+        setUrlInput(`${customerBase}/menu/${body.qrCode.token}`);
+      }
       notice('Table QR regenerated');
     } catch {
       notice('Could not regenerate table QR');
@@ -2423,12 +2545,128 @@ function QrModal({
           </span>
         </div>
         <p style={{ fontSize: 13, color: '#64748b', margin: '8px 0 6px' }}>Scan with any mobile camera to launch the instant digital menu.</p>
-        <div className="qr-dest" style={{ fontSize: 13 }}><QrCode size={16} />{url}</div>
+
+        {/* Target Destination URL Box */}
+        {!isEditingUrl ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, margin: '8px 0', flexWrap: 'wrap' }}>
+            <div className="qr-dest" style={{ fontSize: 13, margin: 0, flex: 1, minWidth: 200, justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+                <QrCode size={16} style={{ flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
+              </div>
+              {currentCustomUrl && (
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', background: '#fef3c7', color: '#b45309', borderRadius: 4, flexShrink: 0 }}>
+                  Custom
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="button secondary"
+              style={{ padding: '6px 10px', height: 34 }}
+              onClick={() => {
+                setUrlInput(url);
+                setIsEditingUrl(true);
+              }}
+              title="Edit destination URL"
+            >
+              <Pencil size={15} style={{ color: '#0bb8ae' }} />
+            </button>
+            <button
+              type="button"
+              className="button secondary"
+              style={{ padding: '6px 10px', height: 34 }}
+              onClick={handleCopyUrl}
+              title="Copy URL"
+            >
+              {copied ? <Check size={15} style={{ color: '#10b981' }} /> : <Copy size={15} />}
+            </button>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button secondary"
+              style={{ padding: '6px 10px', height: 34, display: 'inline-flex', alignItems: 'center' }}
+              title="Open menu"
+            >
+              <ExternalLink size={15} />
+            </a>
+          </div>
+        ) : (
+          <div style={{ background: '#f8fafc', border: '1px solid #0bb8ae', borderRadius: 10, padding: 12, margin: '10px 0', textAlign: 'left' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Pencil size={13} /> Edit Target Customer URL
+              </span>
+              {currentCustomUrl && (
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', background: '#fef3c7', color: '#b45309', borderRadius: 4 }}>
+                  Custom Override
+                </span>
+              )}
+            </div>
+            <input
+              type="url"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder={defaultUrl || 'https://customermenu.scanzaa.in/menu/...'}
+              style={{ width: '100%', padding: '8px 10px', fontSize: 12, fontFamily: 'monospace', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }}
+            />
+            <p style={{ fontSize: 11, color: '#64748b', margin: '6px 0 10px' }}>
+              The QR code will automatically regenerate to route to this URL.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={savingUrl}
+                onClick={() => void handleSaveUrl()}
+                className="button primary"
+                style={{ fontSize: 12, padding: '6px 12px' }}
+              >
+                <Check size={14} /> {savingUrl ? 'Saving…' : 'Save & Regenerate QR'}
+              </button>
+              {currentCustomUrl && (
+                <button
+                  type="button"
+                  disabled={savingUrl}
+                  onClick={() => void handleResetUrl()}
+                  className="button secondary"
+                  style={{ fontSize: 12, padding: '6px 10px' }}
+                  title="Reset to default menu URL"
+                >
+                  <RotateCcw size={13} /> Reset
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={savingUrl}
+                onClick={() => {
+                  setIsEditingUrl(false);
+                  setUrlInput(url);
+                }}
+                className="button secondary"
+                style={{ fontSize: 12, padding: '6px 10px', marginLeft: 'auto' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <div className="modal-actions qr-actions">
         <button className="button secondary" disabled={busy} onClick={() => void regenerate()}>
           <RotateCcw size={16} />{busy ? 'Regenerating…' : 'Regenerate'}
         </button>
+        {!isEditingUrl && (
+          <button
+            className="button secondary"
+            onClick={() => {
+              setUrlInput(url);
+              setIsEditingUrl(true);
+            }}
+          >
+            <Pencil size={15} style={{ color: '#0bb8ae' }} /> Edit URL
+          </button>
+        )}
         <Button disabled={!data} onClick={download} icon={<Download size={16} />}>
           Download PNG
         </Button>

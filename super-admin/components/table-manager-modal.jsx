@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Hash,
+  Pencil,
+  Link2,
 } from 'lucide-react'
 import api, { apiFetch } from '@/lib/api'
 import toast from 'react-hot-toast'
@@ -24,6 +26,7 @@ export default function TableManagerModal({
   initialRestaurantId = '',
   onOpenQr,
   onTableCountChange,
+  onTableUpdated,
 }) {
   const [selectedId, setSelectedId] = useState(initialRestaurantId || '')
   const [tables, setTables] = useState([])
@@ -288,9 +291,16 @@ export default function TableManagerModal({
                         <QrCode className="w-4 h-4" />
                       </div>
                       <div>
-                        <strong className="text-xs font-bold text-slate-900 block">
-                          {t.label}
-                        </strong>
+                        <div className="flex items-center gap-1.5">
+                          <strong className="text-xs font-bold text-slate-900 block">
+                            {t.label}
+                          </strong>
+                          {t.customUrl && (
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200" title={`Custom URL: ${t.customUrl}`}>
+                              Custom URL
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] text-slate-400 font-mono">
                           Token: {t.qrCode?.token || t.qrToken || t.id}
                         </span>
@@ -317,7 +327,7 @@ export default function TableManagerModal({
                         type="button"
                         onClick={() => {
                           if (onOpenQr) {
-                            onOpenQr(t, selectedRestaurant)
+                            onOpenQr(t, selectedRestaurant, false)
                           }
                         }}
                         className="px-2.5 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors border border-teal-200 inline-flex items-center gap-1"
@@ -325,6 +335,20 @@ export default function TableManagerModal({
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>View QR</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onOpenQr) {
+                            onOpenQr(t, selectedRestaurant, true)
+                          }
+                        }}
+                        className="px-2.5 py-1.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 rounded-lg transition-colors border border-slate-200 inline-flex items-center gap-1 shadow-2xs"
+                        title="Edit Target Customer URL for this Table"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-teal-600" />
+                        <span>Edit URL</span>
                       </button>
 
                       <button

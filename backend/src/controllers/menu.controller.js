@@ -15,10 +15,14 @@ const getMenu = async (req, res) => {
   let restaurant = null
   let matchedTable = null
   try {
-    // 1. Check if slug is a table QR token or table id
+    // 1. Check if slug is a table QR token, table id, or custom table URL target
     const tableMatch = await prisma.diningTable.findFirst({
       where: {
-        OR: [{ qrToken: slug }, { id: slug }],
+        OR: [
+          { qrToken: slug },
+          { id: slug },
+          { customUrl: { contains: `/menu/${slug}` } },
+        ],
       },
       include: {
         restaurant: {
